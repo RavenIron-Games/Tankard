@@ -19,3 +19,14 @@
   sentence. Spaces, numbers, punctuation, rich-text tags and non-English letters are never touched, and no word
   vanishes. You see your own garbled line too. Two settings: `GarbleChat` (on/off) and `GarbleStrength` (0 to 2).
   They are read on the drinker's own game.
+- **You feel it.** Once Tipsy, the camera leans, bobs, drifts off your aim and breathes in and out. Your walk
+  wanders side to side, but only while you're moving. Once hammered, you sometimes trip with vanilla's stagger, never
+  twice within 8 seconds, and never while swimming, steering, sitting or in the air. All of it is smooth (a slow lean,
+  never a jolt) and scales with how drunk you are. Settings: `CameraSway`, `Wobble`, `Stumbles`, `SymptomStrength`.
+- **Blackouts.** From the 12th drink of one binge (every drink since you were last fully sober), each drink has a chance
+  to black you out: 10% on the 12th, 10% more on every drink after. You wake on dry land in a biome your world's boss
+  kills have opened, 300 m away on the 12th and 250 m further for every drink after. A share of your things stays
+  in a grave at the drinking spot: a quarter of your stacks on the 12th, 10% more per drink, everything by the 20th.
+  Ore and anything else that can't go through a portal always stays. Your map is gone until you get back within
+  50 m of the spot, so you'll need a friend to bring you home. That survives a relog, and each world tracks its own.
+  A world set to keep inventory on death keeps it here too. Settings: `Blackouts`, `MinDrinks`, `LeavesGear`.

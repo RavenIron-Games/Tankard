@@ -3,15 +3,18 @@ using RavenIron.Tankard.Core;
 namespace RavenIron.Tankard
 {
     /// <summary>
-    /// The local player's intoxication level. A plain number driven from Plugin.Update: no timers, no coroutine of its own
-    /// (house rule 2). It lives on the drinker's own client, which is where the symptoms will render.
+    /// The local player's intoxication level, and how many drinks the current binge holds. A plain number driven from
+    /// Plugin.Update: no timers, no coroutine of its own (house rule 2). It lives on the drinker's own client, which is
+    /// where the symptoms render and where the blackout decides.
     ///
-    /// Not persisted yet: it resets when the game closes, and starts at zero on a new session. Deciding how it survives a
-    /// relog (player custom data vs a status effect that carries it) is still open (CLAUDE.md).
+    /// A binge is every drink since you were last fully sober: the count resets when the meter reaches zero.
+    /// Not persisted: the meter and the binge reset when the game closes. (The blackout's map lock IS persisted; see
+    /// BlackoutRunner.)
     /// </summary>
     internal static class Meter
     {
         public static float Level { get; private set; }
+        public static int BingeDrinks { get; private set; }
         public static Tier Tier => Intoxication.TierOf(Level);
 
         /// <summary>Symptom severity 0 to 1, with the SymptomStrength setting applied. Zero below Tipsy.</summary>
@@ -28,7 +31,8 @@ namespace RavenIron.Tankard
         {
             float before = Level;
             Level = Intoxication.Add(Level, drink.Potency);
-            Plugin.Log.LogInfo($"Drank {drink.DisplayName}: meter {before:0.0} -> {Level:0.0} ({Tier}).");
+            BingeDrinks++;
+            Plugin.Log.LogInfo($"Drank {drink.DisplayName}: meter {before:0.0} -> {Level:0.0} ({Tier}), drink {BingeDrinks} of this binge.");
         }
 
         public static void Tick(float dt)
@@ -37,8 +41,24 @@ namespace RavenIron.Tankard
             Tier before = Tier;
             Level = Intoxication.Decay(Level, dt, Plugin.SoberPerSecond.Value);
             if (Tier != before) Plugin.Log.LogInfo($"Meter {Level:0.0}: {before} -> {Tier}.");
+            if (Level <= 0f && BingeDrinks > 0)
+            {
+                Plugin.Log.LogInfo($"Sober again; the binge of {BingeDrinks} drink(s) is over.");
+                BingeDrinks = 0;
+            }
         }
 
-        public static void Reset() => Level = 0f;
+        /// <summary>After a blackout you come round still drunk, but the binge that did it is spent.</summary>
+        public static void WakeFromBlackout()
+        {
+            Level = Intoxication.TierFloor[(int)Tier.Drunk];
+            BingeDrinks = 0;
+        }
+
+        public static void Reset()
+        {
+            Level = 0f;
+            BingeDrinks = 0;
+        }
     }
 }

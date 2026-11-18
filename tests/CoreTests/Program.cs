@@ -244,6 +244,125 @@ namespace RavenIron.Tankard.Tests
             Check(stumbles > 100 && stumbles < 160, $"about two a minute at full hammered ({stumbles} in an hour)");
         }
 
+        private static void BlackoutTests()
+        {
+            // Chance: zero below 12, 10% on the 12th, climbing 10% a drink, certain by the 21st.
+            for (int n = 0; n < 12; n++) Check(Blackout.Chance(n) == 0.0, $"no blackout on drink {n}");
+            Near((float)Blackout.Chance(12), 0.10f, "10% on the 12th drink");
+            Near((float)Blackout.Chance(15), 0.40f, "40% on the 15th");
+            Check(Blackout.Chance(21) == 1.0 && Blackout.Chance(500) == 1.0, "certain from the 21st, and capped");
+            for (int n = 12; n < 30; n++) Check(Blackout.Chance(n + 1) >= Blackout.Chance(n), $"chance never falls ({n})");
+            Check(Blackout.Chance(5, 5) > 0 && Blackout.Chance(4, 5) == 0, "the minimum is configurable");
+            Check(Blackout.Chance(1, 0) > 0, "a zero minimum is treated as one, never as 'always'... on the first drink");
+
+            // Distance: grows with every drink past 12, never past the world's edge margin.
+            Near(Blackout.Distance(12), Blackout.FirstDistance, "first blackout lands nearby");
+            Check(Blackout.Distance(13) > Blackout.Distance(12) && Blackout.Distance(20) > Blackout.Distance(13), "more drinks, further away");
+            Near(Blackout.Distance(20), 300f + 8 * 250f, "20 drinks is 2.3 km");
+            Check(Blackout.Distance(100000) == Blackout.WorldRadius - Blackout.EdgeMargin, "distance is capped by the world");
+            Check(Blackout.Distance(3) == Blackout.FirstDistance, "below the minimum the distance is the base (unused, but defined)");
+
+            // Loss: 25% on the 12th, +10% a drink, everything by the 20th.
+            Check(Blackout.LossFraction(11) == 0.0, "nothing lost below 12");
+            Near((float)Blackout.LossFraction(12), 0.25f, "a quarter on the 12th");
+            Near((float)Blackout.LossFraction(17), 0.75f, "three quarters on the 17th");
+            Check(Blackout.LossFraction(20) == 1.0 && Blackout.LossFraction(99) == 1.0, "everything from the 20th, capped");
+            for (int n = 12; n < 30; n++) Check(Blackout.LossFraction(n + 1) >= Blackout.LossFraction(n), $"loss never falls ({n})");
+
+            var rng = new Random(5);
+            Check(Blackout.PickLost(0, 0.5, rng).Count == 0 && Blackout.PickLost(10, 0.0, rng).Count == 0 && Blackout.PickLost(10, double.NaN, rng).Count == 0,
+                  "nothing picked from nothing, or at zero or NaN");
+            Check(Blackout.PickLost(10, 1.0, rng).Count == 10 && Blackout.PickLost(10, 7.0, rng).Count == 10, "everything at 1, capped above");
+            Check(Blackout.PickLost(10, 0.25, rng).Count == 3, "ceil(25% of 10) = 3");
+            Check(Blackout.PickLost(1, 0.25, rng).Count == 1, "a single stack at 25% is lost: ceil rounds up");
+            Check(Blackout.PickLost(20, 0.25, rng).Count == 5, "exactly 25% of 20 is 5, not 6 (no float overshoot)");
+            bool distinctOk = true;
+            for (int s = 0; s < 200; s++)
+            {
+                var picked = Blackout.PickLost(32, 0.55, new Random(s));
+                distinctOk &= picked.Count == 18 && picked.Distinct().Count() == 18 && picked.All(i => i >= 0 && i < 32);
+            }
+            Check(distinctOk, "picks are distinct, in range, and the right count");
+            var hits = new int[10];
+            for (int s = 0; s < 20000; s++) foreach (int i in Blackout.PickLost(10, 0.3, new Random(s))) hits[i]++;
+            Check(hits.All(h => Math.Abs(h - 6000) < 400), $"every stack is equally likely to be lost ({string.Join(",", hits)})");
+
+            // Biomes: Meadows always, each boss opens the next, Ocean never.
+            Check(Blackout.AllowedBiomes(k => false) == Blackout.Meadows, "a fresh world: Meadows only");
+            Check(Blackout.AllowedBiomes(null) == Blackout.Meadows, "no key source: Meadows only");
+            int afterElder = Blackout.AllowedBiomes(k => k == "defeated_eikthyr" || k == "defeated_gdking");
+            Check(afterElder == (Blackout.Meadows | Blackout.BlackForest | Blackout.Swamp), "Eikthyr and the Elder open Black Forest and Swamp");
+            int all = Blackout.AllowedBiomes(k => true);
+            Check((all & Blackout.Ocean) == 0, "never the ocean, even with every boss down");
+            Check(all == (Blackout.Meadows | Blackout.BlackForest | Blackout.Swamp | Blackout.Mountain | Blackout.Plains |
+                          Blackout.Mistlands | Blackout.AshLands | Blackout.DeepNorth), "every boss opens every land biome");
+            Check(Blackout.BossOpens.Count == 7 && Blackout.BossOpens.Select(kv => kv.Key).Distinct().Count() == 7, "seven distinct boss keys");
+            Check(Blackout.BossOpens[0].Key == "defeated_eikthyr", "the one key vanilla's own code names (Player.AddKnownBiome) is first");
+            // Pinned to Heightmap.Biome's numbers, decompiled from 1.0.x.
+            Check(Blackout.Meadows == 1 && Blackout.Swamp == 2 && Blackout.Mountain == 4 && Blackout.BlackForest == 8 && Blackout.Plains == 16 &&
+                  Blackout.AshLands == 32 && Blackout.DeepNorth == 64 && Blackout.Ocean == 256 && Blackout.Mistlands == 512, "biome numbers match the game");
+
+            // Landing on a fake world: land is Meadows east of x = 0 and Black Forest west of it, the sea is beyond 3 km,
+            // and height is 40 m on land, 10 m (under the 30 m sea level) in the water.
+            Func<float, float, int> biome = (x, z) => x * x + z * z > 3000f * 3000f ? Blackout.Ocean : (x >= 0 ? Blackout.Meadows : Blackout.BlackForest);
+            Func<float, float, float> height = (x, z) => biome(x, z) == Blackout.Ocean ? 10f : 40f;
+            bool landOk = true; int found = 0;
+            for (int s = 0; s < 300; s++)
+            {
+                if (!Blackout.PickLanding(0f, 0f, 1000f, new Random(s), biome, height, 30f, Blackout.Meadows, out float x, out float z, out float y)) continue;
+                found++;
+                float d = (float)Math.Sqrt(x * x + z * z);
+                landOk &= x >= 0 && d >= 800f - 0.5f && d <= 1200f + 0.5f && y == 40f;
+            }
+            Check(found == 300, $"a landing is always found when there is room ({found}/300)");
+            Check(landOk, "landings are in an allowed biome, on the 80-120% ring, on dry land");
+
+            // An island too small for the ring: the picker shrinks towards the spot instead of drowning you.
+            Func<float, float, int> island = (x, z) => x * x + z * z <= 200f * 200f ? Blackout.Meadows : Blackout.Ocean;
+            Func<float, float, float> islandH = (x, z) => island(x, z) == Blackout.Ocean ? 0f : 35f;
+            bool islandOk = true;
+            for (int s = 0; s < 100; s++)
+            {
+                bool ok = Blackout.PickLanding(0f, 0f, 2000f, new Random(s), island, islandH, 30f, Blackout.Meadows, out float x, out float z, out _);
+                islandOk &= ok && x * x + z * z <= 200f * 200f;
+            }
+            Check(islandOk, "on a small island you wake on the island, not in the sea");
+
+            // Nowhere allowed: no landing, so the caller leaves you be.
+            Check(!Blackout.PickLanding(0f, 0f, 1000f, new Random(1), (x, z) => Blackout.Mistlands, (x, z) => 50f, 30f, Blackout.Meadows, out _, out _, out _),
+                  "no allowed ground anywhere: no landing");
+            Check(!Blackout.PickLanding(0f, 0f, 1000f, new Random(1), (x, z) => Blackout.Meadows, (x, z) => 29.5f, 30f, Blackout.Meadows, out _, out _, out _),
+                  "Meadows that are all under sea level count as water");
+            Check(!Blackout.PickLanding(0f, 0f, 1000f, null, biome, height, 30f, Blackout.Meadows, out _, out _, out _) &&
+                  !Blackout.PickLanding(float.NaN, 0f, 1000f, new Random(1), biome, height, 30f, Blackout.Meadows, out _, out _, out _) &&
+                  !Blackout.PickLanding(0f, 0f, 0f, new Random(1), biome, height, 30f, Blackout.Meadows, out _, out _, out _),
+                  "bad inputs give no landing");
+            // Near the world's edge: never outside it.
+            bool edgeOk = true;
+            for (int s = 0; s < 200; s++)
+                if (Blackout.PickLanding(9400f, 0f, 2000f, new Random(s), (x, z) => Blackout.Meadows, (x, z) => 40f, 30f, Blackout.Meadows, out float x, out float z, out _))
+                    edgeOk &= x * x + z * z <= (Blackout.WorldRadius - Blackout.EdgeMargin) * (Blackout.WorldRadius - Blackout.EdgeMargin) + 1f;
+            Check(edgeOk, "never woken outside the world's edge margin");
+
+            // Home: round-trips through InvariantCulture, even when the thread's culture uses comma decimals.
+            var saved = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                string s = Blackout.FormatHome(-1234.5678f, 42.25f, 987.125f);
+                Check(!s.Contains(","), $"home is written without comma decimals under de-DE ({s})");
+                Check(Blackout.TryParseHome(s, out float hx, out float hy, out float hz) && hx == -1234.5678f && hy == 42.25f && hz == 987.125f,
+                      "home round-trips exactly under de-DE");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = saved; }
+            Check(!Blackout.TryParseHome(null, out _, out _, out _) && !Blackout.TryParseHome("", out _, out _, out _) &&
+                  !Blackout.TryParseHome("1;2", out _, out _, out _) && !Blackout.TryParseHome("a;b;c", out _, out _, out _) &&
+                  !Blackout.TryParseHome("NaN;1;2", out _, out _, out _) && !Blackout.TryParseHome("1;Infinity;2", out _, out _, out _),
+                  "a damaged home value is refused, never half-read");
+            Check(Blackout.IsHome(10f, 10f, 40f, 40f) && !Blackout.IsHome(0f, 0f, 40f, 40f), "home is 50 m, flat");
+            Check(Blackout.KeyFor("123") != Blackout.KeyFor("456") && Blackout.KeyFor(null) == Blackout.KeyFor(""), "one key per world");
+        }
+
         private static int Main()
         {
             // ---- Add ---------------------------------------------------------------------------------------------
@@ -402,6 +521,7 @@ namespace RavenIron.Tankard.Tests
 
             DrunkTextTests();
             SymptomTests();
+            BlackoutTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

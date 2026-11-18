@@ -33,6 +33,9 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<bool> Wobble;
         internal static ConfigEntry<bool> Stumbles;
         internal static ConfigEntry<float> SymptomStrength;
+        internal static ConfigEntry<bool> Blackouts;
+        internal static ConfigEntry<int> BlackoutMinDrinks;
+        internal static ConfigEntry<bool> BlackoutLeavesGear;
 
         private Harmony _harmony;
 
@@ -63,6 +66,17 @@ namespace RavenIron.Tankard
             SymptomStrength = Config.Bind("4 - Symptoms", "SymptomStrength", 1f,
                 new ConfigDescription("Scales sway, wobble and stumbling together. 0 is off, 2 hits full strength at half the meter.",
                     new AcceptableValueRange<float>(0f, 2f)));
+            Blackouts = Config.Bind("5 - Blackout", "Blackouts", true,
+                "Drink too much in one binge and you black out: you wake far away, some of your things stay where you were " +
+                "drinking, and your map is gone until you get back there. Read on your own game.");
+            BlackoutMinDrinks = Config.Bind("5 - Blackout", "MinDrinks", Blackout.DefaultMinDrinks,
+                new ConfigDescription("Drinks in one binge before a blackout is possible: 10% on that drink, +10% each drink after. " +
+                                      "Each drink past it also sends you 250 m further and leaves 10% more of your things behind.",
+                    new AcceptableValueRange<int>(1, 100)));
+            BlackoutLeavesGear = Config.Bind("5 - Blackout", "LeavesGear", true,
+                "On, a blackout leaves a share of your things in a grave at the drinking spot (25% of your stacks on the first " +
+                "possible drink, up to everything). Off, you keep it all. Either way, ore and anything else that can't go " +
+                "through a portal stays behind, and a world set to keep inventory on death keeps it here too.");
             try
             {
                 _harmony = new Harmony(Guid);
@@ -84,6 +98,7 @@ namespace RavenIron.Tankard
             float dt = UnityEngine.Time.deltaTime;
             Meter.Tick(dt);
             if (Enabled.Value) Stumbler.Tick(dt);
+            BlackoutRunner.Tick(dt); // runs even when disabled, so turning Tankard off can never strand a hidden map
         }
 
         // ---- fault reporting from the hot path ----------------------------------------------------------------------

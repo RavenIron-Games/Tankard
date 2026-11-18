@@ -24,7 +24,9 @@ namespace RavenIron.Tankard.Patches
                 if (__instance != Player.m_localPlayer) return; // the meter belongs to the drinker's own client
 
                 DrinkDef drink = Words.ByNameToken(item.m_shared.m_name);
-                if (drink != null) Meter.Drink(drink);
+                if (drink == null) return;
+                Meter.Drink(drink);
+                BlackoutRunner.AfterDrink(__instance);
             }
             catch (Exception ex)
             {
