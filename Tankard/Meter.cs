@@ -1,22 +1,34 @@
 using RavenIron.Tankard.Core;
+using RavenIron.Tankard.Registration;
 
 namespace RavenIron.Tankard
 {
     /// <summary>
-    /// The local player's intoxication level, and how many drinks the current binge holds. A plain number driven from
-    /// Plugin.Update: no timers, no coroutine of its own (house rule 2). It lives on the drinker's own client, which is
-    /// where the symptoms render and where the blackout decides.
+    /// The local player's intoxication level, the current binge, and what the body does about it: drink effects, liquid
+    /// courage while drunk, and the hangover after. A plain number driven from Plugin.Update: no timers, no coroutine of
+    /// its own (house rule 2). It lives on the drinker's own client, which is where the symptoms render and where the
+    /// blackout decides.
     ///
-    /// A binge is every drink since you were last fully sober: the count resets when the meter reaches zero.
-    /// Not persisted: the meter and the binge reset when the game closes. (The blackout's map lock IS persisted; see
-    /// BlackoutRunner.)
+    /// A binge is every drink since you were last fully sober. It ends when the meter reaches zero, and THAT is when the
+    /// hangover lands, sized by how high the meter went (Core\Effects.HangoverSeconds).
+    ///
+    /// Saved on the character (Player.m_customData, MeterState) since 2026-11-18, so quitting does not sober you up (the
+    /// owner: "hold the drunk ... so no rage quits happen"). No time passes while you are logged out. The in-memory copy is
+    /// authoritative while the same character profile is loaded, so a respawn (a new Player object) carries it over.
     /// </summary>
     internal static class Meter
     {
         public static float Level { get; private set; }
         public static int BingeDrinks { get; private set; }
+        public static float Peak { get; private set; }
+        public static bool BlackedOut { get; private set; }
         public const float WakeLevel = 90f;
         public static Tier Tier => Intoxication.TierOf(Level);
+
+        private static object _profile;       // the PlayerProfile this state belongs to
+        private static Player _body;          // the Player object we last wrote to
+        private static float _saveTimer, _courageTimer;
+        private static float _pendingHangover; // restored from a save, applied once the body can take effects
 
         /// <summary>Symptom severity 0 to 1, with the SymptomStrength setting applied. Zero below Tipsy.</summary>
         public static float SymptomSeverity
@@ -39,10 +51,12 @@ namespace RavenIron.Tankard
 
         public static void Drink(DrinkDef drink, Player p)
         {
+            Attach(p);
             float before = Level;
             float tol = ToleranceOf(p);
             float hit = Tolerance.Hit(drink.Abv, tol);
             Level = Intoxication.Add(Level, hit);
+            if (Level > Peak) Peak = Level;
             BingeDrinks++;
             float tolAfter = Tolerance.AfterDrink(tol, drink.Abv);
             if (p != null) p.m_customData[Tolerance.Key] = Tolerance.Format(tolAfter);
@@ -60,12 +74,35 @@ namespace RavenIron.Tankard
                 }
                 catch (System.Exception ex) { Plugin.Report("Tolerance message", ex); }
             }
+            ApplyDrinkEffect(drink, p);
+            UpdateCourage(p);
+            Save(p);
+        }
+
+        private static void ApplyDrinkEffect(DrinkDef drink, Player p)
+        {
+            if (p == null) return;
+            try
+            {
+                var seman = p.GetSEMan();
+                if (drink.CuresHangover && seman.RemoveStatusEffect(Buffs.Hash(Buffs.Hangover), quiet: true))
+                {
+                    _pendingHangover = 0f;
+                    p.Message(MessageHud.MessageType.Center, "The Bloody Ivar does its work. Your head clears.");
+                    Plugin.Log.LogInfo("Bloody Ivar: hangover cured.");
+                }
+                if (!Plugin.DrinkEffects.Value) return;
+                var se = Buffs.ForDrink(drink);
+                if (se != null) seman.AddStatusEffect(se, resetTime: true);
+            }
+            catch (System.Exception ex) { Plugin.Report("Drink effect", ex); }
         }
 
         /// <summary>Eating while drinking takes a little off the meter (Core\Food). Does nothing when sober. The binge
         /// count is untouched: food steadies you, it does not wipe the slate (the meter reaching 0 still does that).</summary>
         public static void Eat(string nameToken, float health, float stamina, float eitr, Player p)
         {
+            Attach(p);
             if (Level <= 0f) return;
             float points = Food.Sobering(health, stamina, eitr, Plugin.FoodSobers.Value);
             if (points <= 0f) return;
@@ -73,6 +110,7 @@ namespace RavenIron.Tankard
             Tier tierBefore = Tier;
             Level = Food.Eat(Level, points);
             Plugin.Log.LogInfo($"Ate {nameToken} ({health:0}/{stamina:0}/{eitr:0}): -{points:0.0}, meter {before:0.0} -> {Level:0.0} ({Tier}).");
+            Save(p);
             if (p == null) return;
             try
             {
@@ -82,22 +120,80 @@ namespace RavenIron.Tankard
             catch (System.Exception ex) { Plugin.Report("Food message", ex); }
         }
 
-        public static void Tick(float dt)
+        public static void Tick(float dt, Player p)
         {
-            if (Level <= 0f) return;
-            Tier before = Tier;
-            Level = Intoxication.Decay(Level, dt, Plugin.SoberPerSecond.Value);
-            if (Tier != before) Plugin.Log.LogInfo($"Meter {Level:0.0}: {before} -> {Tier}.");
-            if (Level <= 0f && BingeDrinks > 0)
+            Attach(p);
+            if (Level > 0f)
             {
-                Plugin.Log.LogInfo($"Sober again; the binge of {BingeDrinks} drink(s) is over.");
-                BingeDrinks = 0;
+                Tier before = Tier;
+                Level = Intoxication.Decay(Level, dt, Plugin.SoberPerSecond.Value);
+                if (Tier != before) Plugin.Log.LogInfo($"Meter {Level:0.0}: {before} -> {Tier}.");
             }
+            if (Level <= 0f && (BingeDrinks > 0 || Peak > 0f)) EndBinge(p);
+
+            if (_pendingHangover > 0f && p != null && !p.IsDead()) StartHangover(p, _pendingHangover, restored: true);
+
+            _courageTimer -= dt;
+            if (_courageTimer <= 0f) { _courageTimer = 0.5f; UpdateCourage(p); }
+            _saveTimer -= dt;
+            if (_saveTimer <= 0f) { _saveTimer = 2f; Save(p); }
+        }
+
+        private static void EndBinge(Player p)
+        {
+            float seconds = Effects.HangoverSeconds(Peak, BlackedOut);
+            Plugin.Log.LogInfo($"Sober again; the binge of {BingeDrinks} drink(s) is over (peak {Peak:0.0}{(BlackedOut ? ", blacked out" : "")}).");
+            BingeDrinks = 0;
+            Peak = 0f;
+            BlackedOut = false;
+            if (seconds > 0f && Plugin.Hangovers.Value && Plugin.Enabled.Value && p != null) StartHangover(p, seconds, restored: false);
+            Save(p);
+        }
+
+        private static void StartHangover(Player p, float seconds, bool restored)
+        {
+            _pendingHangover = 0f;
+            try
+            {
+                var template = Buffs.Get(Buffs.Hangover);
+                if (template == null) return;
+                var seman = p.GetSEMan();
+                seman.RemoveStatusEffect(Buffs.Hash(Buffs.Hangover), quiet: true);
+                var live = seman.AddStatusEffect(template, resetTime: true);
+                if (live != null) live.m_ttl = seconds; // the clone's own clock: remaining = m_ttl - elapsed
+                Plugin.Log.LogInfo(restored ? $"Hangover restored from the save: {seconds:0} s left."
+                                            : $"Hangover: {seconds:0} s. A Bloody Ivar cures it.");
+            }
+            catch (System.Exception ex) { Plugin.Report("Hangover", ex); }
+        }
+
+        /// <summary>Liquid courage while Drunk or worse: one effect for Drunk, a stronger one from Hammered.</summary>
+        private static void UpdateCourage(Player p)
+        {
+            if (p == null || p.IsDead()) return;
+            try
+            {
+                var seman = p.GetSEMan();
+                string want = !Plugin.Enabled.Value || !Plugin.LiquidCourage.Value ? null
+                            : Tier >= Tier.Hammered ? Buffs.CourageHammered : Tier >= Tier.Drunk ? Buffs.CourageDrunk : null;
+                foreach (string name in new[] { Buffs.CourageDrunk, Buffs.CourageHammered })
+                {
+                    bool has = seman.HaveStatusEffect(Buffs.Hash(name));
+                    if (name == want && !has)
+                    {
+                        var se = Buffs.Get(name);
+                        if (se != null) seman.AddStatusEffect(se, resetTime: true);
+                    }
+                    else if (name != want && has) seman.RemoveStatusEffect(Buffs.Hash(name), quiet: true);
+                }
+            }
+            catch (System.Exception ex) { Plugin.Report("Liquid courage", ex); }
         }
 
         /// <summary>
         /// After a blackout you come round still hammered (the owner: "you don't immediately sober up from a blackout"),
-        /// about five minutes from sober at the default rate, but the binge that did it is spent.
+        /// about five minutes from sober at the default rate, but the binge that did it is spent. The hangover that follows
+        /// is the blackout one.
         /// </summary>
         public static void WakeFromBlackout()
         {
@@ -105,13 +201,74 @@ namespace RavenIron.Tankard
             // hammered" lasted one frame (seen in the log 2026-11-17). 90 is a minute of Hammered, then Drunk, then the
             // long way down: about six minutes to sober at the default rate.
             Level = WakeLevel;
+            if (Level > Peak) Peak = Level;
             BingeDrinks = 0;
+            BlackedOut = true;
+            Save(Player.m_localPlayer);
         }
 
+        /// <summary>`tankard sober`: meter, binge and hangover gone, as if the night never happened.</summary>
         public static void Reset()
         {
             Level = 0f;
             BingeDrinks = 0;
+            Peak = 0f;
+            BlackedOut = false;
+            _pendingHangover = 0f;
+            var p = Player.m_localPlayer;
+            if (p != null)
+            {
+                try { p.GetSEMan().RemoveStatusEffect(Buffs.Hash(Buffs.Hangover), quiet: true); } catch (System.Exception) { }
+                UpdateCourage(p);
+                Save(p);
+            }
+        }
+
+        // ---- persistence ----------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Binds the in-memory state to the character. A different profile (another character, or the first one this
+        /// session) loads from the save; the same profile keeps what is in memory and simply writes it onto the new body.
+        /// </summary>
+        private static void Attach(Player p)
+        {
+            if (p == null) return;
+            object profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
+            if (profile != null && !ReferenceEquals(profile, _profile))
+            {
+                _profile = profile;
+                p.m_customData.TryGetValue(MeterState.Key, out string saved);
+                var st = MeterState.Parse(saved);
+                Level = st.Level; BingeDrinks = st.Binge; Peak = st.Peak; BlackedOut = st.BlackedOut;
+                _pendingHangover = st.HangoverLeft;
+                _body = p;
+                if (saved != null)
+                    Plugin.Log.LogInfo($"Meter loaded from the character: {Level:0.0} ({Tier}), binge {BingeDrinks}, peak {Peak:0.0}" +
+                                       (_pendingHangover > 0f ? $", hangover {_pendingHangover:0} s left" : "") + ".");
+                return;
+            }
+            if (!ReferenceEquals(p, _body)) { _body = p; Save(p); } // a respawn: same character, new body
+        }
+
+        private static void Save(Player p)
+        {
+            if (p == null || !ReferenceEquals(p, _body)) return;
+            try
+            {
+                float left = _pendingHangover;
+                var live = p.GetSEMan().GetStatusEffect(Buffs.Hash(Buffs.Hangover));
+                if (live != null) left = live.GetRemaningTime();
+                var st = new MeterState { Level = Level, Binge = BingeDrinks, Peak = Peak, BlackedOut = BlackedOut, HangoverLeft = left };
+                p.m_customData[MeterState.Key] = st.Format();
+            }
+            catch (System.Exception ex) { Plugin.Report("Meter save", ex); }
+        }
+
+        public static float HangoverLeft(Player p)
+        {
+            if (p == null) return 0f;
+            var live = p.GetSEMan().GetStatusEffect(Buffs.Hash(Buffs.Hangover));
+            return live != null ? live.GetRemaningTime() : _pendingHangover;
         }
     }
 }

@@ -57,3 +57,17 @@
   food's health + stamina + eitr, at least 2 and at most 10 (raspberries about 3, cooked meat 4, a big meal 10). A
   feast pulls you down about one tier at most, never sober in one bite, and it doesn't reset the binge count. A
   message says so, with the tier change if there is one. Setting: `FoodSobers` (0 off, 1 normal, up to 3).
+- **Drinks do something.** Every drink gives a buff for 5 to 15 minutes, listed in its tooltip: cider and honey mead
+  heal faster, ale and skaldic mead restore stamina faster, forest grog and Jotun's draught carry more, blueberry wine
+  restores eitr, and bog wine, frostmead and fire wine make you resistant to poison, frost and fire. You can keep
+  drinking while one is running.
+- **Liquid courage.** While Drunk you hit 10% harder and blocking costs 25% more stamina; from Hammered, 20% and 50%.
+- **Hangovers.** When a binge that reached Drunk is over you get a hangover: 40% less stamina regen, 25% less health
+  regen, 5 to 15 minutes by how drunk you got, 20 after a blackout.
+- **The Bloody Ivar** (5 Raspberry, 1 Honey, 2 Dandelion at the cauldron, 6% alcohol) cures it.
+- **Each fermented drink has its own barrel time**, longer the stronger it is: honey mead 20 minutes, bog wine 40,
+  frostmead 50, skaldic mead 60, Jotun's draught 80, fire wine 100 (vanilla mead is 40).
+- **Quitting no longer sobers you up.** The meter, the binge and the hangover are saved with the character, and no time
+  passes while you're logged out.
+- **Dying ends a blackout** and gives your map back. You have two graves to fetch instead.
+- Settings: `DrinkEffects`, `LiquidCourage`, `Hangovers`, `PerDrinkFermentTimes`.

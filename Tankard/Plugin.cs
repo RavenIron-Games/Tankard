@@ -28,6 +28,10 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<bool> Enabled;
         internal static ConfigEntry<float> SoberPerSecond;
         internal static ConfigEntry<float> FoodSobers;
+        internal static ConfigEntry<bool> DrinkEffects;
+        internal static ConfigEntry<bool> LiquidCourage;
+        internal static ConfigEntry<bool> Hangovers;
+        internal static ConfigEntry<bool> PerDrinkFermentTimes;
         internal static ConfigEntry<bool> GarbleChat;
         internal static ConfigEntry<float> GarbleStrength;
         internal static ConfigEntry<bool> CameraSway;
@@ -56,6 +60,17 @@ namespace RavenIron.Tankard
                                       "eitr, at least " + Food.MinPerMeal + " and at most " + Food.MaxPerMeal + " (berries about 3, " +
                                       "cooked meat 4, a big meal 10). This scales it: 0 turns it off, 2 doubles it. Read on your own game.",
                     new AcceptableValueRange<float>(0f, 3f)));
+            DrinkEffects = Config.Bind("6 - Effects", "DrinkEffects", true,
+                "Each drink gives a buff for a few minutes besides getting you drunk: regen, carry weight, or resistance " +
+                "(frostmead against frost, fire wine against fire, bog wine against poison). The tooltip lists each one.");
+            LiquidCourage = Config.Bind("6 - Effects", "LiquidCourage", true,
+                "While Drunk you hit 10% harder and blocking costs 25% more stamina; from Hammered, 20% and 50%.");
+            Hangovers = Config.Bind("6 - Effects", "Hangovers", true,
+                "When a binge that reached Drunk is over, you wake with a hangover: 40% less stamina regen and 25% less health regen, " +
+                "for 5 to 15 minutes by how drunk you got, 20 after a blackout. A Bloody Ivar cures it.");
+            PerDrinkFermentTimes = Config.Bind("6 - Effects", "PerDrinkFermentTimes", true,
+                "Each Tankard drink ferments for its own time, longer the stronger it is: honey mead 20 minutes, fire wine 100 " +
+                "(vanilla mead is 40). Off, they take vanilla's time. Read on the game of whoever looks at the barrel.");
             GarbleChat = Config.Bind("3 - Drunk chat", "GarbleChat", true,
                 "While drunk, what you type in chat (say, shout and whisper) comes out slurred, then garbled. Read on YOUR game, " +
                 "since it is your client that sends the line. Off, your words always come out as typed.");
@@ -111,9 +126,11 @@ namespace RavenIron.Tankard
         private void Update()
         {
             // The one clock. A player who is not in a world (menu, loading) has no meter.
-            if (Player.m_localPlayer == null) { Meter.Reset(); return; }
+            // Not in a world (menu, loading): nothing ticks, and the meter keeps its state for when you are back (it is
+            // saved on the character; quitting does not sober you up).
+            if (Player.m_localPlayer == null) return;
             float dt = UnityEngine.Time.deltaTime;
-            Meter.Tick(dt);
+            Meter.Tick(dt, Player.m_localPlayer);
             if (Enabled.Value) Stumbler.Tick(dt);
             BlackoutRunner.Tick(dt); // runs even when disabled, so turning Tankard off can never strand a hidden map
             MapMemory.Tick(dt);

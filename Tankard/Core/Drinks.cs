@@ -37,11 +37,15 @@ namespace RavenIron.Tankard.Core
 
         // What it costs to make. Station drinks are crafted from these directly (CraftAmount per craft). Fermenter drinks
         // craft their BASE from these at the Mead Ketill (one base per craft, like vanilla), then the fermenter turns one
-        // base into FermentYield drinks. The fermenter's duration is one value per barrel, not per drink (decompiled from
-        // 1.0.x), so there is deliberately no per-drink ferment time.
+        // base into FermentYield drinks. Vanilla keeps ONE fermenting time per barrel; Patch_Fermenter swaps in
+        // FermentSeconds for whichever of our bases is inside (owner, 2026-11-18: "change the times to match the drinks").
         public Ingredient[] Ingredients = new Ingredient[0];
         public int CraftAmount = 1;
         public int FermentYield;
+        public float FermentSeconds;   // world seconds in the barrel; fermenter drinks only
+
+        public DrinkEffect Effect;     // what it does for you besides the meter; null for none
+        public bool CuresHangover;     // the Bloody Ivar
 
         public string NameToken => "$tk_" + PrefabName.ToLowerInvariant();
         public string DescriptionToken => NameToken + "_desc";
@@ -89,38 +93,44 @@ namespace RavenIron.Tankard.Core
         public static readonly IReadOnlyList<DrinkDef> All = new List<DrinkDef>
         {
             // ---- the cauldron: quick, weak, made in one go -----------------------------------------------------------
-            new DrinkDef { PrefabName = "TK_RaspberryCider", DisplayName = "Raspberry cider", DonorPrefab = "MeadHealthMinor",
+            new DrinkDef { PrefabName = "TK_RaspberryCider", Effect = new DrinkEffect { Name = "Sweet cider", Seconds = 300f, HealthRegen = 1.25f }, DisplayName = "Raspberry cider", DonorPrefab = "MeadHealthMinor",
                 Path = BrewPath.Station, Abv = 4f, Blurb = "Barely counts as a drink. Everyone starts somewhere.",
                 Ingredients = new[] { new Ingredient("Raspberry", 8), new Ingredient("Honey", 1) }, CraftAmount = 2 },
-            new DrinkDef { PrefabName = "TK_Ale", DisplayName = "Ale", DonorPrefab = "MeadHealthMinor",
+            new DrinkDef { PrefabName = "TK_Ale", Effect = new DrinkEffect { Name = "Ale-warmed", Seconds = 600f, StaminaRegen = 1.25f }, DisplayName = "Ale", DonorPrefab = "MeadHealthMinor",
                 Path = BrewPath.Station, Abv = 5f, Blurb = "Thin and cheap. A warm start to the evening.",
                 Ingredients = new[] { new Ingredient("Barley", 4) }, CraftAmount = 2 },
-            new DrinkDef { PrefabName = "TK_ForestGrog", DisplayName = "Forest grog", DonorPrefab = "MeadEitrMinor",
+            new DrinkDef { PrefabName = "TK_ForestGrog", Effect = new DrinkEffect { Name = "Grog legs", Seconds = 600f, CarryWeight = 50f, RunStaminaDrain = -0.15f }, DisplayName = "Forest grog", DonorPrefab = "MeadEitrMinor",
                 Path = BrewPath.Station, Abv = 7f, Blurb = "Carrots and thistle, boiled until it stops arguing.",
                 Ingredients = new[] { new Ingredient("Carrot", 4), new Ingredient("Thistle", 2) }, CraftAmount = 2 },
-            new DrinkDef { PrefabName = "TK_BlueberryWine", DisplayName = "Blueberry wine", DonorPrefab = "MeadPoisonResist",
+            new DrinkDef { PrefabName = "TK_BlueberryWine", Effect = new DrinkEffect { Name = "Wine-bright", Seconds = 600f, EitrRegen = 1.3f }, DisplayName = "Blueberry wine", DonorPrefab = "MeadPoisonResist",
                 Path = BrewPath.Station, Abv = 11f, Blurb = "Sweet enough that you forget to count.",
                 Ingredients = new[] { new Ingredient("Blueberries", 8), new Ingredient("Honey", 1) }, CraftAmount = 2 },
+            // The hangover cure (owner, 2026-11-18: "its called a Bloody Ivar"). Hair of the dog: a little alcohol, and the
+            // morning goes away.
+            new DrinkDef { PrefabName = "TK_BloodyIvar", Effect = new DrinkEffect { Name = "Morning mended", Seconds = 300f, HealthRegen = 1.25f }, CuresHangover = true,
+                DisplayName = "Bloody Ivar", DonorPrefab = "MeadHealthMinor",
+                Path = BrewPath.Station, Abv = 6f, Blurb = "Raspberry, honey and a fistful of dandelion. Cures a hangover. Starts the next one.",
+                Ingredients = new[] { new Ingredient("Raspberry", 5), new Ingredient("Honey", 1), new Ingredient("Dandelion", 2) }, CraftAmount = 1 },
 
             // ---- the fermenter: a base from the Mead Ketill, then time. One per biome, each stronger -----------------
-            new DrinkDef { PrefabName = "TK_HoneyMead", DisplayName = "Honey mead", DonorPrefab = "MeadHealthMinor",
+            new DrinkDef { PrefabName = "TK_HoneyMead", Effect = new DrinkEffect { Name = "Honeyed", Seconds = 600f, HealthRegen = 1.5f }, FermentSeconds = 1200f, DisplayName = "Honey mead", DonorPrefab = "MeadHealthMinor",
                 Path = BrewPath.Fermenter, Abv = 12f, Blurb = "Aged in the fermenter. Goes down easy.",
                 Ingredients = new[] { new Ingredient("Honey", 6), new Ingredient("Raspberry", 4) }, FermentYield = 4 },
-            new DrinkDef { PrefabName = "TK_BogWine", DisplayName = "Bog wine", DonorPrefab = "MeadPoisonResist",
+            new DrinkDef { PrefabName = "TK_BogWine", Effect = new DrinkEffect { Name = "Bog-blooded", Seconds = 600f, Resist = Resist.Poison }, FermentSeconds = 2400f, DisplayName = "Bog wine", DonorPrefab = "MeadPoisonResist",
                 Path = BrewPath.Fermenter, Abv = 14f, Blurb = "Turnip, honey and something from a leech. Don't ask which part.",
                 Ingredients = new[] { new Ingredient("Turnip", 6), new Ingredient("Bloodbag", 2), new Ingredient("Honey", 4) }, FermentYield = 4 },
-            new DrinkDef { PrefabName = "TK_Frostmead", DisplayName = "Frostmead", DonorPrefab = "MeadFrostResist",
+            new DrinkDef { PrefabName = "TK_Frostmead", Effect = new DrinkEffect { Name = "Frost-warmed", Seconds = 600f, Resist = Resist.Frost }, FermentSeconds = 3000f, DisplayName = "Frostmead", DonorPrefab = "MeadFrostResist",
                 Path = BrewPath.Fermenter, Abv = 17f, Blurb = "Cold going down, a fire once it lands.",
                 Ingredients = new[] { new Ingredient("Onion", 4), new Ingredient("FreezeGland", 2), new Ingredient("Honey", 6) }, FermentYield = 4 },
-            new DrinkDef { PrefabName = "TK_SkaldicMead", DisplayName = "Skaldic mead", DonorPrefab = "MeadHealthMedium",
+            new DrinkDef { PrefabName = "TK_SkaldicMead", Effect = new DrinkEffect { Name = "Skald's fire", Seconds = 900f, StaminaRegen = 1.5f, HealthRegen = 1.25f }, FermentSeconds = 3600f, DisplayName = "Skaldic mead", DonorPrefab = "MeadHealthMedium",
                 Path = BrewPath.Fermenter, Abv = 20f, Blurb = "The kind a skald sings after. Not for a short night.",
                 Ingredients = new[] { new Ingredient("Honey", 8), new Ingredient("Barley", 4), new Ingredient("Cloudberry", 4) },
                 FermentYield = 4 },
-            new DrinkDef { PrefabName = "TK_JotunDraught", DisplayName = "Jotun's draught", DonorPrefab = "MeadEitrMinor",
+            new DrinkDef { PrefabName = "TK_JotunDraught", Effect = new DrinkEffect { Name = "Giant's back", Seconds = 900f, CarryWeight = 150f, StaminaRegen = 1.25f }, FermentSeconds = 4800f, DisplayName = "Jotun's draught", DonorPrefab = "MeadEitrMinor",
                 Path = BrewPath.Fermenter, Abv = 28f, Blurb = "Brewed from the mist itself. Giants drink it to feel small.",
                 Ingredients = new[] { new Ingredient("Sap", 6), new Ingredient("RoyalJelly", 4), new Ingredient("MushroomJotunPuffs", 4) },
                 FermentYield = 4 },
-            new DrinkDef { PrefabName = "TK_FireWine", DisplayName = "Fire wine", DonorPrefab = "MeadHealthMedium",
+            new DrinkDef { PrefabName = "TK_FireWine", Effect = new DrinkEffect { Name = "Fireproof gut", Seconds = 900f, Resist = Resist.Fire }, FermentSeconds = 6000f, DisplayName = "Fire wine", DonorPrefab = "MeadHealthMedium",
                 Path = BrewPath.Fermenter, Abv = 40f, Blurb = "Vineberries from the burning lands. One of these and the floor is lava.",
                 Ingredients = new[] { new Ingredient("Vineberry", 8), new Ingredient("Honey", 6) }, FermentYield = 4 },
         };
@@ -179,7 +189,8 @@ namespace RavenIron.Tankard.Core
             foreach (var d in Drinks.All)
             {
                 words[d.NameToken.Substring(1)] = d.DisplayName;
-                words[d.DescriptionToken.Substring(1)] = d.Blurb + " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)";
+                words[d.DescriptionToken.Substring(1)] = d.Blurb + " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)" +
+                    (d.Effect != null ? "\n" + d.Effect.Describe() + "." : "") + (d.CuresHangover ? "\nCures a hangover." : "");
                 if (d.Path == BrewPath.Fermenter)
                 {
                     words[d.BaseNameToken.Substring(1)] = d.BaseDisplayName;

@@ -64,6 +64,17 @@ namespace RavenIron.Tankard
 
         private static string WorldKey() => Blackout.KeyFor(WorldId());
 
+        /// <summary>
+        /// Dying ends a blackout and gives the map back (owner, 2026-11-18: "dying should clear the blackout since you now
+        /// have 2 tombstones"): the drinking-spot grave and the death grave are punishment enough. Called from Patch_Death.
+        /// </summary>
+        public static void OnLocalDeath(Player p)
+        {
+            if (p == null || !_mapHidden) return;
+            Plugin.Log.LogInfo("Died during a blackout: blackout over, map restored. Two graves to fetch now.");
+            EndBlackout(p, restoreMinimap: true);
+        }
+
         /// <summary>The blackout is over: by walking home, by remembering the whole map, or by a damaged save.</summary>
         internal static void EndBlackout(Player p, bool restoreMinimap)
         {

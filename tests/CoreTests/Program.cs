@@ -245,6 +245,71 @@ namespace RavenIron.Tankard.Tests
             Check(stumbles > expected * 0.8 && stumbles < expected * 1.2, $"stumble rate matches the constants ({stumbles} in an hour, expected about {expected:0})");
         }
 
+        private static void EffectTests()
+        {
+            // Every drink does something besides get you drunk.
+            Check(Drinks.All.All(d => d.Effect != null && d.Effect.Seconds >= 60f && !string.IsNullOrEmpty(d.Effect.Name)),
+                  "every drink has an effect with a name and a duration");
+            Check(Drinks.All.Select(d => d.Effect.Name).Distinct().Count() == Drinks.All.Count, "effect names are unique");
+            Check(Drinks.All.Select(d => "SE_" + d.PrefabName).Distinct().Count() == Drinks.All.Count, "status effect asset names are unique");
+            var by = Drinks.All.ToDictionary(d => d.PrefabName);
+            Check(by["TK_Frostmead"].Effect.Resist == Resist.Frost && by["TK_FireWine"].Effect.Resist == Resist.Fire &&
+                  by["TK_BogWine"].Effect.Resist == Resist.Poison, "the biome drinks resist their biome");
+            Check(Drinks.All.Count(d => d.CuresHangover) == 1 && by["TK_BloodyIvar"].CuresHangover, "exactly one cure, the Bloody Ivar");
+            Check(by["TK_BloodyIvar"].Path == BrewPath.Station && by["TK_BloodyIvar"].Abv > 0f, "the Bloody Ivar is hair of the dog: a station drink with a little alcohol");
+            Check(Words.English()[by["TK_BloodyIvar"].DescriptionToken.Substring(1)].Contains("Cures a hangover"), "its tooltip says it cures");
+            string d1 = by["TK_ForestGrog"].Effect.Describe();
+            Check(d1 == "+50 carry weight, -15% stamina spent running for 10 minutes", $"effect text comes from the numbers ({d1})");
+            Check(by["TK_SkaldicMead"].Effect.Describe() == "+25% health regen, +50% stamina regen for 15 minutes", by["TK_SkaldicMead"].Effect.Describe());
+            Check(Words.English()[by["TK_Ale"].DescriptionToken.Substring(1)].Contains("+25% stamina regen for 10 minutes"), "the tooltip lists the effect");
+            var saved = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                Check(!by["TK_ForestGrog"].Effect.Describe().Contains(","+"0") && by["TK_ForestGrog"].Effect.Describe().Contains("+50 carry"), "effect text is culture-proof");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = saved; }
+
+            // Liquid courage.
+            Check(Effects.CourageDamage(Tier.Tipsy) == 1f && Effects.CourageDamage(Tier.Drunk) > 1f &&
+                  Effects.CourageDamage(Tier.Hammered) > Effects.CourageDamage(Tier.Drunk), "courage starts at Drunk and grows");
+            Check(Effects.CourageBlockCost(Tier.Tipsy) == 0f && Effects.CourageBlockCost(Tier.Hammered) > Effects.CourageBlockCost(Tier.Drunk),
+                  "and so does the worse block");
+
+            // Hangovers.
+            Check(Effects.HangoverSeconds(49f, false) == 0f && Effects.HangoverSeconds(float.NaN, false) == 0f, "no hangover under Drunk");
+            Near(Effects.HangoverSeconds(50f, false), 300f, "5 minutes at Drunk");
+            Near(Effects.HangoverSeconds(100f, false), 900f, "15 minutes at a full meter");
+            Check(Effects.HangoverSeconds(10f, true) == 1200f, "20 minutes after a blackout, whatever the peak");
+            float lastH = 0f; bool rises = true;
+            for (float p = 50f; p <= 100f; p += 1f) { float h = Effects.HangoverSeconds(p, false); rises &= h >= lastH; lastH = h; }
+            Check(rises, "a harder night, a longer morning");
+
+            // Fermenting: every fermented drink has its own time, and stronger drinks take longer.
+            var ferm = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
+            Check(ferm.All(d => d.FermentSeconds >= 600f), "every fermented drink has a barrel time");
+            bool longer = true;
+            for (int i = 1; i < ferm.Count; i++) longer &= ferm[i].FermentSeconds > ferm[i - 1].FermentSeconds;
+            Check(longer, "stronger drinks ferment longer");
+            Check(ferm.First().FermentSeconds < Effects.VanillaFermentSeconds && ferm.Last().FermentSeconds > Effects.VanillaFermentSeconds,
+                  "honey mead is quicker than vanilla mead, fire wine slower");
+            Check(Drinks.All.Where(d => d.Path == BrewPath.Station).All(d => d.FermentSeconds == 0f), "station drinks have no barrel time");
+
+            // The saved meter.
+            var ms = new MeterState { Level = 63.25f, Binge = 9, Peak = 81.5f, BlackedOut = true, HangoverLeft = 412.5f };
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                var back = MeterState.Parse(ms.Format());
+                Check(back.Level == 63.25f && back.Binge == 9 && back.Peak == 81.5f && back.BlackedOut && back.HangoverLeft == 412.5f,
+                      $"the meter round-trips under de-DE ({ms.Format()})");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = saved; }
+            var junk = MeterState.Parse("NaN;-4;1e9;x;-1");
+            Check(junk.Level == 0f && junk.Binge == 0 && junk.Peak == Intoxication.Max && !junk.BlackedOut && junk.HangoverLeft == 0f, "a damaged save clamps");
+            Check(MeterState.Parse(null).Level == 0f && MeterState.Parse("12;3").Level == 0f, "a missing or short save is sober");
+        }
+
         private static void FoodTests()
         {
             Near(Food.Sobering(30f, 10f, 0f), 4f, "cooked meat (30/10) takes 4 off");
@@ -604,7 +669,7 @@ namespace RavenIron.Tankard.Tests
                       $"{d.PrefabName}: only fermenter drinks yield from a barrel, and a base is crafted one at a time");
                 Check(d.Path == BrewPath.Fermenter == (d.BasePrefabName != null), $"{d.PrefabName}: only fermenter drinks have a base");
             }
-            Check(Drinks.All.Count == 10, "ten drinks: four from the cauldron, six from the fermenter");
+            Check(Drinks.All.Count == 11, "eleven drinks: five from the cauldron (the Bloody Ivar among them), six from the fermenter");
 
             bool hasStation = false, hasFermenter = false;
             float maxStation = 0f, minFerment = float.MaxValue;
@@ -648,10 +713,10 @@ namespace RavenIron.Tankard.Tests
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
-            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_HoneyMead,TK_BogWine,TK_Frostmead,TK_SkaldicMead,TK_JotunDraught,TK_FireWine",
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_BloodyIvar,TK_HoneyMead,TK_BogWine,TK_Frostmead,TK_SkaldicMead,TK_JotunDraught,TK_FireWine",
                   "shipped prefab names are pinned (saves store them)");
             Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
-                  "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_HoneyMead,TK_HoneyMeadBase,TK_BogWine,TK_BogWineBase,TK_Frostmead,TK_FrostmeadBase,TK_SkaldicMead,TK_SkaldicMeadBase,TK_JotunDraught,TK_JotunDraughtBase,TK_FireWine,TK_FireWineBase",
+                  "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_BloodyIvar,TK_HoneyMead,TK_HoneyMeadBase,TK_BogWine,TK_BogWineBase,TK_Frostmead,TK_FrostmeadBase,TK_SkaldicMead,TK_SkaldicMeadBase,TK_JotunDraught,TK_JotunDraughtBase,TK_FireWine,TK_FireWineBase",
                   "shipped item names, bases included, are pinned");
 
             // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------
@@ -703,6 +768,7 @@ namespace RavenIron.Tankard.Tests
             BlackoutTests();
             ToleranceTests();
             FoodTests();
+            EffectTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

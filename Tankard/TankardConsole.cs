@@ -67,6 +67,7 @@ namespace RavenIron.Tankard
                                 args.Context.AddString(
                                     $"tankard: meter {Meter.Level:0.0} ({Meter.Tier}), drink {Meter.BingeDrinks} of this binge, " +
                                     $"tolerance {Meter.ToleranceOf(p):0.00} of {Tolerance.Max:0} ({Tolerance.Describe(Meter.ToleranceOf(p))}), " +
+                                    $"binge peak {Meter.Peak:0.0}{(Meter.BlackedOut ? " (blacked out)" : "")}, hangover {Meter.HangoverLeft(p):0} s, " +
                                     $"blackout {(BlackoutRunner.MapHidden ? "ON" : "off")}, map remembered {MapMemory.Progress:P0}, " +
                                     $"minimap mode {(Minimap.instance != null ? Minimap.instance.m_mode.ToString() : "none")}, " +
                                     $"world no-map modifier {(Game.m_noMap ? "ON" : "off")}, " +

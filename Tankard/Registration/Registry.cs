@@ -20,6 +20,7 @@ namespace RavenIron.Tankard.Registration
                 Items.EnsureItems();
                 Items.EnsurePrefabs();
                 Brewing.EnsureAll();
+                Buffs.EnsureIn(ObjectDB.instance);
             }
             catch (Exception ex)
             {
