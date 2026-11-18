@@ -62,14 +62,14 @@ namespace RavenIron.Tankard
                     new AcceptableValueRange<float>(0f, 3f)));
             DrinkEffects = Config.Bind("6 - Effects", "DrinkEffects", true,
                 "Each drink gives a buff for a few minutes besides getting you drunk: regen, carry weight, or resistance " +
-                "(frostmead against frost, fire wine against fire, bog wine against poison). The tooltip lists each one.");
+                "(Rimecask Mead against frost, Surtr's Kiss against fire, Swampmother's Wine against poison). The tooltip lists each one.");
             LiquidCourage = Config.Bind("6 - Effects", "LiquidCourage", true,
                 "While Drunk you hit 10% harder and blocking costs 25% more stamina; from Hammered, 20% and 50%.");
             Hangovers = Config.Bind("6 - Effects", "Hangovers", true,
                 "When a binge that reached Drunk is over, you wake with a hangover: 40% less stamina regen and 25% less health regen, " +
                 "for 5 to 15 minutes by how drunk you got, 20 after a blackout. A Bloody Ivar cures it.");
             PerDrinkFermentTimes = Config.Bind("6 - Effects", "PerDrinkFermentTimes", true,
-                "Each Tankard drink ferments for its own time, longer the stronger it is: honey mead 20 minutes, fire wine 100 " +
+                "Each Tankard drink ferments for its own time, longer the stronger it is: Hive-Gold Mead 20 minutes, Surtr's Kiss 100 " +
                 "(vanilla mead is 40). Off, they take vanilla's time. Read on the game of whoever looks at the barrel.");
             GarbleChat = Config.Bind("3 - Drunk chat", "GarbleChat", true,
                 "While drunk, what you type in chat (say, shout and whisper) comes out slurred, then garbled. Read on YOUR game, " +

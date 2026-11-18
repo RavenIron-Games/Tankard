@@ -1,9 +1,9 @@
 {
   "name": "Tankard",
   "version_number": "0.1.0",
-  "website_url": "https://github.com/RavenIron-Games/Tankard",
-  "description": "Ale, wine and mead that get you drunk. A stacking intoxication meter, brewed at a station or aged in the fermenter.",
+  "website_url": "https://ravenirongames.com/",
+  "description": "Booze that gets you drunk: eleven brews, a tolerance you earn, swaying, slurred chat, hangovers, and blackouts that send you home the long way.",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2351"
+    "denikson-BepInExPack_Valheim-5.4.2360"
   ]
 }
