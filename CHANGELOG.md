@@ -49,7 +49,7 @@
 - **Alcohol content and tolerance.** Every drink now has an ABV, shown in its tooltip: cider 4%, ale 5%, grog 7%,
   blueberry wine 11%, honey mead 12%, bog wine 14%, frostmead 17%, skaldic mead 20%, Jotun's draught 28%, fire wine
   40%. Each character also has an alcohol tolerance from 0 to 69. A drink's hit is its ABV x 2 for a new drinker, so one
-  fire wine (80) puts a lightweight at Hammered, and it shrinks to 40% of that at 69 (fire wine 32, ale 4). Every drink
+  fire wine (80) puts a paperweight at Hammered, and it shrinks to 40% of that at 69 (fire wine 32, ale 4). Every drink
   raises your tolerance by a tenth of its ABV, more slowly the higher you are, and it never falls or passes 69. A message
   tells you when it goes up. It is saved with the character, not the world. `tankard status` shows it, and
   `tankard tolerance [0-69]` reads or sets it for testing.
@@ -69,7 +69,7 @@
   frostmead 50, skaldic mead 60, Jotun's draught 80, fire wine 100 (vanilla mead is 40).
 - **Quitting no longer sobers you up.** The meter, the binge and the hangover are saved with the character, and no time
   passes while you're logged out.
-- **Dying ends a blackout** and gives your map back. You have two graves to fetch instead.
+- **Dying is no way out of a blackout.** You respawn at your bed with two graves to fetch, but your map stays dark until you walk back to the drinking spot, and you wake with the full 20-minute hangover. A bed right beside the drinking spot does not count as walking home: you have to leave and come back. Dying no longer cures any hangover either: the new body keeps whatever was left.
 - Settings: `DrinkEffects`, `LiquidCourage`, `Hangovers`, `PerDrinkFermentTimes`.
 - **Blackouts follow your blood alcohol, not a drink count.** The meter now runs past full, up to 200, and anything over
   100 is "over the limit" (sobering from 200 takes about 13 minutes). Only a drink that leaves you over the limit can

@@ -69,6 +69,22 @@ namespace RavenIron.Tankard.Core
             return HangoverMinSeconds + (HangoverMaxSeconds - HangoverMinSeconds) * p;
         }
 
+        /// <summary>
+        /// The hangover the new body wakes with after a death. Dying never cures one (a fresh body has no status effects,
+        /// so without this every death quietly did), and dying in a blackout gives the full post-blackout hangover: the
+        /// owner, 2026-11-18, "dying in a black out is the easy way out". Whichever is longer wins.
+        /// </summary>
+        public static float HangoverAfterDeath(float leftNow, bool inBlackout)
+        {
+            float left = float.IsNaN(leftNow) || float.IsInfinity(leftNow) || leftNow < 0f ? 0f : leftNow;
+            return inBlackout ? Math.Max(left, HangoverAfterBlackoutSeconds) : left;
+        }
+
+        /// <summary>A new hangover never shortens one already running (the binge ending after a death in a blackout,
+        /// say, must not cut a 20-minute one to 5).</summary>
+        public static bool ShouldReplaceHangover(float runningLeft, float offered) =>
+            !(runningLeft > 0f) || offered > runningLeft;
+
         // ---- fermenting -------------------------------------------------------------------------------------------
         /// <summary>Vanilla's barrel time (Fermenter.m_fermentationDuration, decompiled 1.0.21): 2400 s of world time.</summary>
         public const float VanillaFermentSeconds = 2400f;

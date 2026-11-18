@@ -27,6 +27,10 @@ namespace RavenIron.Tankard
         // Not saved: a fresh session starts disarmed and arms the moment you are seen away from the spot, which after a
         // blackout is immediately (you wake at least ~240 m off, unless the island fallback put you closer).
         private static bool _homeArmed;
+        // Every new body starts disarmed. Found by the robot, 2026-11-18: after a death far out, the DEAD body stayed the
+        // local player for ~14 s where it fell, was seen 2 km from the spot and armed the check, so the respawn beside
+        // the drinking spot counted as walking home and gave the map back. A dead body is never checked either.
+        private static Player _checkedBody;
 
         /// <summary>Read by the Minimap patch every frame; refreshed from the saved key twice a second.</summary>
         public static bool MapHidden => _mapHidden && Plugin.Enabled.Value;
@@ -65,14 +69,20 @@ namespace RavenIron.Tankard
         private static string WorldKey() => Blackout.KeyFor(WorldId());
 
         /// <summary>
-        /// Dying ends a blackout and gives the map back (owner, 2026-11-18: "dying should clear the blackout since you now
-        /// have 2 tombstones"): the drinking-spot grave and the death grave are punishment enough. Called from Patch_Death.
+        /// Dying in a blackout is not a way out (owner, 2026-11-18: "dying in a black out is the easy way out", replacing the
+        /// same day's "dying should clear the blackout"). You still respawn at your bed with two graves to fetch, but the
+        /// map stays dark until you walk back to the drinking spot, and you wake with the full post-blackout hangover.
+        /// The coming-home check is DISARMED, so a bed beside the drinking spot does not count as walking home: you must
+        /// be seen away from it first. Any death also carries a running hangover over to the new body. From Patch_Death.
         /// </summary>
         public static void OnLocalDeath(Player p)
         {
-            if (p == null || !_mapHidden) return;
-            Plugin.Log.LogInfo("Died during a blackout: blackout over, map restored. Two graves to fetch now.");
-            EndBlackout(p, restoreMinimap: true);
+            if (p == null) return;
+            bool inBlackout = _mapHidden;
+            Meter.OnDeath(p, inBlackout);
+            if (!inBlackout) return;
+            _homeArmed = false;
+            Plugin.Log.LogInfo("Died during a blackout: the map stays dark until you walk back to the drinking spot. Two graves to fetch.");
         }
 
         /// <summary>The blackout is over: by walking home, by remembering the whole map, or by a damaged save.</summary>
@@ -276,6 +286,8 @@ namespace RavenIron.Tankard
                 return;
             }
             _mapHidden = true;
+            if (!ReferenceEquals(p, _checkedBody)) { _checkedBody = p; _homeArmed = false; }
+            if (p.IsDead()) return;
             Vector3 pos = p.transform.position;
             if (Blackout.ShouldRestoreMap(ref _homeArmed, p.IsTeleporting(), pos.x, pos.z, hx, hz))
             {

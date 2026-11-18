@@ -51,7 +51,7 @@ namespace RavenIron.Tankard.Core
             if (n >= 50) return "seasoned";
             if (n >= 30) return "regular";
             if (n >= 10) return "getting there";
-            return "lightweight";
+            return "paperweight";
         }
 
         public const string Key = "Tankard.Tolerance";

@@ -284,6 +284,16 @@ namespace RavenIron.Tankard.Tests
             float lastH = 0f; bool rises = true;
             for (float p = 50f; p <= 100f; p += 1f) { float h = Effects.HangoverSeconds(p, false); rises &= h >= lastH; lastH = h; }
             Check(rises, "a harder night, a longer morning");
+            // Dying is no way out (owner, 2026-11-18): it never cures a hangover, and in a blackout it gives the full one.
+            Check(Effects.HangoverAfterDeath(400f, false) == 400f, "an ordinary death carries the hangover over unchanged");
+            Check(Effects.HangoverAfterDeath(0f, false) == 0f, "and a sober death gives none");
+            Check(Effects.HangoverAfterDeath(0f, true) == 1200f && Effects.HangoverAfterDeath(300f, true) == 1200f,
+                  "a death in a blackout wakes with 20 minutes");
+            Check(Effects.HangoverAfterDeath(1500f, true) == 1500f, "never less than what was already left");
+            Check(Effects.HangoverAfterDeath(float.NaN, true) == 1200f && Effects.HangoverAfterDeath(-5f, false) == 0f, "bad input is no hangover");
+            Check(!Effects.ShouldReplaceHangover(1100f, 300f), "the binge ending later cannot cut a 20-minute hangover to 5");
+            Check(Effects.ShouldReplaceHangover(100f, 900f) && Effects.ShouldReplaceHangover(0f, 300f) && Effects.ShouldReplaceHangover(float.NaN, 300f),
+                  "a longer one, or one with nothing running, does replace it");
 
             // Fermenting: every fermented drink has its own time, and stronger drinks take longer.
             var ferm = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
@@ -366,7 +376,7 @@ namespace RavenIron.Tankard.Tests
             while (Tolerance.Shown(tol) < 30 && n < 10000) { tol = Tolerance.AfterDrink(tol, ale.Abv); n++; }
             Check(n > 40 && n < 200, $"ale alone takes a good while to reach 30 ({n} drinks)");
             Check(Tolerance.Shown(68.99f) == 68 && Tolerance.Shown(69f) == 69 && Tolerance.Shown(-1f) == 0, "shown as a floored whole number, 0..69");
-            Check(Tolerance.Describe(0f) == "lightweight" && Tolerance.Describe(69f) == "iron gut", "described at both ends");
+            Check(Tolerance.Describe(0f) == "paperweight" && Tolerance.Describe(69f) == "iron gut", "described at both ends");
             var savedTol = System.Globalization.CultureInfo.CurrentCulture;
             try
             {

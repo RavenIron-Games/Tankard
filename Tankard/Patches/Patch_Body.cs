@@ -5,7 +5,8 @@ using RavenIron.Tankard.Core;
 
 namespace RavenIron.Tankard.Patches
 {
-    /// <summary>Dying while blacked out ends the blackout: two graves are enough (owner, 2026-11-18). An observing postfix.</summary>
+    /// <summary>Dying carries the hangover to the new body, and in a blackout keeps the map dark and gives the full
+    /// post-blackout hangover (owner, 2026-11-18). An observing postfix.</summary>
     [HarmonyPatch(typeof(Player), nameof(Player.OnDeath))]
     internal static class Patch_Death
     {

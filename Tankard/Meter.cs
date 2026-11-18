@@ -150,8 +150,33 @@ namespace RavenIron.Tankard
             Save(p);
         }
 
+        /// <summary>
+        /// The local player died. The new body has no status effects, so the hangover is carried over by hand, and a death
+        /// in a blackout wakes with the full post-blackout one (Effects.HangoverAfterDeath). Applied by Tick once the new
+        /// body is alive. The meter itself is untouched: dying does not sober you.
+        /// </summary>
+        public static void OnDeath(Player p, bool inBlackout)
+        {
+            Attach(p);
+            float left = HangoverLeft(p);
+            float next = Plugin.Hangovers.Value && Plugin.Enabled.Value ? Effects.HangoverAfterDeath(left, inBlackout) : left;
+            if (next <= 0f) return;
+            _pendingHangover = next;
+            Plugin.Log.LogInfo($"Died{(inBlackout ? " in a blackout" : "")}: the new body wakes with {next:0} s of hangover (had {left:0} s).");
+            Save(p);
+        }
+
         private static void StartHangover(Player p, float seconds, bool restored)
         {
+            if (!restored)
+            {
+                float running = p.GetSEMan().GetStatusEffect(Buffs.Hash(Buffs.Hangover))?.GetRemaningTime() ?? 0f;
+                if (!Effects.ShouldReplaceHangover(running, seconds))
+                {
+                    Plugin.Log.LogInfo($"Hangover of {seconds:0} s offered; the {running:0} s one already running is longer, so it stays.");
+                    return;
+                }
+            }
             _pendingHangover = 0f;
             try
             {
@@ -161,7 +186,7 @@ namespace RavenIron.Tankard
                 seman.RemoveStatusEffect(Buffs.Hash(Buffs.Hangover), quiet: true);
                 var live = seman.AddStatusEffect(template, resetTime: true);
                 if (live != null) live.m_ttl = seconds; // the clone's own clock: remaining = m_ttl - elapsed
-                Plugin.Log.LogInfo(restored ? $"Hangover restored from the save: {seconds:0} s left."
+                Plugin.Log.LogInfo(restored ? $"Hangover resumed: {seconds:0} s left."
                                             : $"Hangover: {seconds:0} s. A Bloody Ivar cures it.");
             }
             catch (System.Exception ex) { Plugin.Report("Hangover", ex); }
