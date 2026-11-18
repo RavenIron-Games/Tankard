@@ -21,12 +21,16 @@ namespace RavenIron.Tankard.Core
     /// </summary>
     public static class Intoxication
     {
+        /// <summary>A FULL meter: symptoms peak here, and it is what the Blackout tier and the 0-100 numbers refer to.</summary>
         public const float Max = 100f;
+        /// <summary>The ceiling. Since 2026-11-18 the meter runs past full: the part over the blackout limit is what makes
+        /// a blackout likelier (CoreBlackout), and it takes longer to sober from. 200 is about 13 minutes at the default rate.</summary>
+        public const float Cap = 200f;
 
         /// <summary>Lowest level of each tier, indexed by <see cref="Tier"/>. Sober starts at zero by definition.</summary>
         public static readonly float[] TierFloor = { 0f, 8f, 25f, 50f, 75f, 95f };
 
-        /// <summary>Adds a drink. Negative or non-finite potency adds nothing; the result never leaves [0, Max].</summary>
+        /// <summary>Adds a drink. Negative or non-finite potency adds nothing; the result never leaves [0, Cap].</summary>
         public static float Add(float level, float potency)
         {
             level = IsFinite(level) ? Clamp(level) : 0f; // clamp BEFORE adding: -50 + 10 is 10, not 0
@@ -72,7 +76,7 @@ namespace RavenIron.Tankard.Core
             return level <= target ? 0f : (level - target) / perSecond;
         }
 
-        private static float Clamp(float v) => v < 0f ? 0f : (v > Max ? Max : v);
+        private static float Clamp(float v) => v < 0f ? 0f : (v > Cap ? Cap : v);
         private static bool IsFinite(float v) => !float.IsNaN(v) && !float.IsInfinity(v);
     }
 }

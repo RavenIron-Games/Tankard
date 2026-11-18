@@ -97,10 +97,10 @@ namespace RavenIron.Tankard.Core
             if (string.IsNullOrEmpty(s)) return st;
             string[] p = s.Split(';');
             if (p.Length < 5) return st;
-            st.Level = Clamp(P(p[0]), Intoxication.Max);
+            st.Level = Clamp(P(p[0]), Intoxication.Cap);
             int.TryParse(p[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out st.Binge);
             if (st.Binge < 0) st.Binge = 0;
-            st.Peak = Clamp(P(p[2]), Intoxication.Max);
+            st.Peak = Clamp(P(p[2]), Intoxication.Cap);
             st.BlackedOut = p[3] == "1";
             st.HangoverLeft = Clamp(P(p[4]), Effects.HangoverAfterBlackoutSeconds);
             return st;

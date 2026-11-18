@@ -5,40 +5,49 @@ using System.Globalization;
 namespace RavenIron.Tankard.Core
 {
     /// <summary>
-    /// The blackout, as pure rules (decided by the owner 2026-11-17):
-    ///  - From the 12th drink of one binge you can black out, and every drink after that makes it likelier.
-    ///    A binge is every drink since you were last fully sober.
-    ///  - You wake somewhere else, and the more you drank past 12 the further from the drinking spot.
+    /// The blackout, as pure rules. Blood alcohol decides it (owner, 2026-11-18: "12 drinks is a little unbalanced. It
+    /// should be BAC related"), replacing the 2026-11-17 rule of "from the 12th drink of a binge":
+    ///  - The meter runs past full (100) up to <see cref="Intoxication.Cap"/>. Everything over the LIMIT (100 by default)
+    ///    is "over the limit", and only a drink that leaves you over it can black you out.
+    ///  - The further over, the likelier: 10% just over, +1% per point (so 60% at 150, certain from 190).
+    ///  - You wake 300 m away plus 25 m per point over, and leave 25% of your stacks plus 1% per point over (all at 175).
+    ///  - Tolerance matters by itself: a hardened drinker takes less from each cup, so it takes them more to get over.
     ///  - You only ever wake in a biome your world's boss kills have opened, on dry land.
     ///  - Your gear stays where you drank (vanilla's tombstone), and your map is gone until you get back there.
     /// No game types here: the world is passed in as two functions, so the harness can run the picker on a fake map.
     /// </summary>
     public static class Blackout
     {
-        public const int DefaultMinDrinks = 12;
-        public const double FirstChance = 0.10;      // on the 12th drink
-        public const double ChancePerExtraDrink = 0.10;
-        public const float FirstDistance = 300f;     // metres from the drinking spot, on the 12th drink
-        public const float DistancePerExtraDrink = 250f;
+        public const float DefaultLimit = 100f;       // the meter level past which a drink can black you out
+        public const double FirstChance = 0.10;      // a drink that leaves you only just over the limit
+        public const double ChancePerPoint = 0.01;
+        public const float FirstDistance = 300f;     // metres from the drinking spot, just over the limit
+        public const float DistancePerPoint = 25f;
         public const float WorldRadius = 10000f;     // WorldGenerator.worldSize (decompiled)
         public const float EdgeMargin = 500f;         // never wake at the edge of the world
         public const float HomeRadius = 50f;          // how close to the drinking spot counts as home again
 
-        /// <summary>Chance of blacking out on this drink, given how many drinks the binge now holds (this one included).</summary>
-        public static double Chance(int drinksInBinge, int minDrinks = DefaultMinDrinks)
+        /// <summary>Points over the limit at this meter level: 0 at or under it, never negative or NaN.</summary>
+        public static float Over(float level, float limit = DefaultLimit)
         {
-            if (minDrinks < 1) minDrinks = 1;
-            if (drinksInBinge < minDrinks) return 0.0;
-            double c = FirstChance + ChancePerExtraDrink * (drinksInBinge - minDrinks);
+            if (float.IsNaN(level) || float.IsInfinity(level) || float.IsNaN(limit) || float.IsInfinity(limit)) return 0f;
+            float o = level - limit;
+            return o > 0f ? o : 0f;
+        }
+
+        /// <summary>Chance of blacking out on a drink that leaves you <paramref name="over"/> points over the limit.</summary>
+        public static double Chance(float over)
+        {
+            if (float.IsNaN(over) || over <= 0f) return 0.0;
+            double c = FirstChance + ChancePerPoint * over;
             return c > 1.0 ? 1.0 : c;
         }
 
-        /// <summary>How far from the drinking spot you wake. Grows with every drink past the minimum, capped by the world.</summary>
-        public static float Distance(int drinksInBinge, int minDrinks = DefaultMinDrinks)
+        /// <summary>How far from the drinking spot you wake, <paramref name="over"/> points over. Capped by the world.</summary>
+        public static float Distance(float over)
         {
-            if (minDrinks < 1) minDrinks = 1;
-            int extra = Math.Max(0, drinksInBinge - minDrinks);
-            float d = FirstDistance + DistancePerExtraDrink * extra;
+            if (float.IsNaN(over) || over < 0f) over = 0f;
+            float d = FirstDistance + DistancePerPoint * over;
             float max = WorldRadius - EdgeMargin;
             return d > max ? max : d;
         }
@@ -74,18 +83,18 @@ namespace RavenIron.Tankard.Core
             return new Streak { LastDay = today, Days = 1, Count = 1 }; // a gap, or the clock went backwards: a fresh start
         }
 
-        /// <summary>Where you wake, given the drinks and the streak this blackout belongs to (already advanced).</summary>
-        public static float DistanceFor(int drinksInBinge, int minDrinks, Streak s)
+        /// <summary>Where you wake, given how far over the limit you were and the streak this blackout belongs to (already advanced).</summary>
+        public static float DistanceFor(float over, Streak s)
         {
-            float d = Distance(drinksInBinge, minDrinks) * (1f + StreakDistanceStep * Math.Max(0, s.Count - 1));
+            float d = Distance(over) * (1f + StreakDistanceStep * Math.Max(0, s.Count - 1));
             if (s.IsTotal && d < FarDistance) d = FarDistance;
             float max = WorldRadius - EdgeMargin;
             return d > max ? max : d;
         }
 
-        /// <summary>The share of your stacks left behind, given the drinks and the streak (already advanced).</summary>
-        public static double LossFor(int drinksInBinge, int minDrinks, Streak s) =>
-            s.IsTotal ? 1.0 : LossFraction(drinksInBinge, minDrinks);
+        /// <summary>The share of your stacks left behind, given how far over the limit you were and the streak (already advanced).</summary>
+        public static double LossFor(float over, Streak s) =>
+            s.IsTotal ? 1.0 : LossFraction(over);
 
         public static string FormatStreak(Streak s) =>
             string.Format(CultureInfo.InvariantCulture, "{0};{1};{2}", s.LastDay, s.Days, s.Count);
@@ -107,15 +116,14 @@ namespace RavenIron.Tankard.Core
 
         // ---- what you leave behind -------------------------------------------------------------------------------
 
-        public const double FirstLoss = 0.25;          // a quarter of your stacks on the 12th drink
-        public const double LossPerExtraDrink = 0.10;  // the owner, 2026-11-17: "the more you drink after 12 the more you lose"
+        public const double FirstLoss = 0.25;      // a quarter of your stacks just over the limit
+        public const double LossPerPoint = 0.01;   // the owner, 2026-11-17: "the more you drink ... the more you lose"
 
-        /// <summary>Fraction of your item stacks left in the pile at the drinking spot. 0 below the minimum, 1 at most.</summary>
-        public static double LossFraction(int drinksInBinge, int minDrinks = DefaultMinDrinks)
+        /// <summary>Fraction of your item stacks left in the pile at the drinking spot. 0 at or under the limit, 1 at most.</summary>
+        public static double LossFraction(float over)
         {
-            if (minDrinks < 1) minDrinks = 1;
-            if (drinksInBinge < minDrinks) return 0.0;
-            double f = FirstLoss + LossPerExtraDrink * (drinksInBinge - minDrinks);
+            if (float.IsNaN(over) || over <= 0f) return 0.0;
+            double f = FirstLoss + LossPerPoint * over;
             return f > 1.0 ? 1.0 : f;
         }
 

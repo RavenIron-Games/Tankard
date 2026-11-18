@@ -39,7 +39,7 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<bool> Stumbles;
         internal static ConfigEntry<float> SymptomStrength;
         internal static ConfigEntry<bool> Blackouts;
-        internal static ConfigEntry<int> BlackoutMinDrinks;
+        internal static ConfigEntry<float> BlackoutOver;
         internal static ConfigEntry<bool> BlackoutLeavesGear;
         internal static ConfigEntry<float> MapRememberSeconds;
         internal static ConfigEntry<bool> PreferExploredGround;
@@ -92,10 +92,11 @@ namespace RavenIron.Tankard
             Blackouts = Config.Bind("5 - Blackout", "Blackouts", true,
                 "Drink too much in one binge and you black out: you wake far away, some of your things stay where you were " +
                 "drinking, and your map is gone until you get back there. Read on your own game.");
-            BlackoutMinDrinks = Config.Bind("5 - Blackout", "MinDrinks", Blackout.DefaultMinDrinks,
-                new ConfigDescription("Drinks in one binge before a blackout is possible: 10% on that drink, +10% each drink after. " +
-                                      "Each drink past it also sends you 250 m further and leaves 10% more of your things behind.",
-                    new AcceptableValueRange<int>(1, 100)));
+            BlackoutOver = Config.Bind("5 - Blackout", "BlackoutOver", Blackout.DefaultLimit,
+                new ConfigDescription("The meter runs past full, up to " + Intoxication.Cap + ". A drink that leaves you over this " +
+                                      "level can black you out: 10% just over it, +1% per point over (60% at 50 over). Each point " +
+                                      "over also sends you 25 m further and leaves 1% more of your things behind. Replaces MinDrinks.",
+                    new AcceptableValueRange<float>(25f, 195f)));
             BlackoutLeavesGear = Config.Bind("5 - Blackout", "LeavesGear", true,
                 "On, a blackout leaves a share of your things in a grave at the drinking spot (25% of your stacks on the first " +
                 "possible drink, up to everything). Off, you keep it all. Either way, ore and anything else that can't go " +

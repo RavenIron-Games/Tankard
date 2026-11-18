@@ -306,7 +306,7 @@ namespace RavenIron.Tankard.Tests
             }
             finally { System.Globalization.CultureInfo.CurrentCulture = saved; }
             var junk = MeterState.Parse("NaN;-4;1e9;x;-1");
-            Check(junk.Level == 0f && junk.Binge == 0 && junk.Peak == Intoxication.Max && !junk.BlackedOut && junk.HangoverLeft == 0f, "a damaged save clamps");
+            Check(junk.Level == 0f && junk.Binge == 0 && junk.Peak == Intoxication.Cap && !junk.BlackedOut && junk.HangoverLeft == 0f, "a damaged save clamps");
             Check(MeterState.Parse(null).Level == 0f && MeterState.Parse("12;3").Level == 0f, "a missing or short save is sober");
         }
 
@@ -324,7 +324,7 @@ namespace RavenIron.Tankard.Tests
                   "a feast is 'a little': less than one tier's width");
             float lvl = Food.Eat(80f, Food.Sobering(85f, 28f, 0f));
             Check(lvl == 70f && Intoxication.TierOf(lvl) == Tier.Drunk, "one feast pulls Hammered at 80 down to Drunk, not sober");
-            Check(Food.Eat(1f, Food.MaxPerMeal) == 0f && Food.Eat(float.NaN, 3f) == 0f && Food.Eat(500f, 0f) == Intoxication.Max && Food.Eat(50f, float.NaN) == 50f, "eating never drives the meter below zero or past full");
+            Check(Food.Eat(1f, Food.MaxPerMeal) == 0f && Food.Eat(float.NaN, 3f) == 0f && Food.Eat(500f, 0f) == Intoxication.Cap && Food.Eat(50f, float.NaN) == 50f, "eating never drives the meter below zero or past full");
         }
 
         private static void ToleranceTests()
@@ -376,27 +376,34 @@ namespace RavenIron.Tankard.Tests
         private static void BlackoutTests()
         {
             // Chance: zero below 12, 10% on the 12th, climbing 10% a drink, certain by the 21st.
-            for (int n = 0; n < 12; n++) Check(Blackout.Chance(n) == 0.0, $"no blackout on drink {n}");
-            Near((float)Blackout.Chance(12), 0.10f, "10% on the 12th drink");
-            Near((float)Blackout.Chance(15), 0.40f, "40% on the 15th");
-            Check(Blackout.Chance(21) == 1.0 && Blackout.Chance(500) == 1.0, "certain from the 21st, and capped");
-            for (int n = 12; n < 30; n++) Check(Blackout.Chance(n + 1) >= Blackout.Chance(n), $"chance never falls ({n})");
-            Check(Blackout.Chance(5, 5) > 0 && Blackout.Chance(4, 5) == 0, "the minimum is configurable");
-            Check(Blackout.Chance(1, 0) > 0, "a zero minimum is treated as one, never as 'always'... on the first drink");
+            // Blood alcohol decides it (owner, 2026-11-18), not a drink count.
+            Check(Blackout.Over(100f) == 0f && Blackout.Over(60f) == 0f && Blackout.Over(float.NaN) == 0f, "at or under the limit is not over");
+            Near(Blackout.Over(160f), 60f, "160 is 60 over");
+            Near(Blackout.Over(160f, 150f), 10f, "the limit is configurable");
+            Check(Blackout.Chance(0f) == 0.0 && Blackout.Chance(-5f) == 0.0 && Blackout.Chance(float.NaN) == 0.0, "no chance at or under the limit");
+            Near((float)Blackout.Chance(0.001f), 0.10f, "10% just over");
+            Near((float)Blackout.Chance(50f), 0.60f, "60% at 50 over");
+            Check(Blackout.Chance(90f) == 1.0 && Blackout.Chance(100f) == 1.0, "certain from 90 over, and capped");
+            for (int n = 0; n < 100; n++) Check(Blackout.Chance(n + 1) >= Blackout.Chance(n), $"chance never falls ({n})");
+            Near(Blackout.Distance(0f), Blackout.FirstDistance, "just over lands nearby");
+            Near(Blackout.Distance(40f), 300f + 40 * 25f, "40 over is 1.3 km");
+            Check(Blackout.Distance(100000f) == Blackout.WorldRadius - Blackout.EdgeMargin && Blackout.Distance(float.NaN) == Blackout.FirstDistance,
+                  "distance is capped by the world, and a bad number lands nearby");
+            Check(Blackout.LossFraction(0f) == 0.0, "nothing lost at the limit");
+            Near((float)Blackout.LossFraction(1f), 0.26f, "a quarter and a bit just over");
+            Near((float)Blackout.LossFraction(50f), 0.75f, "three quarters at 50 over");
+            Check(Blackout.LossFraction(75f) == 1.0 && Blackout.LossFraction(99f) == 1.0, "everything from 75 over, capped");
+            for (int n = 0; n < 100; n++) Check(Blackout.LossFraction(n + 1) >= Blackout.LossFraction(n), $"loss never falls ({n})");
 
-            // Distance: grows with every drink past 12, never past the world's edge margin.
-            Near(Blackout.Distance(12), Blackout.FirstDistance, "first blackout lands nearby");
-            Check(Blackout.Distance(13) > Blackout.Distance(12) && Blackout.Distance(20) > Blackout.Distance(13), "more drinks, further away");
-            Near(Blackout.Distance(20), 300f + 8 * 250f, "20 drinks is 2.3 km");
-            Check(Blackout.Distance(100000) == Blackout.WorldRadius - Blackout.EdgeMargin, "distance is capped by the world");
-            Check(Blackout.Distance(3) == Blackout.FirstDistance, "below the minimum the distance is the base (unused, but defined)");
-
-            // Loss: 25% on the 12th, +10% a drink, everything by the 20th.
-            Check(Blackout.LossFraction(11) == 0.0, "nothing lost below 12");
-            Near((float)Blackout.LossFraction(12), 0.25f, "a quarter on the 12th");
-            Near((float)Blackout.LossFraction(17), 0.75f, "three quarters on the 17th");
-            Check(Blackout.LossFraction(20) == 1.0 && Blackout.LossFraction(99) == 1.0, "everything from the 20th, capped");
-            for (int n = 12; n < 30; n++) Check(Blackout.LossFraction(n + 1) >= Blackout.LossFraction(n), $"loss never falls ({n})");
+            // What that means at the bar, with the real drinks, sobering ignored (back to back).
+            var fireB = Drinks.All.First(d => d.PrefabName == "TK_FireWine");
+            var ciderB = Drinks.All.First(d => d.PrefabName == "TK_RaspberryCider");
+            float lv = 0f; for (int i = 0; i < 2; i++) lv = Intoxication.Add(lv, Tolerance.Hit(fireB.Abv, 0f));
+            Check(Blackout.Chance(Blackout.Over(lv)) >= 0.6, $"a new drinker on two fire wines is likely out ({lv:0}, {Blackout.Chance(Blackout.Over(lv)):P0})");
+            lv = 0f; int cups = 0; while (Blackout.Over(lv) <= 0f && cups < 50) { lv = Intoxication.Add(lv, Tolerance.Hit(fireB.Abv, Tolerance.Max)); cups++; }
+            Check(cups == 4, $"a hardened drinker needs four fire wines to get over the limit ({cups})");
+            lv = 0f; for (int i = 0; i < 12; i++) lv = Intoxication.Decay(Intoxication.Add(lv, Tolerance.Hit(ciderB.Abv, 0f)), 60f, 0.25f);
+            Check(Blackout.Over(lv) == 0f, $"twelve ciders, a minute apart, never get you over ({lv:0})");
 
             var rng = new Random(5);
             Check(Blackout.PickLost(0, 0.5, rng).Count == 0 && Blackout.PickLost(10, 0.0, rng).Count == 0 && Blackout.PickLost(10, double.NaN, rng).Count == 0,
@@ -539,14 +546,14 @@ namespace RavenIron.Tankard.Tests
             Check(Blackout.Advance(d2, 5).Days == 1, "time going backwards (another world, a restore) starts fresh");
             Check(Blackout.Advance(st, -7).LastDay >= 0, "a bad day number never goes negative");
             // Distance and loss with the streak.
-            Near(Blackout.DistanceFor(12, 12, st), Blackout.FirstDistance, "a first blackout is the base distance");
-            Near(Blackout.DistanceFor(12, 12, same), Blackout.FirstDistance * 1.5f, "each earlier blackout adds half again");
-            Near(Blackout.DistanceFor(12, 12, d2), Blackout.FirstDistance * 2f, "the third blackout of a streak is double");
-            Check(Blackout.DistanceFor(12, 12, d3) >= Blackout.FarDistance, "day three throws you at least 5 km");
-            Check(Blackout.DistanceFor(40, 12, d3) <= Blackout.WorldRadius - Blackout.EdgeMargin, "but never off the world");
-            Check(Blackout.LossFor(12, 12, d2) == Blackout.LossFraction(12, 12), "below day three the drinks decide the loss");
-            Check(Blackout.LossFor(12, 12, d3) == 1.0, "day three: everything");
-            Check(Blackout.DistanceFor(20, 12, same) > Blackout.DistanceFor(12, 12, same), "more drinks still means further, inside a streak");
+            Near(Blackout.DistanceFor(0f, st), Blackout.FirstDistance, "a first blackout is the base distance");
+            Near(Blackout.DistanceFor(0f, same), Blackout.FirstDistance * 1.5f, "each earlier blackout adds half again");
+            Near(Blackout.DistanceFor(0f, d2), Blackout.FirstDistance * 2f, "the third blackout of a streak is double");
+            Check(Blackout.DistanceFor(0f, d3) >= Blackout.FarDistance, "day three throws you at least 5 km");
+            Check(Blackout.DistanceFor(100f, d3) <= Blackout.WorldRadius - Blackout.EdgeMargin, "but never off the world");
+            Check(Blackout.LossFor(20f, d2) == Blackout.LossFraction(20f), "below day three how far over decides the loss");
+            Check(Blackout.LossFor(0f, d3) == 1.0, "day three: everything");
+            Check(Blackout.DistanceFor(40f, same) > Blackout.DistanceFor(0f, same), "further over still means further, inside a streak");
             // Saved state.
             var rt2 = Blackout.ParseStreak(Blackout.FormatStreak(d3));
             Check(rt2.LastDay == 12 && rt2.Days == 3 && rt2.Count == 4, "a streak round-trips");
@@ -605,7 +612,10 @@ namespace RavenIron.Tankard.Tests
         {
             // ---- Add ---------------------------------------------------------------------------------------------
             Near(Intoxication.Add(0f, 10f), 10f, "a drink adds its potency");
-            Near(Intoxication.Add(95f, 30f), Intoxication.Max, "the meter caps at Max");
+            Near(Intoxication.Add(95f, 30f), 125f, "the meter runs past full");
+            Near(Intoxication.Add(190f, 30f), Intoxication.Cap, "and caps at the ceiling");
+            Check(Intoxication.TierOf(Intoxication.Cap) == Tier.Blackout && Intoxication.Severity(Intoxication.Cap) == 1f, "past full is still Blackout, symptoms capped");
+            Near(Intoxication.SecondsUntil(Intoxication.Cap, 0f, 0.25f), 800f, "a full ceiling is about 13 minutes from sober");
             Near(Intoxication.Add(20f, -5f), 20f, "negative potency adds nothing");
             Near(Intoxication.Add(20f, 0f), 20f, "zero potency adds nothing");
             Near(Intoxication.Add(20f, float.NaN), 20f, "NaN potency adds nothing");

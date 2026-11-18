@@ -71,3 +71,9 @@
   passes while you're logged out.
 - **Dying ends a blackout** and gives your map back. You have two graves to fetch instead.
 - Settings: `DrinkEffects`, `LiquidCourage`, `Hangovers`, `PerDrinkFermentTimes`.
+- **Blackouts follow your blood alcohol, not a drink count.** The meter now runs past full, up to 200, and anything over
+  100 is "over the limit" (sobering from 200 takes about 13 minutes). Only a drink that leaves you over the limit can
+  black you out: 10% just over, 1% more per point, so 60% at 150 and certain from 190. You wake 300 m away plus 25 m per
+  point over, and leave a quarter of your stacks plus 1% per point (everything from 175). Tolerance shrinks every hit,
+  so a hardened drinker needs four fire wines just to get over, while two flatten a new one, and twelve ciders never
+  will. The streak rules are unchanged. `MinDrinks` is replaced by `BlackoutOver` (default 100).

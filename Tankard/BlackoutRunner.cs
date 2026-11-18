@@ -89,17 +89,19 @@ namespace RavenIron.Tankard
         public static void AfterDrink(Player p)
         {
             if (!Plugin.Enabled.Value || !Plugin.Blackouts.Value || p == null) return;
-            int min = Plugin.BlackoutMinDrinks.Value;
-            double chance = Blackout.Chance(Meter.BingeDrinks, min);
+            // Blood alcohol decides it (owner, 2026-11-18): only a drink that leaves you over the limit can do it.
+            float over = Blackout.Over(Meter.Level, Plugin.BlackoutOver.Value);
+            double chance = Blackout.Chance(over);
             if (chance <= 0.0) return;
             double roll = Rng.NextDouble();
-            Plugin.Log.LogInfo($"Blackout roll on drink {Meter.BingeDrinks}: {roll:0.000} against {chance:0.00}.");
+            Plugin.Log.LogInfo($"Blackout roll at meter {Meter.Level:0.0} ({over:0.0} over the limit of {Plugin.BlackoutOver.Value:0}), " +
+                               $"drink {Meter.BingeDrinks}: {roll:0.000} against {chance:0.00}.");
             if (roll >= chance) return;
-            try { Execute(p, Meter.BingeDrinks, min); }
+            try { Execute(p, over); }
             catch (Exception ex) { Plugin.Log.LogError($"Blackout failed part-way: {ex}"); }
         }
 
-        private static void Execute(Player p, int drinks, int min)
+        private static void Execute(Player p, float over)
         {
             if (p.IsDead() || p.IsTeleporting() || p.InCutscene())
             {
@@ -120,8 +122,9 @@ namespace RavenIron.Tankard
             Blackout.Streak before = Blackout.ParseStreak(savedStreak);
             int today = EnvMan.instance != null && ZNet.instance != null ? EnvMan.instance.GetDay() : Math.Max(0, before.LastDay);
             Blackout.Streak streak = Blackout.Advance(before, today);
-            float distance = Blackout.DistanceFor(drinks, min, streak);
-            double loss = Blackout.LossFor(drinks, min, streak);
+            float distance = Blackout.DistanceFor(over, streak);
+            double loss = Blackout.LossFor(over, streak);
+            int drinks = Meter.BingeDrinks;
             WorldGenerator wg = WorldGenerator.instance;
             float water = ZoneSystem.instance.m_waterLevel;
 
@@ -172,7 +175,7 @@ namespace RavenIron.Tankard
             Meter.WakeFromBlackout();
             float actual = new Vector2(lx - home.x, lz - home.z).magnitude;
             bool onGenerated = generated != null && generated.Contains(ZoneSystem.GetZone(landing));
-            Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, aimed {distance:0} m, woke {actual:0} m away " +
+            Plugin.Log.LogInfo($"BLACKOUT {over:0.0} over the limit, after {drinks} drinks: {left} stack(s) left at {home}, aimed {distance:0} m, woke {actual:0} m away " +
                                $"at ({lx:0}, {lz:0}) on {(onGenerated ? "already-generated" : "NEW")} ground. " +
                                $"Streak: day {streak.Days} in a row (in-game day {streak.LastDay}), blackout {streak.Count} of the streak, loss {loss:P0}" +
                                (streak.IsTotal ? ", TOTAL." : "."));

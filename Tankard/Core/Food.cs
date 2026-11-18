@@ -33,7 +33,7 @@ namespace RavenIron.Tankard.Core
         /// (Intoxication.Add refuses a negative amount by design, so eating has its own path.)</summary>
         public static float Eat(float level, float points)
         {
-            float l = float.IsNaN(level) || float.IsInfinity(level) || level < 0f ? 0f : (level > Intoxication.Max ? Intoxication.Max : level);
+            float l = float.IsNaN(level) || float.IsInfinity(level) || level < 0f ? 0f : (level > Intoxication.Cap ? Intoxication.Cap : level);
             float next = l - Clean(points);
             return next < 0f ? 0f : next;
         }
