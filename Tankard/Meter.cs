@@ -48,10 +48,13 @@ namespace RavenIron.Tankard
             }
         }
 
-        /// <summary>After a blackout you come round still drunk, but the binge that did it is spent.</summary>
+        /// <summary>
+        /// After a blackout you come round still hammered (the owner: "you don't immediately sober up from a blackout"),
+        /// about five minutes from sober at the default rate, but the binge that did it is spent.
+        /// </summary>
         public static void WakeFromBlackout()
         {
-            Level = Intoxication.TierFloor[(int)Tier.Drunk];
+            Level = Intoxication.TierFloor[(int)Tier.Hammered];
             BingeDrinks = 0;
         }
 

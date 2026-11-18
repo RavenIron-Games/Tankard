@@ -205,15 +205,28 @@ namespace RavenIron.Tankard.Core
         // The big map opens under a fog; only time spent LOOKING at it (the large map open) clears the fog. When it is
         // clear you remember everything and the minimap returns too. Walking home still restores it at once.
 
-        public const float DefaultRememberSeconds = 90f;
+        // The owner after the first fog run: "the map comes back too fast, slow it down, you don't immediately sober up
+        // from a blackout". So: 5 minutes of looking when sober (was 90 s), and the drunker you still are, the slower
+        // it comes: at full drunk a tenth of the speed. You remember as you sober.
+        public const float DefaultRememberSeconds = 300f;
+        public const float DrunkRememberFloor = 0.1f;
+
+        /// <summary>How fast memory returns at a symptom severity (0 sober, 1 fully drunk): 1 sober, 0.1 fully drunk.</summary>
+        public static float RememberRate(float severity)
+        {
+            if (float.IsNaN(severity) || severity < 0f) severity = 0f;
+            if (severity > 1f) severity = 1f;
+            return 1f - (1f - DrunkRememberFloor) * severity;
+        }
 
         /// <summary>Progress after looking for <paramref name="dt"/> more seconds. Never falls, never passes 1.</summary>
-        public static float Remember(float progress, float dt, float secondsToRemember)
+        public static float Remember(float progress, float dt, float secondsToRemember, float severity = 0f)
         {
             if (float.IsNaN(progress) || progress < 0f) progress = 0f;
             if (progress > 1f) progress = 1f;
             if (float.IsNaN(dt) || dt <= 0f || float.IsNaN(secondsToRemember) || secondsToRemember <= 0f) return progress;
-            float p = progress + Math.Min(dt, 0.25f) / secondsToRemember; // a frame hitch is not a quarter-minute of memory
+            // A frame hitch is not a quarter-minute of memory.
+            float p = progress + Math.Min(dt, 0.25f) * RememberRate(severity) / secondsToRemember;
             return p > 1f ? 1f : p;
         }
 

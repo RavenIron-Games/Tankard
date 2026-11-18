@@ -375,7 +375,15 @@ namespace RavenIron.Tankard.Tests
             // Remembering: only looking advances it, it never goes back, and 90 s of looking finishes it.
             float mem = 0f;
             for (int f = 0; f < 90 * 60; f++) mem = Blackout.Remember(mem, 1f / 60f, 90f);
-            Check(mem > 0.999f, $"90 s of looking at 60 fps remembers it all ({mem:0.0000})");
+            Check(mem > 0.999f, $"90 s of looking at 60 fps remembers it all when set to 90 ({mem:0.0000})");
+            Check(Blackout.DefaultRememberSeconds >= 300f, "the default is slow: five minutes of looking (the owner: 'too fast')");
+            // Drunk, it comes back slower: a tenth of the speed at full severity.
+            float soberStep = Blackout.Remember(0f, 0.1f, 300f, 0f), drunkStep = Blackout.Remember(0f, 0.1f, 300f, 1f);
+            Check(Math.Abs(drunkStep - soberStep * Blackout.DrunkRememberFloor) < 1e-7f, $"fully drunk remembers at a tenth ({drunkStep} vs {soberStep})");
+            Check(Blackout.RememberRate(0.5f) > Blackout.RememberRate(1f) && Blackout.RememberRate(0.5f) < Blackout.RememberRate(0f), "rate falls as you get drunker");
+            Check(Blackout.RememberRate(float.NaN) == 1f && Blackout.RememberRate(-1f) == 1f &&
+                  Math.Abs(Blackout.RememberRate(5f) - Blackout.DrunkRememberFloor) < 1e-6f, "rate clamps bad severity");
+            Check(Blackout.Remember(0f, 0.1f, 300f, 1f) > 0f, "even blind drunk, looking brings back a little");
             Check(Blackout.Remember(0.5f, 10f, 90f) <= 0.5f + 0.25f / 90f + 1e-6f, "a 10 s frame hitch counts as a quarter second");
             Check(Blackout.Remember(0.5f, 0f, 90f) == 0.5f && Blackout.Remember(0.5f, -1f, 90f) == 0.5f && Blackout.Remember(0.5f, float.NaN, 90f) == 0.5f,
                   "no time, no memory; never backwards");

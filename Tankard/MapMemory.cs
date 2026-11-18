@@ -7,7 +7,7 @@ namespace RavenIron.Tankard
 {
     /// <summary>
     /// After a blackout the big map opens under a fog, and only LOOKING at it clears the fog: you start remembering.
-    /// About 90 s of looking (MapRememberSeconds), across as many glances as you like, brings it all back, and then the
+    /// About 5 minutes of looking when sober, slower while still drunk (MapRememberSeconds), across as many glances as you like, brings it all back, and then the
     /// minimap returns too. Walking back to the drinking spot still restores everything at once. Progress is saved in
     /// Player.m_customData per world, so a relog keeps what you have remembered.
     ///
@@ -20,6 +20,7 @@ namespace RavenIron.Tankard
         private static float _progress;
         private static bool _loaded;
         private static float _saveTimer;
+        private static bool _wasLooking;
         private static GameObject _fog;
         private static Image _fogImage;
 
@@ -59,10 +60,22 @@ namespace RavenIron.Tankard
                 }
 
                 bool looking = Minimap.instance != null && Minimap.instance.m_mode == Minimap.MapMode.Large;
+                if (looking != _wasLooking)
+                {
+                    // One line per open and close: the first fog run produced no line at all, so whether the fog was even
+                    // drawn could not be told from the log. The fog's on-screen size is in it: 0 x 0 would mean it is
+                    // parented to something with no area and is invisible.
+                    _wasLooking = looking;
+                    var rt = _fog != null ? (RectTransform)_fog.transform : null;
+                    Plugin.Log.LogInfo(looking
+                        ? $"Map opened during a blackout: {_progress:P0} remembered, fog opacity {Blackout.FogAlpha(_progress):0.00}, " +
+                          $"fog rect {(rt != null ? rt.rect.width.ToString("0") + " x " + rt.rect.height.ToString("0") : "not built yet")}."
+                        : $"Map closed: {_progress:P0} remembered.");
+                }
                 if (looking)
                 {
                     float before = _progress;
-                    _progress = Blackout.Remember(_progress, dt, Plugin.MapRememberSeconds.Value);
+                    _progress = Blackout.Remember(_progress, dt, Plugin.MapRememberSeconds.Value, Meter.SymptomSeverity);
                     int m = Blackout.MilestoneCrossed(before, _progress);
                     if (m >= 0)
                     {

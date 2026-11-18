@@ -80,8 +80,9 @@ namespace RavenIron.Tankard
                 "through a portal stays behind, and a world set to keep inventory on death keeps it here too.");
             MapRememberSeconds = Config.Bind("5 - Blackout", "MapRememberSeconds", Blackout.DefaultRememberSeconds,
                 new ConfigDescription("After a blackout the big map opens under a fog that clears only while you look at it: you " +
-                                      "start remembering. This is how many seconds of looking bring it all back (the minimap " +
-                                      "returns then too). Walking back to the drinking spot restores it at once either way.",
+                                      "start remembering. This is how many seconds of looking bring it all back when you are " +
+                                      "sober; while still drunk it is slower, down to a tenth of the speed when fully drunk " +
+                                      "(the minimap returns when it is clear). Walking back to the drinking spot restores it at once.",
                     new AcceptableValueRange<float>(5f, 1800f)));
             try
             {
