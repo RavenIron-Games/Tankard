@@ -452,9 +452,9 @@ namespace RavenIron.Tankard.Tests
 
             // The owner's point: an end-game drink handles a new player, and a hardened drinker handles it.
             Check(Tolerance.Hit(fire.Abv, 0f) >= Intoxication.TierFloor[(int)Tier.Hammered],
-                  $"one Fire wine puts a new player at Hammered or worse ({Tolerance.Hit(fire.Abv, 0f):0})");
+                  $"one Surtr's Kiss puts a new player at Hammered or worse ({Tolerance.Hit(fire.Abv, 0f):0})");
             Check(Tolerance.Hit(fire.Abv, Tolerance.Max) < Intoxication.TierFloor[(int)Tier.Drunk],
-                  $"at 69 tolerance one Fire wine is under Drunk ({Tolerance.Hit(fire.Abv, Tolerance.Max):0})");
+                  $"at 69 tolerance one Surtr's Kiss is under Drunk ({Tolerance.Hit(fire.Abv, Tolerance.Max):0})");
             Check(Tolerance.Hit(ale.Abv, Tolerance.Max) < Intoxication.TierFloor[(int)Tier.Buzzed],
                   $"at 69 an ale barely registers ({Tolerance.Hit(ale.Abv, Tolerance.Max):0.0})");
             Near(Tolerance.Hit(10f, 0f), 20f, "the hit is ABV x 2 at tolerance 0");
@@ -473,7 +473,7 @@ namespace RavenIron.Tankard.Tests
             Check(Tolerance.AfterDrink(60f, 5f) - 60f < Tolerance.AfterDrink(0f, 5f), "the gains slow as you climb");
             float tol = 0f; int n = 0;
             while (tol < Tolerance.Max && n < 10000) { tol = Tolerance.AfterDrink(tol, fire.Abv); n++; }
-            Check(tol == Tolerance.Max && n < 200, $"Fire wine alone gets you to 69 ({n} drinks)");
+            Check(tol == Tolerance.Max && n < 200, $"Surtr's Kiss alone gets you to 69 ({n} drinks)");
             tol = 0f; n = 0;
             while (Tolerance.Shown(tol) < 30 && n < 10000) { tol = Tolerance.AfterDrink(tol, ale.Abv); n++; }
             Check(n > 40 && n < 200, $"ale alone takes a good while to reach 30 ({n} drinks)");

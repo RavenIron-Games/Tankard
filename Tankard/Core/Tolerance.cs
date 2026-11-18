@@ -8,9 +8,9 @@ namespace RavenIron.Tankard.Core
     /// drinks, higher stat, that maxes out at 69. So we can make the drinks have alcohol content so end game drinks for a
     /// new player gets them handled."
     ///
-    ///  - Every drink has an ABV. Its hit on the meter is ABV x 2 at tolerance 0: a new player's first Fire wine (40%)
+    ///  - Every drink has an ABV. Its hit on the meter is ABV x 2 at tolerance 0: a new player's first Surtr's Kiss (40%)
     ///    is 80 points, Blackout tier from one cup.
-    ///  - Tolerance runs 0 to 69 and scales the hit down to <see cref="FloorAtMax"/> (40%) at the top: the same Fire wine
+    ///  - Tolerance runs 0 to 69 and scales the hit down to <see cref="FloorAtMax"/> (40%) at the top: the same Surtr's Kiss
     ///    is 32 for a hardened drinker, and ale barely registers.
     ///  - Every drink raises tolerance by ABV / 10, slowing as you climb (times 1 - tol/80, so it still reaches 69) and
     ///    never past 69. Strong drinks train you faster.

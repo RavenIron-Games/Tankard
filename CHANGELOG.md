@@ -2,6 +2,8 @@
 
 ## 0.1.0 (unreleased)
 
+- **New drink names**, because the old ones matched another mod word for word. Brambleblush (was Raspberry cider), Longhouse Ale (Ale), Rootstump Grog (Forest grog), Bilberry Dusk (Blueberry wine), Hive-Gold Mead (Honey mead), Swampmother's Wine (Bog wine), Rimecask Mead (Frostmead), Bragi's Tongue (Skaldic mead), Ymir's Marrow (Jotun's draught) and Surtr's Kiss (Fire wine). Bloody Ivar keeps its name. Only the names changed: every item ID (TK_*) is the same, so drinks in a chest and bases in a barrel keep working, and `spawn TK_FireWine` still spawns a Surtr's Kiss.
+
 - Scaffold. The plugin loads, binds `Enabled` and `SoberPerSecond`, and logs the four-drink table. The intoxication
   meter (add, decay, tiers, symptom severity) is written and covered by the off-game harness.
 - The four drinks (Ale, Blueberry wine, Honey mead, Skaldic mead) are registered as items, cloned from a vanilla mead,
