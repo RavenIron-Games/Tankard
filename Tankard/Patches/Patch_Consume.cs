@@ -29,7 +29,8 @@ namespace RavenIron.Tankard.Patches
                     // Not one of ours. Real food (vanilla's own test in ConsumeItem: m_food > 0) sobers you a little.
                     // Our drinks have their food zeroed, so they never land here.
                     if (item.m_shared.m_food > 0f)
-                        Meter.Eat(item.m_shared.m_name, item.m_shared.m_food, item.m_shared.m_foodStamina, item.m_shared.m_foodEitr, __instance);
+                        Meter.Eat(item.m_shared.m_name, item.m_shared.m_food, item.m_shared.m_foodStamina, item.m_shared.m_foodEitr, __instance,
+                            SameFoodBefore(__instance, item.m_shared.m_name));
                     return;
                 }
                 Meter.Drink(drink, __instance);
@@ -39,6 +40,21 @@ namespace RavenIron.Tankard.Patches
             {
                 Plugin.Log.LogWarning($"Consume hook failed (the drink was still drunk): {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// How many of this food were in the stomach BEFORE this meal. The postfix runs after EatFood, so the meal itself
+        /// is already in the list and is not counted. Vanilla refreshes an entry in place when you re-eat, so this is 0
+        /// there; Fatty appends a new entry per stack (its EatFood prefix never clears the list), so it counts them.
+        /// </summary>
+        private static int SameFoodBefore(Player p, string nameToken)
+        {
+            int n = 0;
+            var foods = p.GetFoods();
+            if (foods == null) return 0;
+            foreach (Player.Food f in foods)
+                if (f?.m_item?.m_shared != null && f.m_item.m_shared.m_name == nameToken) n++;
+            return n > 0 ? n - 1 : 0;
         }
     }
 }

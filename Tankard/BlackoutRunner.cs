@@ -137,7 +137,7 @@ namespace RavenIron.Tankard
 
             if (!Blackout.PickLanding(home.x, home.z, distance, Rng,
                     (x, z) => (int)wg.GetBiome(x, z), (x, z) => wg.GetHeight(x, z), water, allowed,
-                    out float lx, out float lz, out float ly, preferred))
+                    out float lx, out float lz, out float ly, preferred, streak.IsTotal ? Blackout.FarDistance : 0f))
             {
                 Plugin.Log.LogInfo("Blackout: nowhere allowed to wake up, so you stay put.");
                 p.Message(MessageHud.MessageType.Center, "The world spins, but you stay on your feet.");

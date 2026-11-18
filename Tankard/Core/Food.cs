@@ -29,6 +29,21 @@ namespace RavenIron.Tankard.Core
             return points * s;
         }
 
+        /// <summary>
+        /// How much a REPEAT of a food still sobers you, by how many of the same food are already in your stomach (0 = the
+        /// first). Vanilla never holds two of one food, so there it is always 1. Fatty (Wubarrk) lets you stack the same
+        /// food and gives each extra stack 100/50/25/5% of its value; without this, four steaks in a row took 16 off the
+        /// meter (seen in game 2026-11-18) and food became an undo button. The ladder copies Fatty's defaults, so what
+        /// sobers you matches what its food bar shows you got.
+        /// </summary>
+        public static float RepeatFactor(int alreadyEaten)
+        {
+            if (alreadyEaten <= 0) return 1f;
+            if (alreadyEaten == 1) return 0.5f;
+            if (alreadyEaten == 2) return 0.25f;
+            return 0.05f;
+        }
+
         /// <summary>The meter after a meal taking <paramref name="points"/> off. Never below 0 or above the meter's max.
         /// (Intoxication.Add refuses a negative amount by design, so eating has its own path.)</summary>
         public static float Eat(float level, float points)

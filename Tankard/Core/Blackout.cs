@@ -189,6 +189,12 @@ namespace RavenIron.Tankard.Core
         /// island in the open sea, say) it widens towards the spot itself rather than dropping you in the water.
         /// Returns false only if nothing anywhere on any ring qualifies; the caller then leaves you where you are.
         /// </summary>
+        /// <param name="minDistance">
+        /// Optional floor, in metres from the spot. A total-loss day must land at least <see cref="FarDistance"/> away (the
+        /// owner: "go far away"), but the 80-120% ring around a 5 km aim landed 4897 m and 4859 m out in game (2026-11-18).
+        /// With a floor every ring radius is at least the floor and the ring never shrinks towards the spot. Only when no
+        /// ground beyond the floor qualifies at all does it fall back to the plain search, so you still wake somewhere.
+        /// </param>
         /// <param name="preferred">
         /// Optional. Ground that should win if any of it fits (in the game: zones the world has already generated, so
         /// waking there builds no new land; the owner reported lag right after a blackout, and the log showed new
@@ -198,20 +204,29 @@ namespace RavenIron.Tankard.Core
         /// </param>
         public static bool PickLanding(float homeX, float homeZ, float distance, Random rng,
             Func<float, float, int> biomeAt, Func<float, float, float> heightAt, float waterLevel, int allowedMask,
-            out float x, out float z, out float y, Func<float, float, bool> preferred = null)
+            out float x, out float z, out float y, Func<float, float, bool> preferred = null, float minDistance = 0f)
         {
             x = homeX; z = homeZ; y = 0f;
             if (rng == null || biomeAt == null || heightAt == null || float.IsNaN(distance) || distance <= 0f) return false;
             if (float.IsNaN(homeX) || float.IsNaN(homeZ)) return false;
+            float floor = float.IsNaN(minDistance) || minDistance < 0f ? 0f : minDistance;
+            if (floor > 0f)
+            {
+                if (preferred != null &&
+                    PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, preferred, floor, out x, out z, out y))
+                    return true;
+                if (PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, null, floor, out x, out z, out y))
+                    return true;
+            }
             if (preferred != null &&
-                PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, preferred, out x, out z, out y))
+                PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, preferred, 0f, out x, out z, out y))
                 return true;
-            return PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, null, out x, out z, out y);
+            return PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, null, 0f, out x, out z, out y);
         }
 
         private static bool PickOnRings(float homeX, float homeZ, float distance, Random rng,
             Func<float, float, int> biomeAt, Func<float, float, float> heightAt, float waterLevel, int allowedMask,
-            Func<float, float, bool> preferred, out float x, out float z, out float y)
+            Func<float, float, bool> preferred, float floor, out float x, out float z, out float y)
         {
             x = homeX; z = homeZ; y = 0f;
             float limit = WorldRadius - EdgeMargin;
@@ -222,9 +237,11 @@ namespace RavenIron.Tankard.Core
                 // the spot, so a blackout on a small island still lands you on that island.
                 // It shrinks to 2% of the distance, i.e. nearly the drinking spot itself, which is always dry land (you drank
                 // there). Shrinking only to 10% left a 200 m island unreachable from a 2 km blackout (the harness caught it).
-                float shrink = i < Attempts / 2 ? 1f : 1f - (i - Attempts / 2) / (float)(Attempts / 2) * 0.98f;
+                // With a floor the ring never shrinks: it may only reach past the aim, never fall short of the floor.
+                float shrink = floor > 0f || i < Attempts / 2 ? 1f : 1f - (i - Attempts / 2) / (float)(Attempts / 2) * 0.98f;
                 double angle = rng.NextDouble() * Math.PI * 2.0;
                 float r = distance * shrink * (0.8f + 0.4f * (float)rng.NextDouble());
+                if (r < floor) r = floor + (float)rng.NextDouble() * floor * 0.2f;
                 float cx = homeX + (float)Math.Cos(angle) * r;
                 float cz = homeZ + (float)Math.Sin(angle) * r;
                 if (cx * cx + cz * cz > limit * limit) continue;

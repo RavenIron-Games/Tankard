@@ -84,3 +84,9 @@
   everyone. A player's own config file is never overwritten. Every player must run exactly this Tankard version, or
   the server refuses them at join with a message naming both versions. `tankard status` says where the settings come
   from.
+- **A repeat meal sobers less.** With a mod that lets you eat the same food again (Fatty), each extra serving takes off
+  half as much as the one before: 100%, 50%, 25%, then 5%. That matches what Fatty gives you for each extra serving. So four steaks in a row now
+  take about 7.5 off the meter, not 16. Without such a mod nothing changes, because vanilla never lets you eat the same food twice at once.
+- **The third day of a blackout streak always throws you at least 5 km.** Before, the landing could fall up to 20%
+  short of the aim, and two test blackouts woke 4897 m and 4859 m away. Only if there is no allowed dry land beyond
+  5 km at all (a small island, say) does it fall back to the nearest ground it can find, so you still wake somewhere.

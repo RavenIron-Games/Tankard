@@ -325,6 +325,12 @@ namespace RavenIron.Tankard.Tests
             float lvl = Food.Eat(80f, Food.Sobering(85f, 28f, 0f));
             Check(lvl == 70f && Intoxication.TierOf(lvl) == Tier.Drunk, "one feast pulls Hammered at 80 down to Drunk, not sober");
             Check(Food.Eat(1f, Food.MaxPerMeal) == 0f && Food.Eat(float.NaN, 3f) == 0f && Food.Eat(500f, 0f) == Intoxication.Cap && Food.Eat(50f, float.NaN) == 50f, "eating never drives the meter below zero or past full");
+            // Repeats of one food (Fatty stacks them): 100/50/25/5%, the same ladder as Fatty's food bar.
+            Check(Food.RepeatFactor(0) == 1f && Food.RepeatFactor(-3) == 1f, "a first serving sobers in full (and vanilla only ever has firsts)");
+            Check(Food.RepeatFactor(1) == 0.5f && Food.RepeatFactor(2) == 0.25f && Food.RepeatFactor(3) == 0.05f && Food.RepeatFactor(40) == 0.05f,
+                  "repeats sober 50%, 25%, then 5% for good");
+            float four = 0f; for (int i = 0; i < 4; i++) four += Food.Sobering(30f, 10f, 0f) * Food.RepeatFactor(i);
+            Check(four < 8f, $"four steaks in a row take under 8 off, not the 16 seen in game ({four:0.0})");
         }
 
         private static void ToleranceTests()
@@ -489,6 +495,31 @@ namespace RavenIron.Tankard.Tests
             for (int s = 0; s < 50; s++)
                 fallOk &= Blackout.PickLanding(0f, 0f, 1000f, new Random(s), allMeadows, dry, 30f, Blackout.Meadows, out _, out _, out _, (x, z) => false);
             Check(fallOk, "with no generated ground at all, a landing is still found");
+            // A total-loss day lands at least 5 km out (the owner: "go far away"); in game the ring woke 4897 m and 4859 m.
+            bool floorOk = true; float nearest = float.MaxValue;
+            for (int s = 0; s < 400; s++)
+            {
+                bool ok = Blackout.PickLanding(0f, 0f, Blackout.FarDistance, new Random(s), allMeadows, dry, 30f, Blackout.Meadows,
+                    out float x, out float z, out _, null, Blackout.FarDistance);
+                float d = (float)Math.Sqrt(x * x + z * z);
+                floorOk &= ok && d >= Blackout.FarDistance - 0.5f && d <= Blackout.FarDistance * 1.2f + 0.5f;
+                if (d < nearest) nearest = d;
+            }
+            Check(floorOk, $"with a 5 km floor every landing is 5-6 km out (nearest {nearest:0} m)");
+            bool floorPref = true;
+            for (int s = 0; s < 200; s++)
+            {
+                bool ok = Blackout.PickLanding(0f, 0f, Blackout.FarDistance, new Random(s), allMeadows, dry, 30f, Blackout.Meadows,
+                    out float x, out float z, out _, westOnly, Blackout.FarDistance);
+                floorPref &= ok && x < 0f && x * x + z * z >= (Blackout.FarDistance - 0.5f) * (Blackout.FarDistance - 0.5f);
+            }
+            Check(floorPref, "the floor and the generated-ground preference hold together");
+            // On a small island nothing lies beyond the floor: you still wake (on the island) rather than not at all.
+            bool floorIsland = true;
+            for (int s = 0; s < 50; s++)
+                floorIsland &= Blackout.PickLanding(0f, 0f, Blackout.FarDistance, new Random(s), island, islandH, 30f, Blackout.Meadows,
+                    out float x, out float z, out _, null, Blackout.FarDistance) && x * x + z * z <= 200f * 200f;
+            Check(floorIsland, "with no ground past the floor, the plain search still lands you on dry land");
             // ...and the preference never overrides the rules: generated ground in a forbidden biome is not chosen.
             bool ruleOk = true;
             for (int s = 0; s < 100; s++)
