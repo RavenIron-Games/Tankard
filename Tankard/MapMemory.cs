@@ -75,7 +75,7 @@ namespace RavenIron.Tankard
                 if (looking)
                 {
                     float before = _progress;
-                    _progress = Blackout.Remember(_progress, dt, Plugin.MapRememberSeconds.Value, Meter.SymptomSeverity);
+                    _progress = Blackout.Remember(_progress, dt, Plugin.MapRememberSeconds.Value, Meter.Level);
                     int m = Blackout.MilestoneCrossed(before, _progress);
                     if (m >= 0)
                     {

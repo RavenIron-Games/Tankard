@@ -270,25 +270,32 @@ namespace RavenIron.Tankard.Core
         // The owner after the first fog run: "the map comes back too fast, slow it down, you don't immediately sober up
         // from a blackout". So: 5 minutes of looking when sober (was 90 s), and the drunker you still are, the slower
         // it comes: at full drunk a tenth of the speed. You remember as you sober.
-        public const float DefaultRememberSeconds = 300f;
-        public const float DrunkRememberFloor = 0.1f;
+        // Retuned the same evening: "the map comes back too slow at tipsy, you should start remembering". So the rate
+        // steps by TIER rather than sliding with severity, and Tipsy is where it really starts. 150 s of looking when
+        // sober (was 300), about three minutes at Tipsy, and next to nothing while still drunk.
+        public const float DefaultRememberSeconds = 150f;
 
-        /// <summary>How fast memory returns at a symptom severity (0 sober, 1 fully drunk): 1 sober, 0.1 fully drunk.</summary>
-        public static float RememberRate(float severity)
+        /// <summary>How fast memory returns at a meter level: by tier, so crossing into Tipsy is the moment it comes back.</summary>
+        public static float RememberRate(float level)
         {
-            if (float.IsNaN(severity) || severity < 0f) severity = 0f;
-            if (severity > 1f) severity = 1f;
-            return 1f - (1f - DrunkRememberFloor) * severity;
+            switch (Intoxication.TierOf(level)) // NaN and negatives read as Sober there
+            {
+                case Tier.Sober:
+                case Tier.Buzzed: return 1f;
+                case Tier.Tipsy: return 0.8f;
+                case Tier.Drunk: return 0.15f;
+                default: return 0.05f; // Hammered, Blackout: you are in no state to remember anything
+            }
         }
 
-        /// <summary>Progress after looking for <paramref name="dt"/> more seconds. Never falls, never passes 1.</summary>
-        public static float Remember(float progress, float dt, float secondsToRemember, float severity = 0f)
+        /// <summary>Progress after looking for <paramref name="dt"/> more seconds at meter <paramref name="level"/>. Never falls, never passes 1.</summary>
+        public static float Remember(float progress, float dt, float secondsToRemember, float level = 0f)
         {
             if (float.IsNaN(progress) || progress < 0f) progress = 0f;
             if (progress > 1f) progress = 1f;
             if (float.IsNaN(dt) || dt <= 0f || float.IsNaN(secondsToRemember) || secondsToRemember <= 0f) return progress;
             // A frame hitch is not a quarter-minute of memory.
-            float p = progress + Math.Min(dt, 0.25f) * RememberRate(severity) / secondsToRemember;
+            float p = progress + Math.Min(dt, 0.25f) * RememberRate(level) / secondsToRemember;
             return p > 1f ? 1f : p;
         }
 
@@ -301,8 +308,9 @@ namespace RavenIron.Tankard.Core
         {
             if (float.IsNaN(progress) || progress <= 0f) return 1f;
             if (progress >= 1f) return 0f;
-            float t = progress * progress; // ease in
-            return 1f - t;
+            // Ease in, but gentler than the first p^2: at half remembered the fog is about two-thirds, not three-quarters,
+            // so the land shows through while you are still working on it. p^1.6 keeps a 10% peek at 0.975.
+            return 1f - (float)Math.Pow(progress, 1.6);
         }
 
         public static readonly float[] MemoryMilestones = { 0.25f, 0.5f, 0.75f };

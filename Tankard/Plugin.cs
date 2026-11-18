@@ -81,7 +81,7 @@ namespace RavenIron.Tankard
             MapRememberSeconds = Config.Bind("5 - Blackout", "MapRememberSeconds", Blackout.DefaultRememberSeconds,
                 new ConfigDescription("After a blackout the big map opens under a fog that clears only while you look at it: you " +
                                       "start remembering. This is how many seconds of looking bring it all back when you are " +
-                                      "sober; while still drunk it is slower, down to a tenth of the speed when fully drunk " +
+                                      "sober. Tipsy remembers at 80%, Drunk at 15%, Hammered or worse at 5% " +
                                       "(the minimap returns when it is clear). Walking back to the drinking spot restores it at once.",
                     new AcceptableValueRange<float>(5f, 1800f)));
             try

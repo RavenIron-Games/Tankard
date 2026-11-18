@@ -407,14 +407,19 @@ namespace RavenIron.Tankard.Tests
             float mem = 0f;
             for (int f = 0; f < 90 * 60; f++) mem = Blackout.Remember(mem, 1f / 60f, 90f);
             Check(mem > 0.999f, $"90 s of looking at 60 fps remembers it all when set to 90 ({mem:0.0000})");
-            Check(Blackout.DefaultRememberSeconds >= 300f, "the default is slow: five minutes of looking (the owner: 'too fast')");
-            // Drunk, it comes back slower: a tenth of the speed at full severity.
-            float soberStep = Blackout.Remember(0f, 0.1f, 300f, 0f), drunkStep = Blackout.Remember(0f, 0.1f, 300f, 1f);
-            Check(Math.Abs(drunkStep - soberStep * Blackout.DrunkRememberFloor) < 1e-7f, $"fully drunk remembers at a tenth ({drunkStep} vs {soberStep})");
-            Check(Blackout.RememberRate(0.5f) > Blackout.RememberRate(1f) && Blackout.RememberRate(0.5f) < Blackout.RememberRate(0f), "rate falls as you get drunker");
-            Check(Blackout.RememberRate(float.NaN) == 1f && Blackout.RememberRate(-1f) == 1f &&
-                  Math.Abs(Blackout.RememberRate(5f) - Blackout.DrunkRememberFloor) < 1e-6f, "rate clamps bad severity");
-            Check(Blackout.Remember(0f, 0.1f, 300f, 1f) > 0f, "even blind drunk, looking brings back a little");
+            // Tuned twice by the owner: 90 s was too fast, 300 s at Tipsy too slow. 150 s sober, and Tipsy is where it starts.
+            Check(Blackout.DefaultRememberSeconds >= 120f && Blackout.DefaultRememberSeconds <= 200f, "two to three minutes of looking when sober");
+            float tipsy = Intoxication.TierFloor[(int)Tier.Tipsy] + 1f, drunk = Intoxication.TierFloor[(int)Tier.Drunk] + 1f;
+            float hammered = Intoxication.TierFloor[(int)Tier.Hammered] + 1f;
+            Check(Blackout.RememberRate(0f) == 1f && Blackout.RememberRate(10f) == 1f, "sober and buzzed remember at full speed");
+            Check(Blackout.RememberRate(tipsy) >= 0.75f, "Tipsy is where you really start remembering (the owner's second note)");
+            Check(Blackout.RememberRate(drunk) < 0.25f && Blackout.RememberRate(drunk) > Blackout.RememberRate(hammered), "Drunk barely, Hammered less");
+            Check(Blackout.RememberRate(hammered) > 0f && Blackout.RememberRate(100f) > 0f, "even blind drunk, looking brings back a little");
+            Check(Blackout.RememberRate(float.NaN) == 1f && Blackout.RememberRate(-5f) == 1f, "a bad level reads as sober");
+            // At Tipsy, from nothing to all of it in about three minutes of looking, at 60 fps.
+            float tip = 0f; int frames = 0;
+            while (tip < 1f && frames < 60 * 600) { tip = Blackout.Remember(tip, 1f / 60f, Blackout.DefaultRememberSeconds, tipsy); frames++; }
+            Check(frames / 60f > 150f && frames / 60f < 240f, $"Tipsy remembers it all in about three minutes ({frames / 60f:0} s)");
             Check(Blackout.Remember(0.5f, 10f, 90f) <= 0.5f + 0.25f / 90f + 1e-6f, "a 10 s frame hitch counts as a quarter second");
             Check(Blackout.Remember(0.5f, 0f, 90f) == 0.5f && Blackout.Remember(0.5f, -1f, 90f) == 0.5f && Blackout.Remember(0.5f, float.NaN, 90f) == 0.5f,
                   "no time, no memory; never backwards");
