@@ -14,3 +14,8 @@
   drinks out. A fermented drink hits harder than any cauldron one. All fermenter drinks take the barrel's normal time:
   the game keeps one fermentation time per barrel, not per drink. A recipe whose ingredient or station can't be found
   is left out and logged, never added cheaper.
+- **Drunk chat.** Once you are properly Tipsy, what you say, shout or whisper comes out slurred: stretched vowels and
+  hiccups at first, wrong keys and dropped letters next, and near full the line is gibberish with the shape of a
+  sentence. Spaces, numbers, punctuation, rich-text tags and non-English letters are never touched, and no word
+  vanishes. You see your own garbled line too. Two settings: `GarbleChat` (on/off) and `GarbleStrength` (0 to 2).
+  They are read on the drinker's own game.

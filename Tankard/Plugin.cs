@@ -27,6 +27,8 @@ namespace RavenIron.Tankard
 
         internal static ConfigEntry<bool> Enabled;
         internal static ConfigEntry<float> SoberPerSecond;
+        internal static ConfigEntry<bool> GarbleChat;
+        internal static ConfigEntry<float> GarbleStrength;
 
         private Harmony _harmony;
 
@@ -39,6 +41,13 @@ namespace RavenIron.Tankard
                 new ConfigDescription("How fast the intoxication meter falls, in meter units a second. The meter runs 0 to " +
                                       Intoxication.Max + ", so 0.25 is about six and a half minutes from a full meter to sober.",
                     new AcceptableValueRange<float>(0.01f, 10f)));
+            GarbleChat = Config.Bind("3 - Drunk chat", "GarbleChat", true,
+                "While drunk, what you type in chat (say, shout and whisper) comes out slurred, then garbled. Read on YOUR game, " +
+                "since it is your client that sends the line. Off, your words always come out as typed.");
+            GarbleStrength = Config.Bind("3 - Drunk chat", "GarbleStrength", 1f,
+                new ConfigDescription("How hard drunkenness garbles chat. 1 is normal, 0.5 is half as bad, 2 reaches full gibberish " +
+                                      "at half the intoxication. 0 turns it off.",
+                    new AcceptableValueRange<float>(0f, 2f)));
             try
             {
                 _harmony = new Harmony(Guid);
