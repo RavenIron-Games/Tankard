@@ -31,7 +31,7 @@ namespace RavenIron.Tankard.Patches
                 string before = text;
                 text = DrunkText.Garble(before, severity, Rng, Plugin.GarbleStrength.Value);
                 if (!ReferenceEquals(before, text) && before != text)
-                    Plugin.Log.LogInfo($"Slurred a {type} line at {Meter.Tier} (severity {severity:0.00}): \"{before}\" -> \"{text}\"");
+                    Plugin.Log.LogDebug($"Slurred a {type} line at {Meter.Tier} (severity {severity:0.00}): \"{before}\" -> \"{text}\"");
             }
             catch (Exception ex)
             {

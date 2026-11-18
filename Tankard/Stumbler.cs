@@ -39,7 +39,7 @@ namespace RavenIron.Tankard
                 if (Time.realtimeSinceStartup >= _nextBlockedLog)
                 {
                     _nextBlockedLog = Time.realtimeSinceStartup + 20f;
-                    Plugin.Log.LogInfo($"Stumble due at {Meter.Tier} but skipped: {blocked}.");
+                    Plugin.Log.LogDebug($"Stumble due at {Meter.Tier} but skipped: {blocked}.");
                 }
                 return;
             }
@@ -51,7 +51,7 @@ namespace RavenIron.Tankard
                 Vector3 push = Quaternion.Euler(0f, yaw, 0f) * -p.transform.forward;
                 p.Stagger(push);
                 _sinceLast = 0f;
-                Plugin.Log.LogInfo($"Stumbled at {Meter.Tier} (meter {Meter.Level:0.0}).");
+                Plugin.Log.LogDebug($"Stumbled at {Meter.Tier} (meter {Meter.Level:0.0}).");
                 p.Message(MessageHud.MessageType.TopLeft, Meter.Tier == Tier.Blackout ? "The ground comes up to meet you." : "You stumble.");
             }
             catch (Exception ex)

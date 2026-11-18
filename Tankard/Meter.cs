@@ -127,7 +127,7 @@ namespace RavenIron.Tankard
             {
                 Tier before = Tier;
                 Level = Intoxication.Decay(Level, dt, Plugin.SoberPerSecond.Value);
-                if (Tier != before) Plugin.Log.LogInfo($"Meter {Level:0.0}: {before} -> {Tier}.");
+                if (Tier != before) Plugin.Log.LogDebug($"Meter {Level:0.0}: {before} -> {Tier}.");
             }
             if (Level <= 0f && (BingeDrinks > 0 || Peak > 0f)) EndBinge(p);
 
