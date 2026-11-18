@@ -78,7 +78,14 @@ namespace RavenIron.Tankard
 
             Vector3 home = p.transform.position;
             int allowed = Blackout.AllowedBiomes(k => ZoneSystem.instance.GetGlobalKey(k));
-            float distance = Blackout.Distance(drinks, min);
+            // The streak this blackout would join. Computed now, saved only after the teleport is accepted (step 4).
+            string streakKey = Blackout.StreakKeyFor(WorldId());
+            p.m_customData.TryGetValue(streakKey, out string savedStreak);
+            Blackout.Streak before = Blackout.ParseStreak(savedStreak);
+            int today = EnvMan.instance != null && ZNet.instance != null ? EnvMan.instance.GetDay() : Math.Max(0, before.LastDay);
+            Blackout.Streak streak = Blackout.Advance(before, today);
+            float distance = Blackout.DistanceFor(drinks, min, streak);
+            double loss = Blackout.LossFor(drinks, min, streak);
             WorldGenerator wg = WorldGenerator.instance;
             float water = ZoneSystem.instance.m_waterLevel;
 
@@ -107,8 +114,9 @@ namespace RavenIron.Tankard
             }
 
             // Step 4: the irreversible part.
-            int left = LeaveGear(p, drinks, min);
+            int left = LeaveGear(p, loss);
             p.m_customData[WorldKey()] = Blackout.FormatHome(home.x, home.y, home.z);
+            p.m_customData[streakKey] = Blackout.FormatStreak(streak);
             _mapHidden = true;
             _homeArmed = false; // you are still standing at the spot for the teleport's first 2 s
             MapMemory.Start(p);
@@ -119,15 +127,19 @@ namespace RavenIron.Tankard
             _followHome = home;
             _followTarget = landing;
             Meter.WakeFromBlackout();
-            Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, waking {distance:0} m away at ({lx:0}, {lz:0}).");
-            p.Message(MessageHud.MessageType.Center, "Everything goes black.");
-            p.Message(MessageHud.MessageType.TopLeft, left > 0
-                ? "You've woken up somewhere you don't recognise. Some of your things are back where you were drinking, and you can't read your map."
-                : "You've woken up somewhere you don't recognise, and you can't read your map.");
+            Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, waking {distance:0} m away at ({lx:0}, {lz:0}). " +
+                               $"Streak: day {streak.Days} in a row (in-game day {streak.LastDay}), blackout {streak.Count} of the streak, loss {loss:P0}" +
+                               (streak.IsTotal ? ", TOTAL." : "."));
+            p.Message(MessageHud.MessageType.Center, streak.IsTotal ? "Three nights running. Everything goes black." : "Everything goes black.");
+            p.Message(MessageHud.MessageType.TopLeft, streak.IsTotal
+                ? "You've woken up a long way from anywhere you know, with nothing on you. It's all back where you were drinking."
+                : left > 0
+                    ? "You've woken up somewhere you don't recognise. Some of your things are back where you were drinking, and you can't read your map."
+                    : "You've woken up somewhere you don't recognise, and you can't read your map.");
         }
 
         /// <summary>Moves a share of the inventory into a tombstone at the player's feet. Returns how many stacks moved.</summary>
-        private static int LeaveGear(Player p, int drinks, int min)
+        private static int LeaveGear(Player p, double lossFraction)
         {
             if (p.m_tombstone == null) return 0;
             // The world's own death rule wins, and so does the owner's switch; ore still never travels either way.
@@ -140,7 +152,7 @@ namespace RavenIron.Tankard
 
             var lost = new HashSet<ItemDrop.ItemData>();
             if (!keepAll)
-                foreach (int i in Blackout.PickLost(candidates.Count, Blackout.LossFraction(drinks, min), Rng))
+                foreach (int i in Blackout.PickLost(candidates.Count, lossFraction, Rng))
                     lost.Add(candidates[i]);
             // Whatever cannot go through a portal never comes with you, or a blackout would be a free ore teleport.
             foreach (ItemDrop.ItemData it in candidates)

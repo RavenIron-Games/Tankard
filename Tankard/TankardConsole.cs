@@ -14,6 +14,18 @@ namespace RavenIron.Tankard
     [HarmonyPatch(typeof(Terminal), "InitTerminal")]
     internal static class TankardConsole
     {
+        private static string StreakText(Player p)
+        {
+            if (p == null) return "streak: no player";
+            p.m_customData.TryGetValue(Blackout.StreakKeyFor(BlackoutRunner.WorldId()), out string s);
+            Blackout.Streak st = Blackout.ParseStreak(s);
+            int today = EnvMan.instance != null && ZNet.instance != null ? EnvMan.instance.GetDay() : -1;
+            if (st.Days == 0) return $"no blackout streak (today is day {today})";
+            bool live = today == st.LastDay || today == st.LastDay + 1;
+            return $"streak {st.Days} day(s), {st.Count} blackout(s), last on day {st.LastDay}, today day {today}" +
+                   (live ? (st.Days + (today == st.LastDay ? 0 : 1) >= Blackout.TotalLossDays ? " - the next one takes EVERYTHING" : "") : " (broken: a day was skipped)");
+        }
+
         private static int CountKeys(Player p)
         {
             if (p == null) return 0;
@@ -50,7 +62,7 @@ namespace RavenIron.Tankard
                                     $"blackout {(BlackoutRunner.MapHidden ? "ON" : "off")}, map remembered {MapMemory.Progress:P0}, " +
                                     $"minimap mode {(Minimap.instance != null ? Minimap.instance.m_mode.ToString() : "none")}, " +
                                     $"world no-map modifier {(Game.m_noMap ? "ON" : "off")}, " +
-                                    $"saved blackout keys here: {CountKeys(p)}");
+                                    $"saved blackout keys here: {CountKeys(p)}, " + StreakText(p));
                                 return;
                         }
                     }

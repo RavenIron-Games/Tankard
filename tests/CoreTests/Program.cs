@@ -372,6 +372,36 @@ namespace RavenIron.Tankard.Tests
             Check(!Blackout.ShouldRestoreMap(ref a2, true, 5000f, 0f, 0f, 0f) && !a2, "far away but mid-teleport does not arm");
             bool a3 = false;
             Check(!Blackout.ShouldRestoreMap(ref a3, false, 90f, 0f, 0f, 0f) && !a3, "90 m is not far enough to arm (needs 100)");
+            // Streaks: consecutive days escalate; day three takes everything and throws you far.
+            var st = Blackout.Advance(Blackout.Streak.None, 10);
+            Check(st.LastDay == 10 && st.Days == 1 && st.Count == 1 && !st.IsTotal, "first blackout starts a one-day streak");
+            var same = Blackout.Advance(st, 10);
+            Check(same.Days == 1 && same.Count == 2, "a second blackout the same day counts, but is still day one");
+            var d2 = Blackout.Advance(same, 11);
+            Check(d2.Days == 2 && d2.Count == 3 && !d2.IsTotal, "the next day is day two");
+            var d3 = Blackout.Advance(d2, 12);
+            Check(d3.Days == 3 && d3.IsTotal, "the third day in a row is total");
+            Check(Blackout.Advance(d3, 13).IsTotal, "and it stays total while the streak runs");
+            Check(Blackout.Advance(d2, 13).Days == 1 && Blackout.Advance(d2, 13).Count == 1, "a skipped day ends the streak");
+            Check(Blackout.Advance(d2, 5).Days == 1, "time going backwards (another world, a restore) starts fresh");
+            Check(Blackout.Advance(st, -7).LastDay >= 0, "a bad day number never goes negative");
+            // Distance and loss with the streak.
+            Near(Blackout.DistanceFor(12, 12, st), Blackout.FirstDistance, "a first blackout is the base distance");
+            Near(Blackout.DistanceFor(12, 12, same), Blackout.FirstDistance * 1.5f, "each earlier blackout adds half again");
+            Near(Blackout.DistanceFor(12, 12, d2), Blackout.FirstDistance * 2f, "the third blackout of a streak is double");
+            Check(Blackout.DistanceFor(12, 12, d3) >= Blackout.FarDistance, "day three throws you at least 5 km");
+            Check(Blackout.DistanceFor(40, 12, d3) <= Blackout.WorldRadius - Blackout.EdgeMargin, "but never off the world");
+            Check(Blackout.LossFor(12, 12, d2) == Blackout.LossFraction(12, 12), "below day three the drinks decide the loss");
+            Check(Blackout.LossFor(12, 12, d3) == 1.0, "day three: everything");
+            Check(Blackout.DistanceFor(20, 12, same) > Blackout.DistanceFor(12, 12, same), "more drinks still means further, inside a streak");
+            // Saved state.
+            var rt2 = Blackout.ParseStreak(Blackout.FormatStreak(d3));
+            Check(rt2.LastDay == 12 && rt2.Days == 3 && rt2.Count == 4, "a streak round-trips");
+            Check(Blackout.ParseStreak(null).Days == 0 && Blackout.ParseStreak("x").Days == 0 && Blackout.ParseStreak("1;2").Days == 0 &&
+                  Blackout.ParseStreak("-1;1;1").Days == 0 && Blackout.ParseStreak("5;0;0").Days == 0 && Blackout.ParseStreak("5;3;1").Days == 0,
+                  "a damaged streak reads as none, never as a phantom day three");
+            Check(Blackout.StreakKeyFor("1") != Blackout.KeyFor("1") && Blackout.StreakKeyFor("1") != Blackout.MemoryKeyFor("1"), "three separate keys");
+
             // Remembering: only looking advances it, it never goes back, and 90 s of looking finishes it.
             float mem = 0f;
             for (int f = 0; f < 90 * 60; f++) mem = Blackout.Remember(mem, 1f / 60f, 90f);

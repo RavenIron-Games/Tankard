@@ -30,3 +30,12 @@
   Ore and anything else that can't go through a portal always stays. Your map is gone until you get back within
   50 m of the spot, so you'll need a friend to bring you home. That survives a relog, and each world tracks its own.
   A world set to keep inventory on death keeps it here too. Settings: `Blackouts`, `MinDrinks`, `LeavesGear`.
+- **Remembering the map.** The big map opens under a fog that clears only while you look at it: you start
+  remembering. It takes about 5 minutes of looking when sober, and much longer while you're still drunk (a tenth of
+  the speed when fully drunk). You come round from a blackout still Hammered. The minimap comes back when the fog has
+  cleared, and walking back to the grave still restores everything at once. Setting: `MapRememberSeconds`.
+- **Blackouts in a row.** Every earlier blackout in a streak (consecutive in-game days with at least one blackout,
+  same-day ones included) sends you half as far again. On the third day in a row you lose everything and wake at
+  least 5 km away. A day without a blackout ends the streak.
+- `tankard status | map | sober` in the console: see the meter, blackout, memory and streak; end a stuck blackout;
+  sober up.

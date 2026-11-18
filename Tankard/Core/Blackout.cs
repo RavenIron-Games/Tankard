@@ -43,6 +43,68 @@ namespace RavenIron.Tankard.Core
             return d > max ? max : d;
         }
 
+        // ---- blackouts in a row ------------------------------------------------------------------------------------
+        // The owner, 2026-11-17: "if you have multiple blackouts you get farther away and the more drunk you are the more
+        // shit you lose. 3 days in a row you lose everything and go far away."
+        // A streak is a run of consecutive in-game days each with at least one blackout. Every earlier blackout in the
+        // streak (same day included) adds half the base distance again; the third day in a row takes everything and
+        // throws you at least 5 km. A day with no blackout ends it.
+
+        public const int TotalLossDays = 3;
+        public const float StreakDistanceStep = 0.5f;
+        public const float FarDistance = 5000f;
+
+        public struct Streak
+        {
+            public int LastDay;  // in-game day of the last blackout (EnvMan.GetDay), -1 for none
+            public int Days;     // consecutive days with a blackout, ending on LastDay
+            public int Count;    // blackouts in the streak, all days
+
+            public static Streak None => new Streak { LastDay = -1, Days = 0, Count = 0 };
+            public bool IsTotal => Days >= TotalLossDays;
+        }
+
+        /// <summary>The streak after a blackout on <paramref name="today"/>. Pure: call it, then save the result only once the blackout has really happened.</summary>
+        public static Streak Advance(Streak s, int today)
+        {
+            if (today < 0) today = 0;
+            if (s.Days <= 0 || s.LastDay < 0) return new Streak { LastDay = today, Days = 1, Count = 1 };
+            if (today == s.LastDay) return new Streak { LastDay = today, Days = s.Days, Count = s.Count + 1 };
+            if (today == s.LastDay + 1) return new Streak { LastDay = today, Days = s.Days + 1, Count = s.Count + 1 };
+            return new Streak { LastDay = today, Days = 1, Count = 1 }; // a gap, or the clock went backwards: a fresh start
+        }
+
+        /// <summary>Where you wake, given the drinks and the streak this blackout belongs to (already advanced).</summary>
+        public static float DistanceFor(int drinksInBinge, int minDrinks, Streak s)
+        {
+            float d = Distance(drinksInBinge, minDrinks) * (1f + StreakDistanceStep * Math.Max(0, s.Count - 1));
+            if (s.IsTotal && d < FarDistance) d = FarDistance;
+            float max = WorldRadius - EdgeMargin;
+            return d > max ? max : d;
+        }
+
+        /// <summary>The share of your stacks left behind, given the drinks and the streak (already advanced).</summary>
+        public static double LossFor(int drinksInBinge, int minDrinks, Streak s) =>
+            s.IsTotal ? 1.0 : LossFraction(drinksInBinge, minDrinks);
+
+        public static string FormatStreak(Streak s) =>
+            string.Format(CultureInfo.InvariantCulture, "{0};{1};{2}", s.LastDay, s.Days, s.Count);
+
+        public static Streak ParseStreak(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return Streak.None;
+            string[] p = text.Split(';');
+            if (p.Length != 3 ||
+                !int.TryParse(p[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int last) ||
+                !int.TryParse(p[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int days) ||
+                !int.TryParse(p[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) ||
+                last < 0 || days <= 0 || count < days)
+                return Streak.None;
+            return new Streak { LastDay = last, Days = days, Count = count };
+        }
+
+        public static string StreakKeyFor(string worldId) => "Tankard.BlackoutStreak." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
+
         // ---- what you leave behind -------------------------------------------------------------------------------
 
         public const double FirstLoss = 0.25;          // a quarter of your stacks on the 12th drink
