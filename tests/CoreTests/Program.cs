@@ -245,6 +245,23 @@ namespace RavenIron.Tankard.Tests
             Check(stumbles > expected * 0.8 && stumbles < expected * 1.2, $"stumble rate matches the constants ({stumbles} in an hour, expected about {expected:0})");
         }
 
+        private static void FoodTests()
+        {
+            Near(Food.Sobering(30f, 10f, 0f), 4f, "cooked meat (30/10) takes 4 off");
+            Near(Food.Sobering(7f, 20f, 0f), 2.7f, "raspberries (7/20) take 2.7");
+            Near(Food.Sobering(5f, 10f, 0f), Food.MinPerMeal, "a snack takes at least the minimum");
+            Near(Food.Sobering(85f, 28f, 0f), Food.MaxPerMeal, "a big meal is capped");
+            Near(Food.Sobering(300f, 300f, 300f), Food.MaxPerMeal, "no meal ever takes more than the cap");
+            Check(Food.Sobering(0f, 0f, 0f) == 0f && Food.Sobering(float.NaN, -5f, float.PositiveInfinity) == 0f, "not food, no sobering");
+            Check(Food.Sobering(30f, 10f, 0f, 0f) == 0f && Food.Sobering(30f, 10f, 0f, float.NaN) == 0f, "strength 0 turns it off");
+            Near(Food.Sobering(30f, 10f, 0f, 2f), 8f, "strength scales it");
+            Check(Food.MaxPerMeal < Intoxication.TierFloor[(int)Tier.Hammered] - Intoxication.TierFloor[(int)Tier.Drunk],
+                  "a feast is 'a little': less than one tier's width");
+            float lvl = Food.Eat(80f, Food.Sobering(85f, 28f, 0f));
+            Check(lvl == 70f && Intoxication.TierOf(lvl) == Tier.Drunk, "one feast pulls Hammered at 80 down to Drunk, not sober");
+            Check(Food.Eat(1f, Food.MaxPerMeal) == 0f && Food.Eat(float.NaN, 3f) == 0f && Food.Eat(500f, 0f) == Intoxication.Max && Food.Eat(50f, float.NaN) == 50f, "eating never drives the meter below zero or past full");
+        }
+
         private static void ToleranceTests()
         {
             var fire = Drinks.All.First(d => d.PrefabName == "TK_FireWine");
@@ -685,6 +702,7 @@ namespace RavenIron.Tankard.Tests
             SymptomTests();
             BlackoutTests();
             ToleranceTests();
+            FoodTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

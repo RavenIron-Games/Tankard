@@ -27,6 +27,7 @@ namespace RavenIron.Tankard
 
         internal static ConfigEntry<bool> Enabled;
         internal static ConfigEntry<float> SoberPerSecond;
+        internal static ConfigEntry<float> FoodSobers;
         internal static ConfigEntry<bool> GarbleChat;
         internal static ConfigEntry<float> GarbleStrength;
         internal static ConfigEntry<bool> CameraSway;
@@ -50,6 +51,11 @@ namespace RavenIron.Tankard
                 new ConfigDescription("How fast the intoxication meter falls, in meter units a second. The meter runs 0 to " +
                                       Intoxication.Max + ", so 0.25 is about six and a half minutes from a full meter to sober.",
                     new AcceptableValueRange<float>(0.01f, 10f)));
+            FoodSobers = Config.Bind("2 - Drunkenness", "FoodSobers", 1f,
+                new ConfigDescription("Eating while drunk takes a little off the meter: a tenth of the food's health + stamina + " +
+                                      "eitr, at least " + Food.MinPerMeal + " and at most " + Food.MaxPerMeal + " (berries about 3, " +
+                                      "cooked meat 4, a big meal 10). This scales it: 0 turns it off, 2 doubles it. Read on your own game.",
+                    new AcceptableValueRange<float>(0f, 3f)));
             GarbleChat = Config.Bind("3 - Drunk chat", "GarbleChat", true,
                 "While drunk, what you type in chat (say, shout and whisper) comes out slurred, then garbled. Read on YOUR game, " +
                 "since it is your client that sends the line. Off, your words always come out as typed.");

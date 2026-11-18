@@ -24,7 +24,14 @@ namespace RavenIron.Tankard.Patches
                 if (__instance != Player.m_localPlayer) return; // the meter belongs to the drinker's own client
 
                 DrinkDef drink = Words.ByNameToken(item.m_shared.m_name);
-                if (drink == null) return;
+                if (drink == null)
+                {
+                    // Not one of ours. Real food (vanilla's own test in ConsumeItem: m_food > 0) sobers you a little.
+                    // Our drinks have their food zeroed, so they never land here.
+                    if (item.m_shared.m_food > 0f)
+                        Meter.Eat(item.m_shared.m_name, item.m_shared.m_food, item.m_shared.m_foodStamina, item.m_shared.m_foodEitr, __instance);
+                    return;
+                }
                 Meter.Drink(drink, __instance);
                 BlackoutRunner.AfterDrink(__instance);
             }

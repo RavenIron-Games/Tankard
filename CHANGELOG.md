@@ -53,3 +53,7 @@
   raises your tolerance by a tenth of its ABV, more slowly the higher you are, and it never falls or passes 69. A message
   tells you when it goes up. It is saved with the character, not the world. `tankard status` shows it, and
   `tankard tolerance [0-69]` reads or sets it for testing.
+- **Food steadies you.** Eating real food while you have anything on the meter takes a little off: a tenth of the
+  food's health + stamina + eitr, at least 2 and at most 10 (raspberries about 3, cooked meat 4, a big meal 10). A
+  feast pulls you down about one tier at most, never sober in one bite, and it doesn't reset the binge count. A
+  message says so, with the tier change if there is one. Setting: `FoodSobers` (0 off, 1 normal, up to 3).

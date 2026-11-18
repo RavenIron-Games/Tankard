@@ -62,6 +62,26 @@ namespace RavenIron.Tankard
             }
         }
 
+        /// <summary>Eating while drinking takes a little off the meter (Core\Food). Does nothing when sober. The binge
+        /// count is untouched: food steadies you, it does not wipe the slate (the meter reaching 0 still does that).</summary>
+        public static void Eat(string nameToken, float health, float stamina, float eitr, Player p)
+        {
+            if (Level <= 0f) return;
+            float points = Food.Sobering(health, stamina, eitr, Plugin.FoodSobers.Value);
+            if (points <= 0f) return;
+            float before = Level;
+            Tier tierBefore = Tier;
+            Level = Food.Eat(Level, points);
+            Plugin.Log.LogInfo($"Ate {nameToken} ({health:0}/{stamina:0}/{eitr:0}): -{points:0.0}, meter {before:0.0} -> {Level:0.0} ({Tier}).");
+            if (p == null) return;
+            try
+            {
+                string text = Tier != tierBefore ? $"The food steadies you. ({tierBefore} -> {Tier})" : "The food steadies you a little.";
+                p.Message(MessageHud.MessageType.TopLeft, text);
+            }
+            catch (System.Exception ex) { Plugin.Report("Food message", ex); }
+        }
+
         public static void Tick(float dt)
         {
             if (Level <= 0f) return;
