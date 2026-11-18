@@ -29,6 +29,10 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<float> SoberPerSecond;
         internal static ConfigEntry<bool> GarbleChat;
         internal static ConfigEntry<float> GarbleStrength;
+        internal static ConfigEntry<bool> CameraSway;
+        internal static ConfigEntry<bool> Wobble;
+        internal static ConfigEntry<bool> Stumbles;
+        internal static ConfigEntry<float> SymptomStrength;
 
         private Harmony _harmony;
 
@@ -48,6 +52,17 @@ namespace RavenIron.Tankard
                 new ConfigDescription("How hard drunkenness garbles chat. 1 is normal, 0.5 is half as bad, 2 reaches full gibberish " +
                                       "at half the intoxication. 0 turns it off.",
                     new AcceptableValueRange<float>(0f, 2f)));
+            CameraSway = Config.Bind("4 - Symptoms", "CameraSway", true,
+                "Past Tipsy the camera leans, bobs, drifts off your aim and breathes in and out. Turn it off if it makes you feel " +
+                "sick for real. Read on your own game.");
+            Wobble = Config.Bind("4 - Symptoms", "Wobble", true,
+                "Past Tipsy your walk drifts side to side. Only while moving; standing still never slides you. Read on your own game.");
+            Stumbles = Config.Bind("4 - Symptoms", "Stumbles", true,
+                "Once hammered you sometimes trip (vanilla's stagger). Never while swimming, steering, sitting, in the air or " +
+                "already staggering, and never two within 8 seconds. Read on your own game.");
+            SymptomStrength = Config.Bind("4 - Symptoms", "SymptomStrength", 1f,
+                new ConfigDescription("Scales sway, wobble and stumbling together. 0 is off, 2 hits full strength at half the meter.",
+                    new AcceptableValueRange<float>(0f, 2f)));
             try
             {
                 _harmony = new Harmony(Guid);
@@ -66,7 +81,30 @@ namespace RavenIron.Tankard
         {
             // The one clock. A player who is not in a world (menu, loading) has no meter.
             if (Player.m_localPlayer == null) { Meter.Reset(); return; }
-            Meter.Tick(UnityEngine.Time.deltaTime);
+            float dt = UnityEngine.Time.deltaTime;
+            Meter.Tick(dt);
+            if (Enabled.Value) Stumbler.Tick(dt);
+        }
+
+        // ---- fault reporting from the hot path ----------------------------------------------------------------------
+        // The camera and movement patches run every frame, so a fault that keeps happening would bury the log. Each site
+        // reports its first fault in full, then once per interval with the number suppressed in between (Fathom's shape).
+        private const float ReportEverySeconds = 30f;
+        private static readonly System.Collections.Generic.Dictionary<string, float> _nextReport = new System.Collections.Generic.Dictionary<string, float>();
+        private static readonly System.Collections.Generic.Dictionary<string, long> _suppressed = new System.Collections.Generic.Dictionary<string, long>();
+
+        internal static void Report(string where, Exception ex)
+        {
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            if (_nextReport.TryGetValue(where, out float next) && now < next)
+            {
+                _suppressed[where] = (_suppressed.TryGetValue(where, out long n) ? n : 0) + 1;
+                return;
+            }
+            _suppressed.TryGetValue(where, out long gone);
+            _suppressed[where] = 0;
+            _nextReport[where] = now + ReportEverySeconds;
+            Log.LogWarning($"{where}: {ex}" + (gone > 0 ? $" (and {gone} more since the last line)" : ""));
         }
 
         private void OnDestroy() => _harmony?.UnpatchSelf();

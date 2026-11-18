@@ -14,6 +14,16 @@ namespace RavenIron.Tankard
         public static float Level { get; private set; }
         public static Tier Tier => Intoxication.TierOf(Level);
 
+        /// <summary>Symptom severity 0 to 1, with the SymptomStrength setting applied. Zero below Tipsy.</summary>
+        public static float SymptomSeverity
+        {
+            get
+            {
+                float s = Intoxication.Severity(Level) * Plugin.SymptomStrength.Value;
+                return s < 0f ? 0f : (s > 1f ? 1f : s);
+            }
+        }
+
         public static void Drink(DrinkDef drink)
         {
             float before = Level;

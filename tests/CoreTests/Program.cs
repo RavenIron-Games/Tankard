@@ -142,6 +142,108 @@ namespace RavenIron.Tankard.Tests
             Check(!threw, "3000 random strings, including lone surrogates and stray brackets, never throw");
         }
 
+        private static void SymptomTests()
+        {
+            // Sober means still: exactly zero, at every moment, for every bad input.
+            bool still = true;
+            foreach (float s in new[] { 0f, -1f, float.NaN, float.NegativeInfinity })
+                for (float t = 0f; t < 60f; t += 0.37f)
+                {
+                    var c = Symptoms.Camera(t, s);
+                    still &= c.Roll == 0f && c.Pitch == 0f && c.Yaw == 0f && c.Fov == 0f && Symptoms.MoveDrift(t, s) == 0f;
+                }
+            Check(still, "no sway and no drift when sober or on bad input");
+            Check(Symptoms.Camera(float.NaN, 1f).Roll == 0f && Symptoms.MoveDrift(float.PositiveInfinity, 1f) == 0f, "a bad clock moves nothing");
+
+            // Bounded by the ceilings, and scaled by severity, over ten simulated minutes at 60 fps.
+            float maxRoll = 0, maxPitch = 0, maxYaw = 0, maxFov = 0, maxDrift = 0, halfRoll = 0;
+            double maxRateRoll = 0, maxRateDrift = 0; // per second, measured over the ACTUAL float step (see below)
+            var prev = Symptoms.Camera(0f, 1f); float prevDrift = Symptoms.MoveDrift(0f, 1f); float prevT = 0f;
+            for (int f = 1; f < 36000; f++)
+            {
+                float t = f / 60f;
+                double dtReal = (double)t - prevT; // float t quantises 1/60 s; divide by the step it really took
+                var c = Symptoms.Camera(t, 1f);
+                float d = Symptoms.MoveDrift(t, 1f);
+                maxRoll = Math.Max(maxRoll, Math.Abs(c.Roll)); maxPitch = Math.Max(maxPitch, Math.Abs(c.Pitch));
+                maxYaw = Math.Max(maxYaw, Math.Abs(c.Yaw)); maxFov = Math.Max(maxFov, Math.Abs(c.Fov));
+                maxDrift = Math.Max(maxDrift, Math.Abs(d));
+                halfRoll = Math.Max(halfRoll, Math.Abs(Symptoms.Camera(t, 0.5f).Roll));
+                maxRateRoll = Math.Max(maxRateRoll, Math.Abs(c.Roll - prev.Roll) / dtReal);
+                maxRateDrift = Math.Max(maxRateDrift, Math.Abs(d - prevDrift) / dtReal);
+                prev = c; prevDrift = d; prevT = t;
+            }
+            const float slack = 1e-4f;
+            Check(maxRoll <= Symptoms.MaxRollDegrees + slack, $"roll stays under its ceiling ({maxRoll:0.00})");
+            Check(maxPitch <= Symptoms.MaxPitchDegrees + slack && maxYaw <= Symptoms.MaxYawDegrees + slack && maxFov <= Symptoms.MaxFovDegrees + slack,
+                  "pitch, yaw and fov stay under their ceilings");
+            Check(maxDrift <= Symptoms.MaxMoveDrift + slack, $"drift stays under its ceiling ({maxDrift:0.00})");
+            Check(maxRoll > Symptoms.MaxRollDegrees * 0.8f, $"full drunk actually reaches a real lean ({maxRoll:0.00} deg)");
+            Check(maxDrift > Symptoms.MaxMoveDrift * 0.8f, $"full drunk actually drifts ({maxDrift:0.00})");
+            Check(Math.Abs(halfRoll - maxRoll * 0.5f) < 0.01f, $"half severity is half the lean ({halfRoll:0.00} vs {maxRoll:0.00})");
+            // Smooth: the rate of change never exceeds the analytic bound on the derivative, so there is no jump.
+            // Roll: 6 deg x (0.6 x 2pi/6.5 + 0.4 x 2pi/3.7) = 7.55 deg/s (a slow lean).
+            // Drift: 0.45 x (0.65 x 2pi/2.9 + 0.35 x 2pi/1.7) = 1.22 /s (a stagger, not a twitch).
+            // Measured as change / actual step: the loop's own float t is not exactly f/60 (it was 0.18% long near 600 s,
+            // which a per-frame comparison read as the function breaking its bound).
+            double rollBound = Symptoms.MaxRollDegrees * (0.60 * 2 * Math.PI / 6.5 + 0.40 * 2 * Math.PI / 3.7);
+            double driftBound = Symptoms.MaxMoveDrift * (0.65 * 2 * Math.PI / 2.9 + 0.35 * 2 * Math.PI / 1.7);
+            Check(maxRateRoll <= rollBound * 1.001, $"roll moves smoothly ({maxRateRoll:0.000} deg/s, bound {rollBound:0.000})");
+            Check(maxRateDrift <= driftBound * 1.001, $"drift moves smoothly ({maxRateDrift:0.0000} /s, bound {driftBound:0.0000})");
+            Check(rollBound < 10.0, "the fastest lean is under 10 degrees a second");
+
+            // Late in a long session: Time.time is a float that never resets. At ten hours, step it the way the game does
+            // and demand the same bound. The first version did its phase maths in float and would have jittered here.
+            float late = 36000f; double lateRateMax = 0;
+            float prevLateT = late, prevLate = Symptoms.Camera(late, 1f).Roll;
+            for (int k = 1; k < 2000; k++)
+            {
+                float t = late + k * (1f / 60f);
+                if (t == prevLateT) continue; // float time can stall for a frame; vanilla would see the same
+                float r = Symptoms.Camera(t, 1f).Roll;
+                lateRateMax = Math.Max(lateRateMax, Math.Abs(r - prevLate) / ((double)t - prevLateT));
+                prevLate = r; prevLateT = t;
+            }
+            Check(lateRateMax <= rollBound * 1.01, $"still smooth after ten hours of play ({lateRateMax:0.000} deg/s)");
+            // It wanders: both signs are reached, so the lean is not stuck to one side.
+            bool left = false, right = false;
+            for (float t = 0f; t < 60f; t += 0.1f) { float r = Symptoms.Camera(t, 1f).Roll; left |= r < -1f; right |= r > 1f; }
+            Check(left && right, "the lean goes both ways");
+
+            // Stumbles: none until properly hammered, more at blackout, and never chained.
+            Check(Symptoms.StumbleChancePerSecond(0.3f, Tier.Drunk) == 0.0, "no stumbles while merely drunk");
+            Check(Symptoms.StumbleChancePerSecond(Symptoms.StumbleStartSeverity, Tier.Drunk) == 0.0, "no stumble exactly at the threshold");
+            Check(Symptoms.StumbleChancePerSecond(0.75f, Tier.Hammered) < Symptoms.StumbleChancePerSecond(1f, Tier.Hammered), "chance climbs");
+            Check(Math.Abs(Symptoms.StumbleChancePerSecond(1f, Tier.Hammered) - Symptoms.MaxStumbleChancePerSecond) < 1e-9, "full chance is the ceiling");
+            Check(Symptoms.StumbleChancePerSecond(1f, Tier.Blackout) > Symptoms.StumbleChancePerSecond(1f, Tier.Hammered), "blackout stumbles more");
+            Check(!Symptoms.ShouldStumble(1f, Tier.Hammered, 0.016f, 0.0, Symptoms.StumbleCooldown - 0.01f), "the cooldown holds even on a certain roll");
+            Check(Symptoms.ShouldStumble(1f, Tier.Hammered, 0.016f, 0.0, Symptoms.StumbleCooldown), "a zero roll stumbles once the cooldown is over");
+            Check(!Symptoms.ShouldStumble(1f, Tier.Hammered, 0.016f, 0.999, 100f), "a high roll does not stumble");
+            Check(!Symptoms.ShouldStumble(1f, Tier.Hammered, 0f, 0.0, 100f) && !Symptoms.ShouldStumble(1f, Tier.Hammered, float.NaN, 0.0, 100f),
+                  "no time, no stumble");
+            Check(!Symptoms.ShouldStumble(1f, Tier.Hammered, 0.016f, double.NaN, 100f) && !Symptoms.ShouldStumble(1f, Tier.Hammered, 0.016f, 0.0, float.NaN),
+                  "a bad roll or a bad clock never stumbles");
+            Check(Symptoms.ShouldStumble(1f, Tier.Blackout, 0.016f, 0.0, Symptoms.BlackoutStumbleCooldown), "blackout's shorter cooldown applies");
+            // A ten-second frame hitch counts as MaxFrame, not as ten seconds of chances.
+            Check(!Symptoms.ShouldStumble(1f, Tier.Hammered, 10f, Symptoms.MaxStumbleChancePerSecond * Symptoms.MaxFrame + 0.001, 100f),
+                  "a long frame is capped");
+
+            // Simulated: an hour at full hammered, 60 fps, real RNG. Rate near the expected value, and the cooldown never broken.
+            var rng = new Random(42);
+            float since = 100f; int stumbles = 0; float minGap = float.MaxValue;
+            for (int f = 0; f < 60 * 3600; f++)
+            {
+                since += 1f / 60f;
+                if (Symptoms.ShouldStumble(1f, Tier.Hammered, 1f / 60f, rng.NextDouble(), since))
+                {
+                    minGap = Math.Min(minGap, since); since = 0f; stumbles++;
+                }
+            }
+            Check(minGap >= Symptoms.StumbleCooldown, $"no two stumbles closer than the cooldown ({minGap:0.0} s)");
+            // Expected interval is cooldown + 1/chance = 8 + 20 = 28 s, so about 129 an hour.
+            Check(stumbles > 100 && stumbles < 160, $"about two a minute at full hammered ({stumbles} in an hour)");
+        }
+
         private static int Main()
         {
             // ---- Add ---------------------------------------------------------------------------------------------
@@ -299,6 +401,7 @@ namespace RavenIron.Tankard.Tests
                     Check(!ing.Item.EndsWith("Base"), $"{r.Name}: no recipe takes a base as an ingredient");
 
             DrunkTextTests();
+            SymptomTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;
