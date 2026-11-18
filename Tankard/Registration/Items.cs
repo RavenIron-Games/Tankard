@@ -177,6 +177,15 @@ namespace RavenIron.Tankard.Registration
                 s.m_attackStatusEffect = null;
             }
 
+            // Our own picture (Registration\Icons.cs). One icon, so m_variants stays 0: 1.0.17's ResetVariantIfInvalid
+            // resets any variant index that is not below m_variants, and GetIcon bounds-checks against m_icons.
+            Sprite icon = Icons.For(def.PrefabName);
+            if (icon != null)
+            {
+                s.m_icons = new[] { icon };
+                s.m_variants = 0;
+            }
+
             s.m_setName = "";
             s.m_setSize = 0;
             s.m_setStatusEffect = null;

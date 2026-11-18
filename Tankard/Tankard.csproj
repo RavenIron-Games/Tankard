@@ -32,6 +32,11 @@
            Text="libs\ is missing or empty. Run tools\fetch-libs.ps1 to populate it from your Valheim install." />
   </Target>
 
+  <!-- Item icons, drawn by tools\icons\make-icons.js; Registration\Icons.cs loads them by this name. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\*.png" LogicalName="icon_%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="assembly_valheim">
       <HintPath>$(LibsDir)\assembly_valheim_publicized.dll</HintPath>
