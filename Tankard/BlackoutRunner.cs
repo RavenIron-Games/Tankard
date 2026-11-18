@@ -82,6 +82,11 @@ namespace RavenIron.Tankard
 
             // Step 3: ask first. Vanilla's distant teleport finds the real floor itself once the area loads (FindFloor, then
             // GetSolidHeight after 15 s), so the generator's height only has to be close; aim a little above it.
+            // Stand up first. While attached (a chair, a bench, a bed, a ship's helm) Player.UpdateAttach writes the seat's
+            // position into the transform EVERY frame (decompiled), so a teleport from a seat is undone the next frame.
+            // Found in the first in-game run: two blackouts from the same bench, both of which "happened" and moved no one.
+            if (p.IsAttached()) p.AttachStop();
+
             Vector3 landing = new Vector3(lx, ly + 2f, lz);
             Quaternion facing = Quaternion.Euler(0f, (float)(Rng.NextDouble() * 360.0), 0f);
             if (!p.TeleportTo(landing, facing, distantTeleport: true))
