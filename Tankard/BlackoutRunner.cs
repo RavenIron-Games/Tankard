@@ -506,6 +506,16 @@ namespace RavenIron.Tankard
             }
             _mapHidden = true;
             if (!ReferenceEquals(p, _checkedBody)) { _checkedBody = p; _homeArmed = false; }
+            // The minimap stays off for the whole blackout. Patch_NoMap only turns REQUESTS for it away, and the game asks
+            // for it only from None, so one that is already showing stays up for good. That happened after a relog: the
+            // game showed it while loading the character, before this tick knew about the blackout (the robot's relog
+            // test, 2026-11-18, read "blackout ON, minimap mode Small"). The big map (Large) is allowed: it is where you remember.
+            Minimap mm = Minimap.instance;
+            if (mm != null && mm.m_mode == Minimap.MapMode.Small)
+            {
+                mm.SetMapMode(Minimap.MapMode.None);
+                Plugin.Log.LogInfo("Blackout: the minimap was showing; hidden again.");
+            }
             if (p.IsDead()) return;
 
             // After a death in a blackout: drop the lost tankard once the new body stands where it came round and the
