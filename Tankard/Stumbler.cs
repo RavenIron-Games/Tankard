@@ -16,6 +16,7 @@ namespace RavenIron.Tankard
     {
         private static readonly System.Random Rng = new System.Random();
         private static float _sinceLast = 1000f;
+        private static float _nextBlockedLog;
 
         public static void Tick(float dt)
         {
@@ -27,7 +28,21 @@ namespace RavenIron.Tankard
             float severity = Meter.SymptomSeverity;
             if (severity <= 0f) return;
             if (!Symptoms.ShouldStumble(severity, Meter.Tier, dt, Rng.NextDouble(), _sinceLast)) return;
-            if (p.IsDead() || p.IsSwimming() || p.IsAttached() || p.InCutscene() || p.IsStaggering() || !p.IsOnGround()) return;
+            string blocked = p.IsDead() ? "dead" : p.IsSwimming() ? "swimming" : p.IsAttached() ? "attached (seat, bed or helm)"
+                : p.InCutscene() ? "in a cutscene" : p.IsStaggering() ? "already staggering" : !p.IsOnGround() ? "not on the ground"
+                : p.IsTeleporting() ? "teleporting" : null;
+            if (blocked != null)
+            {
+                // A stumble was due and a safety rule stopped it. Said at most every 20 s, so a whole binge spent sitting
+                // reads as one line with a reason, not as silence (the first in-game run had a binge with no stumbles and
+                // no way to tell why).
+                if (Time.realtimeSinceStartup >= _nextBlockedLog)
+                {
+                    _nextBlockedLog = Time.realtimeSinceStartup + 20f;
+                    Plugin.Log.LogInfo($"Stumble due at {Meter.Tier} but skipped: {blocked}.");
+                }
+                return;
+            }
 
             try
             {

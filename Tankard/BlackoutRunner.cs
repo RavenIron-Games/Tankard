@@ -102,6 +102,10 @@ namespace RavenIron.Tankard
             _homeArmed = false; // you are still standing at the spot for the teleport's first 2 s
             Minimap.instance?.SetMapMode(Minimap.MapMode.None);
 
+            _followUp = 0f;
+            _followUpStep = 0;
+            _followHome = home;
+            _followTarget = landing;
             Meter.WakeFromBlackout();
             Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, waking {distance:0} m away at ({lx:0}, {lz:0}).");
             p.Message(MessageHud.MessageType.Center, "Everything goes black.");
@@ -156,8 +160,34 @@ namespace RavenIron.Tankard
 
         // ---- coming home ---------------------------------------------------------------------------------------
 
+        // ---- after a blackout: did it take? ------------------------------------------------------------------------
+        // The first in-game run had two blackouts that both started from the same spot, with the player back at the grave
+        // 77 s after the first: the teleport did not hold, and nothing in the log said so. Three lines now say where you
+        // actually are, so a teleport that is undone is visible rather than inferred.
+        private static readonly float[] FollowUpAt = { 3f, 10f, 30f };
+        private static float _followUp = -1f;
+        private static int _followUpStep;
+        private static Vector3 _followHome, _followTarget;
+
+        private static void FollowUp(float dt)
+        {
+            if (_followUp < 0f) return;
+            _followUp += dt;
+            if (_followUpStep >= FollowUpAt.Length) { _followUp = -1f; return; }
+            if (_followUp < FollowUpAt[_followUpStep]) return;
+            Player p = Player.m_localPlayer;
+            if (p == null) { _followUp = -1f; return; }
+            Vector3 pos = p.transform.position;
+            float fromHome = new Vector2(pos.x - _followHome.x, pos.z - _followHome.z).magnitude;
+            float fromTarget = new Vector2(pos.x - _followTarget.x, pos.z - _followTarget.z).magnitude;
+            Plugin.Log.LogInfo($"Blackout +{FollowUpAt[_followUpStep]:0}s: at ({pos.x:0}, {pos.y:0}, {pos.z:0}), {fromHome:0} m from the drinking spot, " +
+                               $"{fromTarget:0} m from the landing; teleporting={p.IsTeleporting()}, attached={p.IsAttached()}, dead={p.IsDead()}.");
+            _followUpStep++;
+        }
+
         public static void Tick(float dt)
         {
+            FollowUp(dt);
             _checkTimer -= dt;
             if (_checkTimer > 0f) return;
             _checkTimer = 0.5f;
