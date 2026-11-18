@@ -75,6 +75,13 @@ namespace RavenIron.Tankard
         private static bool _dropPending;
         private static Vector3 _dropNear;
         private static float _dropWait;
+        // The respawn is a blackout's (drop the lost tankard after it) or the long walk's (no tankard, just no bed).
+        private static bool _dropAfterRespawn;
+        private static bool _longWalkNotice;
+        private static bool _longWalk;
+        private static string LongWalkKey() => Blackout.LongWalkKeyFor(WorldId());
+        /// <summary>No bed yet: a blackout's long walk home is still on (Core\Blackout.LongWalkOver).</summary>
+        public static bool OnLongWalk => _longWalk && Plugin.Enabled.Value;
         // Lost tankards this game dropped, with their real-time deadline, so it can take back any not found in time.
         private static readonly List<KeyValuePair<ItemDrop, DateTime>> _dropped = new List<KeyValuePair<ItemDrop, DateTime>>();
 
@@ -86,6 +93,7 @@ namespace RavenIron.Tankard
         {
             _respawnPending = false;
             if (!spawnedThere) return;
+            if (!_dropAfterRespawn) { _longWalkNotice = true; return; }
             _dropPending = true;
             _dropNear = _respawnAt;
             _dropWait = 0f;
@@ -103,11 +111,15 @@ namespace RavenIron.Tankard
         {
             if (p == null) return;
             bool inBlackout = _mapHidden;
+            // After the blackout, until its hangover is over: still no bed (the owner, 2026-11-18). Read from the save,
+            // not the cached flag, so a death on the very first frame after a login still counts.
+            bool longWalk = !inBlackout && Plugin.Enabled.Value && p.m_customData.ContainsKey(LongWalkKey());
             _respawnPending = false;
             _dropPending = false;
             Meter.OnDeath(p, inBlackout);
-            if (!inBlackout) return;
+            if (!inBlackout && !longWalk) return;
             _homeArmed = false;
+            _dropAfterRespawn = inBlackout;
 
             Vector3 died = p.transform.position;
             Vector3 at = died;
@@ -125,6 +137,12 @@ namespace RavenIron.Tankard
             _respawnAt = at;
             _respawnPending = true;
             float off = new Vector2(at.x - died.x, at.z - died.z).magnitude;
+            if (!inBlackout)
+            {
+                Plugin.Log.LogInfo($"Died on the long walk home at ({died.x:0}, {died.z:0}): you will come round {off:0} m away at " +
+                                   $"({at.x:0}, {at.z:0}), not at your bed, until the blackout's hangover is over.");
+                return;
+            }
             Plugin.Log.LogInfo($"Died during a blackout at ({died.x:0}, {died.z:0}): you will come round {off:0} m away at ({at.x:0}, {at.z:0}), " +
                                "not at your bed, with your lost tankard close by. The map stays dark until you pick it up or walk home.");
         }
@@ -346,6 +364,8 @@ namespace RavenIron.Tankard
             int left = LeaveGear(p, loss);
             p.m_customData[WorldKey()] = Blackout.FormatHome(home.x, home.y, home.z);
             p.m_customData[streakKey] = Blackout.FormatStreak(streak);
+            p.m_customData[LongWalkKey()] = "1"; // no bed until this blackout's hangover is over
+            _longWalk = true;
             _mapHidden = true;
             _homeArmed = false; // you are still standing at the spot for the teleport's first 2 s
             MapMemory.Start(p);
@@ -441,6 +461,30 @@ namespace RavenIron.Tankard
             _followUpStep++;
         }
 
+        /// <summary>
+        /// The long walk home (Core\Blackout.LongWalkOver): reads it from the character, tells a player who has just come
+        /// round on it why they are not at their bed, and ends it once the blackout and its hangover are both over. Only
+        /// once Meter holds this body's saved state, or a login would read "no hangover" and end it on the first frame.
+        /// </summary>
+        private static void UpdateLongWalk(Player p, bool blackoutActive)
+        {
+            string key = LongWalkKey();
+            _longWalk = p.m_customData.ContainsKey(key);
+            if (!_longWalk || p.IsDead()) return;
+            if (_longWalkNotice)
+            {
+                _longWalkNotice = false;
+                p.Message(MessageHud.MessageType.Center, "No bed for you yet. Not until the hangover's gone.");
+            }
+            if (!Meter.AttachedTo(p)) return;
+            bool hangoversOn = Plugin.Hangovers.Value && Plugin.Enabled.Value;
+            if (!Blackout.LongWalkOver(blackoutActive, hangoversOn, Meter.HangoverLeft(p), Meter.BlackedOut)) return;
+            p.m_customData.Remove(key);
+            _longWalk = false;
+            Plugin.Log.LogInfo("Long walk over: the blackout and its hangover are gone, so a death sends you to your bed again.");
+            p.Message(MessageHud.MessageType.TopLeft, "Your head clears. Your bed will have you again.");
+        }
+
         public static void Tick(float dt)
         {
             FollowUp(dt);
@@ -450,8 +494,9 @@ namespace RavenIron.Tankard
 
             Player p = Player.m_localPlayer;
             ExpireDroppedTankards(p);
-            if (p == null || ZNet.instance == null) { _mapHidden = false; return; }
+            if (p == null || ZNet.instance == null) { _mapHidden = false; _longWalk = false; return; }
             string key = WorldKey();
+            UpdateLongWalk(p, p.m_customData.ContainsKey(key));
             if (!p.m_customData.TryGetValue(key, out string saved)) { _mapHidden = false; return; }
             if (!Blackout.TryParseHome(saved, out float hx, out float _, out float hz))
             {

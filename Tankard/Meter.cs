@@ -293,6 +293,10 @@ namespace RavenIron.Tankard
             if (!ReferenceEquals(p, _body)) { _body = p; Save(p); } // a respawn: same character, new body
         }
 
+        /// <summary>True once this body's saved state is loaded, so its hangover and binge can be trusted (the long walk
+        /// must not end on the first frames after a login, before the save is read).</summary>
+        public static bool AttachedTo(Player p) => p != null && ReferenceEquals(p, _body);
+
         private static void Save(Player p)
         {
             if (p == null || !ReferenceEquals(p, _body)) return;

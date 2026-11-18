@@ -387,5 +387,26 @@ namespace RavenIron.Tankard.Core
 
         /// <summary>The custom-data key for one world, so a blackout in one world never hides the map in another.</summary>
         public static string KeyFor(string worldId) => "Tankard.BlackoutHome." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
+
+        // ---- the long walk home ---------------------------------------------------------------------------------
+        // The owner, 2026-11-18, after dying a second time and waking at his bed: drinking the lost tankard ended the
+        // blackout, so the next death was an ordinary one and vanilla sent him home. "Drink the tankard, then die" was a free
+        // trip home. His choice: no bed until the blackout's hangover is over. A blackout starts the long walk; until it ends,
+        // every death wakes you near where you fell (as in a blackout) but drops no lost tankard and leaves the map alone.
+
+        public static string LongWalkKeyFor(string worldId) => "Tankard.LongWalk." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
+
+        /// <summary>
+        /// Whether the long walk is over: the blackout has ended, and its hangover has been and gone (run out, or cured by a
+        /// Bloody Ivar). <paramref name="hangoverOwed"/> is a blacked-out binge still running: its 20-minute hangover arrives
+        /// when the meter reaches zero, so the walk is not over before it. With hangovers off there is nothing to wait for,
+        /// and the walk ends with the blackout.
+        /// </summary>
+        public static bool LongWalkOver(bool blackoutActive, bool hangoversOn, float hangoverLeft, bool hangoverOwed)
+        {
+            if (blackoutActive) return false;
+            if (!hangoversOn) return true;
+            return !(hangoverLeft > 0f) && !hangoverOwed; // NaN counts as none
+        }
     }
 }

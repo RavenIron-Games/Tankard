@@ -80,6 +80,7 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 - **Your map is gone.** Open it and it starts to come back while you look, slowly if you are still drunk. Walk back to the drinking spot and it all returns at once.
 - **Blackouts in a row** send you further each time. Three days in a row and you lose everything and wake at least 5 km out.
 - **Dying is not a way out.** You do not wake at your bed. You wake a short walk from where you fell, still blacked out, with a twenty-minute hangover. Close by lies **your lost tankard**. Drink from it to remember everything and end the blackout. Leave it for five minutes and it is gone, and you walk home.
+- **No bed until the hangover is gone.** Even after the blackout ends, a death wakes you near where you fell, not at your bed, until the blackout's hangover has run out or a Bloody Ivar has cured it.
 
 ![IV THE MORNING AFTER](https://img.shields.io/badge/IV-THE_MORNING_AFTER-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNyAxTDIuNSA2TDcuNSA4TDMgMTMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2NiYWE4YSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 

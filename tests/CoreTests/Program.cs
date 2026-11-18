@@ -397,6 +397,17 @@ namespace RavenIron.Tankard.Tests
             Check(LostTankard.IsExpired(stamp, t0 + TimeSpan.FromSeconds(301).Ticks) && LostTankard.IsExpired(stamp, t0 + TimeSpan.FromHours(3).Ticks),
                   "gone after five minutes");
             Check(!LostTankard.IsExpired(stamp, t0 - TimeSpan.FromMinutes(10).Ticks), "a clock set back counts as just dropped");
+
+            // The long walk home (owner, 2026-11-18): no bed until the blackout's hangover is over.
+            Check(!Blackout.LongWalkOver(true, true, 0f, false), "long walk: never over while the blackout runs");
+            Check(!Blackout.LongWalkOver(true, false, 0f, false), "long walk: never over while the blackout runs, hangovers off too");
+            Check(!Blackout.LongWalkOver(false, true, 1179f, false), "long walk: the lost tankard ended the blackout, hangover running: no bed");
+            Check(!Blackout.LongWalkOver(false, true, 0f, true), "long walk: walked home, binge still running and its hangover owed: no bed");
+            Check(Blackout.LongWalkOver(false, true, 0f, false), "long walk: blackout over, hangover run out or cured: bed again");
+            Check(Blackout.LongWalkOver(false, true, float.NaN, false), "long walk: a NaN hangover counts as none");
+            Check(Blackout.LongWalkOver(false, false, 500f, true), "long walk: with hangovers off it ends with the blackout");
+            Check(Blackout.LongWalkKeyFor("123") == "Tankard.LongWalk.123" && Blackout.LongWalkKeyFor(null) == "Tankard.LongWalk.unknown" &&
+                  Blackout.LongWalkKeyFor("123") != Blackout.KeyFor("123"), "long walk: its own per-world key");
             Check(LostTankard.IsExpired(null, t0) && LostTankard.IsExpired("", t0) && LostTankard.IsExpired("soon", t0) && LostTankard.IsExpired("0", t0),
                   "a missing or garbled stamp counts as too late");
 

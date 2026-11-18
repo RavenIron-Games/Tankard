@@ -20,5 +20,6 @@ The first release.
   - Your map is dark until you remember it or walk back.
   - Three days in a row costs everything.
   - Dying in a blackout wakes you nearby, never at your bed. Your lost tankard lies close by for five minutes, and drinking it ends the blackout.
+  - Your bed waits until the blackout's hangover is gone.
 - **The `tankard` console command:** status, find, map, sober, tolerance.
 - **Server-synced settings**, locked to admins. A player can't join on a different Tankard version.

@@ -60,6 +60,7 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 - **Your map is gone.** Open it and it starts to come back while you look, slowly if you are still drunk. Walk back to the drinking spot and it all returns at once.
 - **Blackouts in a row** send you further each time. Three days in a row and you lose everything and wake at least 5 km out.
 - **Dying is not a way out.** You do not wake at your bed. You wake a short walk from where you fell, still blacked out, with a twenty-minute hangover. Close by lies **your lost tankard**. Drink from it to remember everything and end the blackout. Leave it for five minutes and it is gone, and you walk home.
+- **No bed until the hangover is gone.** Even after the blackout ends, a death wakes you near where you fell, not at your bed, until the blackout's hangover has run out or a Bloody Ivar has cured it.
 
 {{rune ᛊ | IV | THE MORNING AFTER | a0652a}}
 
