@@ -39,3 +39,10 @@
   least 5 km away. A day without a blackout ends the streak.
 - `tankard status | map | sober` in the console: see the meter, blackout, memory and streak; end a stuck blackout;
   sober up.
+- **Six more drinks, ten in all**, climbing the biomes. From the cauldron: Raspberry cider (8 Raspberry + 1 Honey),
+  Ale, Forest grog (4 Carrot + 2 Thistle), Blueberry wine. From the fermenter, each stronger than the last: Honey
+  mead, Bog wine (Turnip, Bloodbag, Honey), Frostmead (Onion, Freeze gland, Honey), Skaldic mead, Jotun's draught
+  (Sap, Royal jelly, Jotun puffs), Fire wine (Vineberry, Honey). They clone different vanilla meads, so they look
+  different in the inventory.
+- `PreferExploredGround` (off by default): a blackout prefers ground the world has already generated, which avoids
+  the hitch of building new land as you wake, at the cost of landing only where the world has been loaded.

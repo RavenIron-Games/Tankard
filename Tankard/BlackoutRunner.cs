@@ -118,7 +118,7 @@ namespace RavenIron.Tankard
             // after a blackout (the owner, 2026-11-17; the log showed locations and dungeons generated at each landing).
             HashSet<Vector2s> generated = GeneratedZones();
             Func<float, float, bool> preferred = null;
-            if (generated != null && generated.Count > 0)
+            if (Plugin.PreferExploredGround.Value && generated != null && generated.Count > 0)
                 preferred = (x, z) => generated.Contains(ZoneSystem.GetZone(new Vector3(x, 0f, z)));
 
             if (!Blackout.PickLanding(home.x, home.z, distance, Rng,

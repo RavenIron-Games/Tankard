@@ -541,7 +541,7 @@ namespace RavenIron.Tankard.Tests
                       $"{d.PrefabName}: only fermenter drinks yield from a barrel, and a base is crafted one at a time");
                 Check(d.Path == BrewPath.Fermenter == (d.BasePrefabName != null), $"{d.PrefabName}: only fermenter drinks have a base");
             }
-            Check(Drinks.All.Count == 4, "four drinks in the first cut");
+            Check(Drinks.All.Count == 10, "ten drinks: four from the cauldron, six from the fermenter");
 
             bool hasStation = false, hasFermenter = false;
             float maxStation = 0f, minFerment = float.MaxValue;
@@ -553,6 +553,12 @@ namespace RavenIron.Tankard.Tests
             Check(hasStation && hasFermenter, "both brewing paths are represented");
             // A fermented drink should outpunch a station one, or there is no reason to wait.
             Check(minFerment > maxStation, "every fermented drink is stronger than every station drink");
+            // The fermenter list climbs the biomes: each drink is stronger than the one before it.
+            var fermented = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
+            bool climbs = true;
+            for (int i = 1; i < fermented.Count; i++) climbs &= fermented[i].Potency > fermented[i - 1].Potency;
+            Check(climbs, "fermented drinks get stronger in table order (one per biome)");
+            Check(Drinks.All.Select(d => d.DonorPrefab).Distinct().Count() >= 4, "drinks clone several different meads, so they don't all look alike");
 
             // ---- Tokens and the English table -------------------------------------------------------------------------
             var tokens = new HashSet<string>();
@@ -579,10 +585,10 @@ namespace RavenIron.Tankard.Tests
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
-            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Ale,TK_BlueberryWine,TK_HoneyMead,TK_SkaldicMead",
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_HoneyMead,TK_BogWine,TK_Frostmead,TK_SkaldicMead,TK_JotunDraught,TK_FireWine",
                   "shipped prefab names are pinned (saves store them)");
             Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
-                  "TK_Ale,TK_BlueberryWine,TK_HoneyMead,TK_HoneyMeadBase,TK_SkaldicMead,TK_SkaldicMeadBase",
+                  "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_HoneyMead,TK_HoneyMeadBase,TK_BogWine,TK_BogWineBase,TK_Frostmead,TK_FrostmeadBase,TK_SkaldicMead,TK_SkaldicMeadBase,TK_JotunDraught,TK_JotunDraughtBase,TK_FireWine,TK_FireWineBase",
                   "shipped item names, bases included, are pinned");
 
             // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------
