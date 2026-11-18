@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using RavenIron.Tankard.Core;
+using UnityEngine;
 
 namespace RavenIron.Tankard.Patches
 {
@@ -80,6 +81,59 @@ namespace RavenIron.Tankard.Patches
         private static void Finalizer(Fermenter __instance, float __state)
         {
             if (__state >= 0f && __instance != null) __instance.m_fermentationDuration = __state;
+        }
+    }
+
+    /// <summary>
+    /// A death during a blackout respawns you on fresh ground near where you fell (BlackoutRunner.OnLocalDeath picks it),
+    /// never at your bed. The owner, 2026-11-18: going back to the bed "make it to easy to get drunk and get home".
+    ///
+    /// Game.FindSpawnPoint (private, decompiled 1.0.21) runs every frame while a respawn is pending. After a death it tries
+    /// the bed (custom spawn point), then the start temple: each waits m_respawnLoadDuration (8 s) and for the area to be
+    /// ready, then takes the ground height. This prefix does the same steps for Tankard's spot instead, and only after a
+    /// death (m_respawnAfterDeath; a log-in uses the logout point and is never touched). usedLogoutPoint = true keeps
+    /// vanilla from making that spot your new home point. Nothing pending, or another prefix already decided:
+    /// vanilla runs. If the spot has no ground (it should: it was picked as dry land), Tankard
+    /// lets go and vanilla picks, with a warning, rather than leave you waiting forever.
+    /// </summary>
+    [HarmonyPatch(typeof(Game), "FindSpawnPoint")]
+    internal static class Patch_BlackoutRespawn
+    {
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.Low)]
+        private static bool Prefix(Game __instance, ref Vector3 point, ref bool usedLogoutPoint, float dt, ref bool __result,
+            bool ___m_respawnAfterDeath, ref float ___m_respawnWait, bool __runOriginal)
+        {
+            if (!__runOriginal) return false;
+            try
+            {
+                if (!___m_respawnAfterDeath || !BlackoutRunner.PeekRespawn(out Vector3 at)) return true;
+                ___m_respawnWait += dt;
+                usedLogoutPoint = false;
+                point = Vector3.zero;
+                __result = false;
+                ZNet.instance.SetReferencePosition(at);
+                if (___m_respawnWait <= __instance.m_respawnLoadDuration || !ZNetScene.instance.IsAreaReady(at)) return false;
+                if (!ZoneSystem.instance.GetGroundHeight(at, out float ground))
+                {
+                    Plugin.Log.LogWarning($"Blackout respawn: no ground at ({at.x:0}, {at.z:0}); letting the game choose.");
+                    BlackoutRunner.RespawnUsed(spawnedThere: false);
+                    ___m_respawnWait = 0f;
+                    return false;
+                }
+                point = new Vector3(at.x, Mathf.Max(at.y, ground) + 0.25f, at.z);
+                usedLogoutPoint = true;
+                __result = true;
+                BlackoutRunner.RespawnUsed(spawnedThere: true);
+                Plugin.Log.LogInfo($"Blackout respawn: you come round at ({point.x:0}, {point.z:0}), after {___m_respawnWait:0.0} s.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Blackout respawn failed, the game picks instead: {ex.Message}");
+                BlackoutRunner.RespawnUsed(spawnedThere: false);
+                return true;
+            }
         }
     }
 }

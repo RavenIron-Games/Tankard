@@ -68,30 +68,203 @@ namespace RavenIron.Tankard
 
         private static string WorldKey() => Blackout.KeyFor(WorldId());
 
+        // A death in a blackout: where the next body comes round (taken by Patch_BlackoutRespawn), then the lost tankard to
+        // drop beside it. Static because the dead body (and its m_customData) is destroyed before Game looks for a spawn.
+        private static bool _respawnPending;
+        private static Vector3 _respawnAt;
+        private static bool _dropPending;
+        private static Vector3 _dropNear;
+        private static float _dropWait;
+        // Lost tankards this game dropped, with their real-time deadline, so it can take back any not found in time.
+        private static readonly List<KeyValuePair<ItemDrop, DateTime>> _dropped = new List<KeyValuePair<ItemDrop, DateTime>>();
+
+        /// <summary>Where the next body comes round after a death in a blackout. False means "let vanilla choose".</summary>
+        public static bool PeekRespawn(out Vector3 at) { at = _respawnAt; return _respawnPending && Plugin.Enabled.Value; }
+
+        /// <summary>The respawn happened (or was given up): drop the lost tankard once the new body is standing there.</summary>
+        public static void RespawnUsed(bool spawnedThere)
+        {
+            _respawnPending = false;
+            if (!spawnedThere) return;
+            _dropPending = true;
+            _dropNear = _respawnAt;
+            _dropWait = 0f;
+        }
+
         /// <summary>
-        /// Dying in a blackout is not a way out (owner, 2026-11-18: "dying in a black out is the easy way out", replacing the
-        /// same day's "dying should clear the blackout"). You still respawn at your bed with two graves to fetch, but the
-        /// map stays dark until you walk back to the drinking spot, and you wake with the full post-blackout hangover.
-        /// The coming-home check is DISARMED, so a bed beside the drinking spot does not count as walking home: you must
-        /// be seen away from it first. Any death also carries a running hangover over to the new body. From Patch_Death.
+        /// Dying in a blackout is no way out (owner, 2026-11-18). You never respawn at your bed ("make it to easy to get
+        /// drunk and get home"), and not where you fell either, so whatever killed you cannot keep killing you: you come
+        /// round on fresh dry land about LostTankard.RespawnDistance from where you died, picked again on every death, with
+        /// your lost tankard 10 to 20 m away. Picking it up ends the blackout. Walking back to the drinking spot still works.
+        /// You also wake with the full post-blackout hangover, and any death carries a running hangover to the new body.
+        /// The coming-home check is disarmed, so a respawn near the drinking spot never counts as walking home. From Patch_Death.
         /// </summary>
         public static void OnLocalDeath(Player p)
         {
             if (p == null) return;
             bool inBlackout = _mapHidden;
+            _respawnPending = false;
+            _dropPending = false;
             Meter.OnDeath(p, inBlackout);
             if (!inBlackout) return;
             _homeArmed = false;
-            Plugin.Log.LogInfo("Died during a blackout: the map stays dark until you walk back to the drinking spot. Two graves to fetch.");
+
+            Vector3 died = p.transform.position;
+            Vector3 at = died;
+            WorldGenerator wg = WorldGenerator.instance;
+            if (wg != null && ZoneSystem.instance != null)
+            {
+                int allowed = Blackout.AllowedBiomes(k => ZoneSystem.instance.GetGlobalKey(k));
+                if (Blackout.PickLanding(died.x, died.z, LostTankard.RespawnDistance, Rng,
+                        (x, z) => (int)wg.GetBiome(x, z), (x, z) => wg.GetHeight(x, z), ZoneSystem.instance.m_waterLevel, allowed,
+                        out float lx, out float lz, out float ly))
+                    at = new Vector3(lx, ly, lz);
+                else
+                    Plugin.Log.LogWarning("Died during a blackout: no allowed dry land near where you fell, so you come round there.");
+            }
+            _respawnAt = at;
+            _respawnPending = true;
+            float off = new Vector2(at.x - died.x, at.z - died.z).magnitude;
+            Plugin.Log.LogInfo($"Died during a blackout at ({died.x:0}, {died.z:0}): you will come round {off:0} m away at ({at.x:0}, {at.z:0}), " +
+                               "not at your bed, with your lost tankard close by. The map stays dark until you pick it up or walk home.");
         }
 
-        /// <summary>The blackout is over: by walking home, by remembering the whole map, or by a damaged save.</summary>
+        /// <summary>The blackout is over: by walking home, by finding the lost tankard, by remembering the whole map, or by a damaged save.</summary>
         internal static void EndBlackout(Player p, bool restoreMinimap)
         {
             if (p != null) p.m_customData.Remove(WorldKey());
+            _respawnPending = false;
+            _dropPending = false;
             _mapHidden = false;
             MapMemory.Clear(p);
             if (restoreMinimap) Minimap.instance?.SetMapMode(Minimap.MapMode.Small); // nothing else would bring it back
+        }
+
+        // ---- the lost tankard -----------------------------------------------------------------------------------
+
+        /// <summary>Drops the lost tankard 10-20 m from the new body, on dry ground, marked with the owner's id.</summary>
+        private static void DropLostTankard(Player p)
+        {
+            _dropPending = false;
+            try
+            {
+                GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(LostTankard.PrefabName) : null;
+                ItemDrop template = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+                if (template == null)
+                {
+                    Plugin.Log.LogError($"Lost tankard: the '{LostTankard.PrefabName}' prefab is missing, so none was dropped. Walk home instead.");
+                    return;
+                }
+                Vector3 me = p.transform.position;
+                Vector3 spot;
+                if (LostTankard.PickDrop(me.x, me.z, Rng, (x, z) => ZoneSystem.instance.GetGroundHeight(new Vector3(x, me.y + 50f, z)),
+                        ZoneSystem.instance.m_waterLevel, out float dx, out float dz, out float dy))
+                    spot = new Vector3(dx, dy + 0.5f, dz);
+                else
+                    spot = me + p.transform.forward * 1.5f + Vector3.up * 0.5f; // nowhere dry nearby: at your feet
+                ItemDrop.ItemData item = template.m_itemData.Clone();
+                item.m_dropPrefab = prefab;
+                item.m_stack = 1;
+                item.m_customData[LostTankard.OwnerKey] = LostTankard.FormatOwner(p.GetPlayerID());
+                DateTime now = DateTime.UtcNow;
+                item.m_customData[LostTankard.DroppedKey] = LostTankard.FormatTicks(now.Ticks);
+                ItemDrop dropped = ItemDrop.DropItem(item, 1, spot, Quaternion.Euler(0f, (float)(Rng.NextDouble() * 360.0), 0f));
+                if (dropped != null) _dropped.Add(new KeyValuePair<ItemDrop, DateTime>(dropped, now.AddSeconds(LostTankard.FindSeconds)));
+                float d = new Vector2(spot.x - me.x, spot.z - me.z).magnitude;
+                Plugin.Log.LogInfo($"Lost tankard dropped {d:0} m from you at ({spot.x:0}, {spot.z:0}); {LostTankard.FindSeconds:0} s of real time to find it.");
+                p.Message(MessageHud.MessageType.Center, "You had a tankard in your hand... it can't be far. Find it before it's gone.");
+            }
+            catch (Exception ex) { Plugin.Report("Lost tankard drop", ex); }
+        }
+
+        /// <summary>
+        /// Takes back every lost tankard this game dropped that nobody found within LostTankard.FindSeconds of real time.
+        /// A picked-up one is already gone from the world (Unity null) and is just forgotten.
+        /// </summary>
+        private static void ExpireDroppedTankards(Player p)
+        {
+            if (_dropped.Count == 0) return;
+            DateTime now = DateTime.UtcNow;
+            for (int i = _dropped.Count - 1; i >= 0; i--)
+            {
+                ItemDrop drop = _dropped[i].Key;
+                if (drop == null) { _dropped.RemoveAt(i); continue; }
+                if (now < _dropped[i].Value) continue;
+                _dropped.RemoveAt(i);
+                try
+                {
+                    ZNetView nview = drop.GetComponent<ZNetView>();
+                    if (nview == null || !nview.IsValid()) continue;
+                    if (!nview.IsOwner()) nview.ClaimOwnership();
+                    nview.Destroy();
+                    Plugin.Log.LogInfo("Lost tankard despawned: not found in time.");
+                    if (p != null && _mapHidden)
+                        p.Message(MessageHud.MessageType.Center, "Your tankard is gone. You'll have to find your own way home.");
+                }
+                catch (Exception ex) { Plugin.Report("Lost tankard despawn", ex); }
+            }
+        }
+
+        /// <summary>
+        /// Your own lost tankard, picked up: found in time it is marked so the clock no longer applies, and you are told to
+        /// drink it. Picked up too late (a copy that outlived the despawn, say across a relog) it crumbles. Anyone else's is
+        /// left alone: it does nothing for them.
+        /// </summary>
+        private static void CheckPickedUpTankards(Player p)
+        {
+            Inventory inv = p.GetInventory();
+            if (inv == null) return;
+            long me = p.GetPlayerID();
+            foreach (ItemDrop.ItemData it in inv.GetAllItems())
+            {
+                if (it?.m_shared == null || it.m_shared.m_name != LostTankard.NameToken) continue;
+                if (it.m_customData.ContainsKey(LostTankard.FoundKey)) continue;
+                it.m_customData.TryGetValue(LostTankard.OwnerKey, out string owner);
+                if (!LostTankard.IsMine(owner, me)) continue;
+                it.m_customData.TryGetValue(LostTankard.DroppedKey, out string dropped);
+                if (LostTankard.IsExpired(dropped, DateTime.UtcNow.Ticks))
+                {
+                    inv.RemoveItem(it); // returning at once: the enumerator never advances after the removal
+                    Plugin.Log.LogInfo("Lost tankard picked up too late: it crumbles.");
+                    p.Message(MessageHud.MessageType.Center, "The tankard crumbles in your hand. Too late.");
+                    return;
+                }
+                it.m_customData[LostTankard.FoundKey] = "1";
+                Plugin.Log.LogInfo("Lost tankard found in time.");
+                p.Message(MessageHud.MessageType.Center, "Your tankard! Drink from it.");
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Drinking the lost tankard (from Patch_Consume). Single use: the game has already taken it from the bag. Yours, found
+        /// in time, during a blackout: the blackout ends and the map comes back. Anything else: gone, and nothing happens.
+        /// </summary>
+        public static void DrankLostTankard(Player p, ItemDrop.ItemData item)
+        {
+            item.m_customData.TryGetValue(LostTankard.OwnerKey, out string owner);
+            if (!LostTankard.IsMine(owner, p.GetPlayerID()))
+            {
+                Plugin.Log.LogInfo("Drank someone else's lost tankard: nothing happens.");
+                p.Message(MessageHud.MessageType.Center, "It isn't your tankard. Nothing comes back to you.");
+                return;
+            }
+            item.m_customData.TryGetValue(LostTankard.DroppedKey, out string dropped);
+            if (!item.m_customData.ContainsKey(LostTankard.FoundKey) && LostTankard.IsExpired(dropped, DateTime.UtcNow.Ticks))
+            {
+                Plugin.Log.LogInfo("Drank a lost tankard found too late: nothing happens.");
+                p.Message(MessageHud.MessageType.Center, "Too late. It's empty.");
+                return;
+            }
+            if (!_mapHidden)
+            {
+                Plugin.Log.LogInfo("Drank the lost tankard with no blackout running: nothing to end.");
+                p.Message(MessageHud.MessageType.Center, "Empty. You already know where you are.");
+                return;
+            }
+            Plugin.Log.LogInfo("Drank from the lost tankard: blackout over, map restored.");
+            p.Message(MessageHud.MessageType.Center, "One more drink... and it all comes back to you.");
+            EndBlackout(p, restoreMinimap: true);
         }
 
         // ---- the drink that might do it ---------------------------------------------------------------------------
@@ -276,6 +449,7 @@ namespace RavenIron.Tankard
             _checkTimer = 0.5f;
 
             Player p = Player.m_localPlayer;
+            ExpireDroppedTankards(p);
             if (p == null || ZNet.instance == null) { _mapHidden = false; return; }
             string key = WorldKey();
             if (!p.m_customData.TryGetValue(key, out string saved)) { _mapHidden = false; return; }
@@ -288,6 +462,18 @@ namespace RavenIron.Tankard
             _mapHidden = true;
             if (!ReferenceEquals(p, _checkedBody)) { _checkedBody = p; _homeArmed = false; }
             if (p.IsDead()) return;
+
+            // After a death in a blackout: drop the lost tankard once the new body stands where it came round and the
+            // ground there has loaded (GetGroundHeight needs the area). Never later than a minute, wherever you are then.
+            if (_dropPending)
+            {
+                _dropWait += 0.5f;
+                Vector3 me = p.transform.position;
+                bool there = new Vector2(me.x - _dropNear.x, me.z - _dropNear.z).magnitude < 60f;
+                if ((there && !p.IsTeleporting() && ZoneSystem.instance.IsActiveAreaLoaded()) || _dropWait >= 60f) DropLostTankard(p);
+            }
+            CheckPickedUpTankards(p);
+
             Vector3 pos = p.transform.position;
             if (Blackout.ShouldRestoreMap(ref _homeArmed, p.IsTeleporting(), pos.x, pos.z, hx, hz))
             {

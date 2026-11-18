@@ -69,7 +69,12 @@
   frostmead 50, skaldic mead 60, Jotun's draught 80, fire wine 100 (vanilla mead is 40).
 - **Quitting no longer sobers you up.** The meter, the binge and the hangover are saved with the character, and no time
   passes while you're logged out.
-- **Dying is no way out of a blackout.** You respawn at your bed with two graves to fetch, but your map stays dark until you walk back to the drinking spot, and you wake with the full 20-minute hangover. A bed right beside the drinking spot does not count as walking home: you have to leave and come back. Dying no longer cures any hangover either: the new body keeps whatever was left.
+- **Dying is no way out of a blackout.**
+  - **Where you come round:** never at your bed, and not where you fell either, because whatever killed you would still be there. You come round on fresh dry land 180 to 270 m from where you died, picked again on every death.
+  - **Your lost tankard** lies 10 to 20 m away. It's single use: pick it up and drink from it, and the blackout ends, your map comes back and the tankard is gone.
+  - **Find it within 5 minutes** of real time, or it despawns and you have to walk home. Walking back to the drinking spot still works either way.
+  - **Only your own tankard counts.** Someone else who drinks it gets nothing.
+  - **The hangover:** you wake with the full 20-minute hangover. Dying no longer cures any hangover either: the new body keeps whatever was left.
 - Settings: `DrinkEffects`, `LiquidCourage`, `Hangovers`, `PerDrinkFermentTimes`.
 - **Blackouts follow your blood alcohol, not a drink count.** The meter now runs past full, up to 200, and anything over
   100 is "over the limit" (sobering from 200 takes about 13 minutes). Only a drink that leaves you over the limit can

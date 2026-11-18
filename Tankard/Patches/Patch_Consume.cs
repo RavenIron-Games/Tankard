@@ -23,6 +23,9 @@ namespace RavenIron.Tankard.Patches
                 if (!__result || !Plugin.Enabled.Value || item == null || item.m_shared == null) return;
                 if (__instance != Player.m_localPlayer) return; // the meter belongs to the drinker's own client
 
+                // The lost tankard: single use, drinking it is what ends a blackout after a death (BlackoutRunner).
+                if (item.m_shared.m_name == LostTankard.NameToken) { BlackoutRunner.DrankLostTankard(__instance, item); return; }
+
                 DrinkDef drink = Words.ByNameToken(item.m_shared.m_name);
                 if (drink == null)
                 {

@@ -68,6 +68,8 @@ namespace RavenIron.Tankard.Registration
                 }
                 foreach (KeyValuePair<string, string> kv in Words.English())
                     _addWord(__instance, kv.Key, kv.Value);
+                foreach (KeyValuePair<string, string> kv in LostTankard.English())
+                    _addWord(__instance, kv.Key, kv.Value);
             }
             catch (Exception ex)
             {

@@ -45,6 +45,14 @@ namespace RavenIron.Tankard.Registration
             return _updateRegisters != null;
         }
 
+        /// <summary>Every item Tankard registers: the drinks and their bases, then the lost tankard.</summary>
+        private static List<ItemSpec> AllSpecs()
+        {
+            var list = Drinks.Items();
+            list.Add(ItemSpec.LostTankardSpec());
+            return list;
+        }
+
         public static GameObject Get(string prefabName) =>
             Prefabs.TryGetValue(prefabName, out GameObject go) ? go : null;
 
@@ -60,7 +68,7 @@ namespace RavenIron.Tankard.Registration
             if (db == null || db.m_items == null || db.m_items.Count == 0 || db.GetItemPrefab("Wood") == null) return;
 
             bool added = false;
-            foreach (ItemSpec def in Drinks.Items())
+            foreach (ItemSpec def in AllSpecs())
             {
                 try
                 {
@@ -92,6 +100,11 @@ namespace RavenIron.Tankard.Registration
                 return existing;
 
             GameObject donor = db.GetItemPrefab(def.DonorPrefab);
+            if (donor == null && !string.IsNullOrEmpty(def.FallbackDonorPrefab))
+            {
+                donor = db.GetItemPrefab(def.FallbackDonorPrefab);
+                if (donor != null) Plugin.Log.LogWarning($"Donor '{def.DonorPrefab}' is missing; '{def.PrefabName}' is built from '{def.FallbackDonorPrefab}' instead.");
+            }
             if (donor == null)
             {
                 Plugin.Log.LogError($"Donor prefab '{def.DonorPrefab}' is missing from ObjectDB, so '{def.PrefabName}' cannot be built.");
@@ -135,8 +148,9 @@ namespace RavenIron.Tankard.Registration
             s.m_description = def.DescriptionToken;
             // A drink is a consumable. A base is a MATERIAL: Humanoid.CanConsumeItem refuses anything that is not
             // ItemType.Consumable (decompiled), so a base can never be swallowed for nothing; only the fermenter takes it.
-            s.m_itemType = def.IsDrink ? ItemDrop.ItemData.ItemType.Consumable : ItemDrop.ItemData.ItemType.Material;
-            s.m_maxStackSize = def.IsDrink ? 10 : 20;
+            // The lost tankard is drunk too (single use: drinking it ends the blackout, Patch_Consume), so it is a consumable.
+            s.m_itemType = def.IsDrink || def.IsLostTankard ? ItemDrop.ItemData.ItemType.Consumable : ItemDrop.ItemData.ItemType.Material;
+            s.m_maxStackSize = def.IsLostTankard ? 1 : def.IsDrink ? 10 : 20;
             s.m_weight = 0.5f;
             s.m_teleportable = true;
             s.m_questItem = false;
@@ -152,6 +166,16 @@ namespace RavenIron.Tankard.Registration
             s.m_foodEitr = 0f;
             s.m_foodBurnTime = 0f;
             s.m_foodRegen = 0f;
+
+            if (def.IsLostTankard)
+            {
+                // Vanilla's own despawn is off (ItemDrop.TimedDestruction: an hour, and only with no player within 25 m;
+                // decompiled 1.0.21). Tankard runs its own 5-minute clock instead (LostTankard.FindSeconds): the dropper's
+                // game removes it from the world, and a copy that outlived that (a relog) is refused when picked up.
+                drop.m_autoDestroy = false;
+                // The vanilla tankard is equipment; ours is only ever picked up, so strip what it does when equipped.
+                s.m_attackStatusEffect = null;
+            }
 
             s.m_setName = "";
             s.m_setSize = 0;
@@ -188,7 +212,7 @@ namespace RavenIron.Tankard.Registration
             if (scene == null || Prefabs.Count == 0 || !ResolveNamedPrefabs()) return;
             Dictionary<int, GameObject> named = _namedPrefabs(scene);
 
-            foreach (ItemSpec def in Drinks.Items())
+            foreach (ItemSpec def in AllSpecs())
             {
                 if (!Prefabs.TryGetValue(def.PrefabName, out GameObject prefab) || prefab == null) continue;
                 int hash = def.PrefabName.GetStableHashCode();

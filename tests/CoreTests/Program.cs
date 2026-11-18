@@ -320,6 +320,78 @@ namespace RavenIron.Tankard.Tests
             Check(MeterState.Parse(null).Level == 0f && MeterState.Parse("12;3").Level == 0f, "a missing or short save is sober");
         }
 
+        private static void LostTankardTests()
+        {
+            // The owner, 2026-11-18: a death in a blackout must not loop ("troll kills you and keeps killing you"), and the
+            // way out is a tankard "closer 10-20m away".
+            bool ringOk = true; float near = float.MaxValue, far = 0f;
+            for (int s = 0; s < 500; s++)
+            {
+                LostTankard.DropOffset(new Random(s), out float dx, out float dz);
+                float d = (float)Math.Sqrt(dx * dx + dz * dz);
+                ringOk &= d >= LostTankard.DropMin - 0.01f && d <= LostTankard.DropMax + 0.01f;
+                near = Math.Min(near, d); far = Math.Max(far, d);
+            }
+            Check(ringOk, $"the tankard always lands 10-20 m from you ({near:0.0} to {far:0.0} m over 500 drops)");
+
+            // West of x = 0 is sea (height 0, water at 30): the tankard only ever lands on the dry east side.
+            Func<float, float, float> eastDry = (x, z) => x >= 0f ? 40f : 0f;
+            bool dryOk = true; int found = 0;
+            for (int s = 0; s < 200; s++)
+            {
+                if (!LostTankard.PickDrop(0f, 0f, new Random(s), eastDry, 30f, out float x, out _, out float y)) continue;
+                found++;
+                dryOk &= x >= 0f && y == 40f;
+            }
+            Check(dryOk && found == 200, $"it lands on dry ground, never in the water ({found}/200 placed)");
+            Check(!LostTankard.PickDrop(0f, 0f, new Random(1), (x, z) => 30.2f, 30f, out _, out _, out _),
+                  "ground within half a metre of the water counts as water, and nowhere dry gives no spot (the caller drops it at your feet)");
+            Check(!LostTankard.PickDrop(0f, 0f, null, eastDry, 30f, out _, out _, out _) &&
+                  !LostTankard.PickDrop(float.NaN, 0f, new Random(1), eastDry, 30f, out _, out _, out _) &&
+                  !LostTankard.PickDrop(0f, 0f, new Random(1), (x, z) => float.NaN, 30f, out _, out _, out _),
+                  "bad inputs give no spot");
+
+            // Only its owner's blackout ends.
+            Check(LostTankard.IsMine(LostTankard.FormatOwner(123456789012L), 123456789012L), "your own tankard is yours");
+            Check(!LostTankard.IsMine(LostTankard.FormatOwner(42L), 43L), "someone else's does nothing for you");
+            Check(!LostTankard.IsMine(null, 42L) && !LostTankard.IsMine("", 42L) && !LostTankard.IsMine("forty-two", 42L) && !LostTankard.IsMine("0", 0L),
+                  "an unmarked or garbled tankard is nobody's");
+
+            // You come round 180-270 m from where you fell, never at the spot itself (whatever killed you is there).
+            Func<float, float, int> meadows = (x, z) => Blackout.Meadows;
+            Func<float, float, float> dry = (x, z) => 40f;
+            bool respawnOk = true;
+            for (int s = 0; s < 300; s++)
+            {
+                bool ok = Blackout.PickLanding(1000f, -500f, LostTankard.RespawnDistance, new Random(s), meadows, dry, 30f, Blackout.Meadows,
+                    out float x, out float z, out _);
+                float d = (float)Math.Sqrt((x - 1000f) * (x - 1000f) + (z + 500f) * (z + 500f));
+                respawnOk &= ok && d >= 180f - 0.5f && d <= 270f + 0.5f;
+            }
+            Check(respawnOk, "a death in a blackout respawns you 180-270 m from where you fell");
+
+            // Five minutes of real time to find it (owner, 2026-11-18), counted from the stamp in the item itself.
+            long t0 = new DateTime(2026, 11, 18, 12, 0, 0, DateTimeKind.Utc).Ticks;
+            string stamp = LostTankard.FormatTicks(t0);
+            Check(!LostTankard.IsExpired(stamp, t0) && !LostTankard.IsExpired(stamp, t0 + TimeSpan.FromSeconds(299).Ticks) &&
+                  !LostTankard.IsExpired(stamp, t0 + TimeSpan.FromSeconds(300).Ticks), "still findable up to five minutes");
+            Check(LostTankard.IsExpired(stamp, t0 + TimeSpan.FromSeconds(301).Ticks) && LostTankard.IsExpired(stamp, t0 + TimeSpan.FromHours(3).Ticks),
+                  "gone after five minutes");
+            Check(!LostTankard.IsExpired(stamp, t0 - TimeSpan.FromMinutes(10).Ticks), "a clock set back counts as just dropped");
+            Check(LostTankard.IsExpired(null, t0) && LostTankard.IsExpired("", t0) && LostTankard.IsExpired("soon", t0) && LostTankard.IsExpired("0", t0),
+                  "a missing or garbled stamp counts as too late");
+
+            var words = LostTankard.English();
+            Check(words.Count == 2 && words["tk_lost_tankard"] == LostTankard.DisplayName && words.ContainsKey("tk_lost_tankard_desc"),
+                  "the lost tankard has its name and description");
+            var spec = ItemSpec.LostTankardSpec();
+            Check(spec.IsLostTankard && !spec.IsDrink && spec.Drink == null && spec.PrefabName == "TK_LostTankard",
+                  "it is its own item, not a drink");
+            Check(!Drinks.Items().Any(i => i.PrefabName == LostTankard.PrefabName), "and it is not in the drink list (recipes, fermenter and tooltips never see it)");
+            Check(!Drinks.All.Any(d => d.NameToken == LostTankard.NameToken) && Words.ByNameToken(LostTankard.NameToken) == null,
+                  "picking it up is never mistaken for drinking");
+        }
+
         private static void FoodTests()
         {
             Near(Food.Sobering(30f, 10f, 0f), 4f, "cooked meat (30/10) takes 4 off");
@@ -824,6 +896,7 @@ namespace RavenIron.Tankard.Tests
             ToleranceTests();
             FoodTests();
             EffectTests();
+            LostTankardTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

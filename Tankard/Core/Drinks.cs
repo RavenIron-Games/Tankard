@@ -65,7 +65,16 @@ namespace RavenIron.Tankard.Core
         public string NameToken;
         public string DescriptionToken;
         public bool IsDrink;      // drinks are consumable; bases are materials that only the fermenter takes
-        public DrinkDef Drink;    // the drink this item is, or is the base of
+        public DrinkDef Drink;    // the drink this item is, or is the base of (null for the lost tankard)
+        public string FallbackDonorPrefab; // tried when DonorPrefab is missing; null for none
+        public bool IsLostTankard;
+
+        /// <summary>The lost tankard a death in a blackout leaves near you (CoreLostTankard). Not a drink and not in Items().</summary>
+        public static ItemSpec LostTankardSpec() => new ItemSpec
+        {
+            PrefabName = LostTankard.PrefabName, DonorPrefab = LostTankard.DonorPrefab, FallbackDonorPrefab = LostTankard.FallbackDonorPrefab,
+            NameToken = LostTankard.NameToken, DescriptionToken = LostTankard.DescriptionToken, IsDrink = false, IsLostTankard = true,
+        };
     }
 
     /// <summary>One crafting recipe the registration layer must add.</summary>
