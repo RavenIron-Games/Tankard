@@ -97,3 +97,4 @@
   5 km at all (a small island, say) does it fall back to the nearest ground it can find, so you still wake somewhere.
 - **`tankard find`** says where your lost tankard is. It gives which way to walk, how far, how far up or down, and how many seconds are left to find it, or tells you it's already in your bag. Lost tankards belonging to other players are listed too, marked as theirs.
 - **An ordinary death no longer cures a hangover.** The game wipes every status effect when you die, before Tankard could read how much hangover was left, so the new body woke with none. Found on a live server: "had 0 s" with about 1000 s still to go.
+- **One binge, one hangover.** A death in a blackout gives you that binge's 20-minute hangover there and then, so the binge ending later no longer gives you another. Before, curing the first one with a Bloody Ivar just earned a second. And drinking a Bloody Ivar never makes your next hangover longer.

@@ -56,7 +56,7 @@ namespace RavenIron.Tankard
             float tol = ToleranceOf(p);
             float hit = Tolerance.Hit(drink.Abv, tol);
             Level = Intoxication.Add(Level, hit);
-            if (Level > Peak) Peak = Level;
+            Peak = Effects.PeakAfterDrink(Peak, Level, drink.CuresHangover); // the cure never earns the next hangover
             BingeDrinks++;
             float tolAfter = Tolerance.AfterDrink(tol, drink.Abv);
             if (p != null) p.m_customData[Tolerance.Key] = Tolerance.Format(tolAfter);
@@ -170,10 +170,17 @@ namespace RavenIron.Tankard
             Attach(p);
             float left = _hangoverAtDeath >= 0f ? _hangoverAtDeath : HangoverLeft(p);
             _hangoverAtDeath = -1f;
-            float next = Plugin.Hangovers.Value && Plugin.Enabled.Value ? Effects.HangoverAfterDeath(left, inBlackout) : left;
-            if (next <= 0f) return;
+            bool hangoversOn = Plugin.Hangovers.Value && Plugin.Enabled.Value;
+            float next = hangoversOn ? Effects.HangoverAfterDeath(left, inBlackout) : left;
+            // One binge, one hangover: the death just handed out this binge's, so the binge ending must not add another.
+            float peak = Peak; bool blackedOut = BlackedOut;
+            Effects.SettleAfterDeath(inBlackout, hangoversOn, ref peak, ref blackedOut);
+            bool settled = peak != Peak || blackedOut != BlackedOut;
+            Peak = peak; BlackedOut = blackedOut;
+            if (next <= 0f) { if (settled) Save(p); return; }
             _pendingHangover = next;
-            Plugin.Log.LogInfo($"Died{(inBlackout ? " in a blackout" : "")}: the new body wakes with {next:0} s of hangover (had {left:0} s).");
+            Plugin.Log.LogInfo($"Died{(inBlackout ? " in a blackout" : "")}: the new body wakes with {next:0} s of hangover (had {left:0} s)" +
+                               (settled ? "; that is this binge's hangover, so the binge ending adds none." : "."));
             Save(p);
         }
 

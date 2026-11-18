@@ -85,6 +85,28 @@ namespace RavenIron.Tankard.Core
         public static bool ShouldReplaceHangover(float runningLeft, float offered) =>
             !(runningLeft > 0f) || offered > runningLeft;
 
+        /// <summary>
+        /// One binge, one hangover (owner, 2026-11-18). A death in a blackout hands out the binge's hangover there and then
+        /// (HangoverAfterDeath), so it also SETTLES the binge: its peak and its blackout are cleared, and the binge ending
+        /// later charges nothing more for them. Seen live on Storm10: the death gave 20 minutes, a Bloody Ivar cured it,
+        /// and the meter reaching 0 gave the same binge another 20. Drinks after the death raise the peak again and can
+        /// earn their own hangover. With hangovers off nothing was handed out, so nothing is settled.
+        /// </summary>
+        public static void SettleAfterDeath(bool inBlackout, bool hangoversOn, ref float peak, ref bool blackedOut)
+        {
+            if (!inBlackout || !hangoversOn) return;
+            peak = 0f;
+            blackedOut = false;
+        }
+
+        /// <summary>The peak a hangover is sized from, after a drink. A cure (the Bloody Ivar) never raises it: drinking the
+        /// cure must not earn the next hangover.</summary>
+        public static float PeakAfterDrink(float peak, float level, bool curesHangover)
+        {
+            if (curesHangover || float.IsNaN(level)) return peak;
+            return level > peak ? level : peak;
+        }
+
         // ---- fermenting -------------------------------------------------------------------------------------------
         /// <summary>Vanilla's barrel time (Fermenter.m_fermentationDuration, decompiled 1.0.21): 2400 s of world time.</summary>
         public const float VanillaFermentSeconds = 2400f;

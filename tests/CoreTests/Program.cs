@@ -294,6 +294,25 @@ namespace RavenIron.Tankard.Tests
             Check(!Effects.ShouldReplaceHangover(1100f, 300f), "the binge ending later cannot cut a 20-minute hangover to 5");
             Check(Effects.ShouldReplaceHangover(100f, 900f) && Effects.ShouldReplaceHangover(0f, 300f) && Effects.ShouldReplaceHangover(float.NaN, 300f),
                   "a longer one, or one with nothing running, does replace it");
+            // One binge, one hangover (owner, 2026-11-18). Storm10: a blackout death gave 20 min, a Bloody Ivar cured it, and
+            // the meter reaching 0 gave the SAME binge another 20.
+            float pk = 200f; bool bo = true;
+            Effects.SettleAfterDeath(inBlackout: true, hangoversOn: true, ref pk, ref bo);
+            Check(pk == 0f && !bo && Effects.HangoverSeconds(pk, bo) == 0f, "a blackout death settles the binge: when it ends, no second hangover");
+            pk = 200f; bo = true;
+            Effects.SettleAfterDeath(inBlackout: false, hangoversOn: true, ref pk, ref bo);
+            Check(pk == 200f && bo, "an ordinary death settles nothing (the binge's own hangover is still to come)");
+            pk = 200f; bo = true;
+            Effects.SettleAfterDeath(inBlackout: true, hangoversOn: false, ref pk, ref bo);
+            Check(pk == 200f && bo, "with hangovers off, nothing was handed out, so nothing is settled");
+            Check(Effects.PeakAfterDrink(0f, 66f, curesHangover: true) == 0f, "drinking the cure never earns the next hangover");
+            Check(Effects.PeakAfterDrink(0f, 66f, curesHangover: false) == 66f && Effects.PeakAfterDrink(90f, 66f, false) == 90f &&
+                  Effects.PeakAfterDrink(40f, float.NaN, false) == 40f, "any other drink raises the peak as before");
+            // The whole Storm10 sequence: settled at the death, then a Bloody Ivar at 66: the binge ends with no hangover.
+            pk = 200f; bo = true;
+            Effects.SettleAfterDeath(true, true, ref pk, ref bo);
+            pk = Effects.PeakAfterDrink(pk, 66f, curesHangover: true);
+            Check(Effects.HangoverSeconds(pk, bo) == 0f, "the Storm10 sequence (blackout death, Bloody Ivar, sober) ends with no second hangover");
 
             // Fermenting: every fermented drink has its own time, and stronger drinks take longer.
             var ferm = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
