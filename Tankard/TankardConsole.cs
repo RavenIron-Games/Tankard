@@ -71,7 +71,7 @@ namespace RavenIron.Tankard
                                     $"blackout {(BlackoutRunner.MapHidden ? "ON" : "off")}, map remembered {MapMemory.Progress:P0}, " +
                                     $"minimap mode {(Minimap.instance != null ? Minimap.instance.m_mode.ToString() : "none")}, " +
                                     $"world no-map modifier {(Game.m_noMap ? "ON" : "off")}, " +
-                                    $"saved blackout keys here: {CountKeys(p)}, " + StreakText(p));
+                                    $"saved blackout keys here: {CountKeys(p)}, " + StreakText(p) + ", " + ServerSyncSetup.Describe());
                                 return;
                         }
                     }

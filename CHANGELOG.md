@@ -77,3 +77,10 @@
   point over, and leave a quarter of your stacks plus 1% per point (everything from 175). Tolerance shrinks every hit,
   so a hardened drinker needs four fire wines just to get over, while two flatten a new one, and twelve ciders never
   will. The streak rules are unchanged. `MinDrinks` is replaced by `BlackoutOver` (default 100).
+- **The server's settings apply to everyone** (ServerSync). Every Tankard setting follows the server on each player's
+  game, so nobody can switch blackouts off or sober up faster in their own file. The one exception is `CameraSway`,
+  which each player keeps, so nobody is forced to play with a swaying camera that makes them feel sick. With
+  `LockConfiguration` on (the default) only an admin can change settings from a player's game, and the change goes to
+  everyone. A player's own config file is never overwritten. Every player must run exactly this Tankard version, or
+  the server refuses them at join with a message naming both versions. `tankard status` says where the settings come
+  from.

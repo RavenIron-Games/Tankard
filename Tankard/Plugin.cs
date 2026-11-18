@@ -110,6 +110,9 @@ namespace RavenIron.Tankard
             PreferExploredGround = Config.Bind("5 - Blackout", "PreferExploredGround", false,
                 "On, a blackout lands you on ground the world has already generated when any fits, which avoids the hitch of " +
                 "building new land the moment you wake. Off (the default), you can wake anywhere allowed, explored or not.");
+            // After every Bind, so ServerSync sees the whole file. Its own patches come with PatchAll below.
+            try { ServerSyncSetup.Register(Config); }
+            catch (Exception ex) { Log.LogError($"ServerSync setup failed; every setting stays local to each player: {ex}"); }
             try
             {
                 _harmony = new Harmony(Guid);
