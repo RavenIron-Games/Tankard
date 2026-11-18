@@ -181,13 +181,31 @@ namespace RavenIron.Tankard.Core
         /// island in the open sea, say) it widens towards the spot itself rather than dropping you in the water.
         /// Returns false only if nothing anywhere on any ring qualifies; the caller then leaves you where you are.
         /// </summary>
+        /// <param name="preferred">
+        /// Optional. Ground that should win if any of it fits (in the game: zones the world has already generated, so
+        /// waking there builds no new land; the owner reported lag right after a blackout, and the log showed new
+        /// locations and dungeons being generated at each landing). A full pass is tried with it first, then a full pass
+        /// without it, so a world with little generated land still sends you somewhere. Checked BEFORE biome and height,
+        /// because in the game it is a hash lookup and they are noise functions.
+        /// </param>
         public static bool PickLanding(float homeX, float homeZ, float distance, Random rng,
             Func<float, float, int> biomeAt, Func<float, float, float> heightAt, float waterLevel, int allowedMask,
-            out float x, out float z, out float y)
+            out float x, out float z, out float y, Func<float, float, bool> preferred = null)
         {
             x = homeX; z = homeZ; y = 0f;
             if (rng == null || biomeAt == null || heightAt == null || float.IsNaN(distance) || distance <= 0f) return false;
             if (float.IsNaN(homeX) || float.IsNaN(homeZ)) return false;
+            if (preferred != null &&
+                PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, preferred, out x, out z, out y))
+                return true;
+            return PickOnRings(homeX, homeZ, distance, rng, biomeAt, heightAt, waterLevel, allowedMask, null, out x, out z, out y);
+        }
+
+        private static bool PickOnRings(float homeX, float homeZ, float distance, Random rng,
+            Func<float, float, int> biomeAt, Func<float, float, float> heightAt, float waterLevel, int allowedMask,
+            Func<float, float, bool> preferred, out float x, out float z, out float y)
+        {
+            x = homeX; z = homeZ; y = 0f;
             float limit = WorldRadius - EdgeMargin;
 
             for (int i = 0; i < Attempts; i++)
@@ -202,6 +220,7 @@ namespace RavenIron.Tankard.Core
                 float cx = homeX + (float)Math.Cos(angle) * r;
                 float cz = homeZ + (float)Math.Sin(angle) * r;
                 if (cx * cx + cz * cz > limit * limit) continue;
+                if (preferred != null && !preferred(cx, cz)) continue;
 
                 int biome = biomeAt(cx, cz);
                 if ((biome & allowedMask) == 0 || (biome & Ocean) != 0) continue;

@@ -21,6 +21,7 @@ namespace RavenIron.Tankard
         private static bool _loaded;
         private static float _saveTimer;
         private static bool _wasLooking;
+        private static bool _stackedThisOpen;
         private static GameObject _fog;
         private static Image _fogImage;
 
@@ -123,8 +124,12 @@ namespace RavenIron.Tankard
                 rt.offsetMax = Vector2.zero;
                 _fogImage = _fog.AddComponent<Image>();
                 _fogImage.raycastTarget = false; // the map still takes your clicks; you just can't see what you click
+                _fog.transform.SetAsLastSibling();
             }
-            if (looking) _fog.transform.SetAsLastSibling(); // over anything the map added since
+            // Re-stacked only when the map opens, not every frame: moving a sibling dirties the canvas, and doing that
+            // per frame forces a UI rebuild of the whole map panel for as long as it is open.
+            if (looking && !_stackedThisOpen) { _fog.transform.SetAsLastSibling(); _stackedThisOpen = true; }
+            if (!looking) _stackedThisOpen = false;
             Color c = FogColour;
             c.a = Blackout.FogAlpha(_progress);
             _fogImage.color = c;

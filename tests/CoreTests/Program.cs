@@ -338,6 +338,30 @@ namespace RavenIron.Tankard.Tests
                   !Blackout.PickLanding(float.NaN, 0f, 1000f, new Random(1), biome, height, 30f, Blackout.Meadows, out _, out _, out _) &&
                   !Blackout.PickLanding(0f, 0f, 0f, new Random(1), biome, height, 30f, Blackout.Meadows, out _, out _, out _),
                   "bad inputs give no landing");
+            // Preferring already-generated ground (the lag fix): when some fits, every landing is on it...
+            Func<float, float, bool> westOnly = (x, z) => x < 0f; // pretend only the west has been generated
+            Func<float, float, int> allMeadows = (x, z) => Blackout.Meadows;
+            Func<float, float, float> dry = (x, z) => 40f;
+            bool prefOk = true;
+            for (int s = 0; s < 200; s++)
+            {
+                bool ok = Blackout.PickLanding(0f, 0f, 1000f, new Random(s), allMeadows, dry, 30f, Blackout.Meadows, out float x, out float z, out _, westOnly);
+                prefOk &= ok && x < 0f;
+            }
+            Check(prefOk, "landings prefer already-generated ground when any of it fits");
+            // ...when none fits, you still go somewhere (fresh ground), never nowhere.
+            bool fallOk = true;
+            for (int s = 0; s < 50; s++)
+                fallOk &= Blackout.PickLanding(0f, 0f, 1000f, new Random(s), allMeadows, dry, 30f, Blackout.Meadows, out _, out _, out _, (x, z) => false);
+            Check(fallOk, "with no generated ground at all, a landing is still found");
+            // ...and the preference never overrides the rules: generated ground in a forbidden biome is not chosen.
+            bool ruleOk = true;
+            for (int s = 0; s < 100; s++)
+                if (Blackout.PickLanding(0f, 0f, 1000f, new Random(s), (x, z) => x < 0f ? Blackout.Mistlands : Blackout.Meadows, dry, 30f,
+                        Blackout.Meadows, out float x2, out _, out _, westOnly))
+                    ruleOk &= x2 >= 0f;
+            Check(ruleOk, "a generated zone in a forbidden biome loses to fresh allowed ground");
+
             // Near the world's edge: never outside it.
             bool edgeOk = true;
             for (int s = 0; s < 200; s++)

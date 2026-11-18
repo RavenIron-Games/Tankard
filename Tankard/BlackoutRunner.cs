@@ -31,6 +31,31 @@ namespace RavenIron.Tankard
         /// <summary>Read by the Minimap patch every frame; refreshed from the saved key twice a second.</summary>
         public static bool MapHidden => _mapHidden && Plugin.Enabled.Value;
 
+        // ZoneSystem.m_generatedZones is PRIVATE (decompiled 1.0.x: `private readonly HashSet<Vector2s>`), and so is
+        // IsZoneGenerated. Read through a cached FieldRefAccess (house rule 5), retried until it resolves; a miss only
+        // costs the preference, never the blackout. On a client in multiplayer it holds the zones THIS machine has
+        // generated, which is still the land it can load without building.
+        private static AccessTools.FieldRef<ZoneSystem, HashSet<Vector2s>> _generatedZones;
+        private static bool _warnedGenerated;
+
+        private static HashSet<Vector2s> GeneratedZones()
+        {
+            try
+            {
+                if (_generatedZones == null) _generatedZones = AccessTools.FieldRefAccess<ZoneSystem, HashSet<Vector2s>>("m_generatedZones");
+                return ZoneSystem.instance != null ? _generatedZones(ZoneSystem.instance) : null;
+            }
+            catch (Exception ex)
+            {
+                if (!_warnedGenerated)
+                {
+                    _warnedGenerated = true;
+                    Plugin.Log.LogWarning($"ZoneSystem.m_generatedZones did not resolve, so blackouts may land on new ground (lag). {ex.Message}");
+                }
+                return null;
+            }
+        }
+
         internal static string WorldId()
         {
             long uid = ZNet.instance != null ? ZNet.instance.GetWorldUID() : 0;
@@ -89,9 +114,16 @@ namespace RavenIron.Tankard
             WorldGenerator wg = WorldGenerator.instance;
             float water = ZoneSystem.instance.m_waterLevel;
 
+            // Prefer ground the world has already generated: waking there builds no new land, which is what lagged right
+            // after a blackout (the owner, 2026-11-17; the log showed locations and dungeons generated at each landing).
+            HashSet<Vector2s> generated = GeneratedZones();
+            Func<float, float, bool> preferred = null;
+            if (generated != null && generated.Count > 0)
+                preferred = (x, z) => generated.Contains(ZoneSystem.GetZone(new Vector3(x, 0f, z)));
+
             if (!Blackout.PickLanding(home.x, home.z, distance, Rng,
                     (x, z) => (int)wg.GetBiome(x, z), (x, z) => wg.GetHeight(x, z), water, allowed,
-                    out float lx, out float lz, out float ly))
+                    out float lx, out float lz, out float ly, preferred))
             {
                 Plugin.Log.LogInfo("Blackout: nowhere allowed to wake up, so you stay put.");
                 p.Message(MessageHud.MessageType.Center, "The world spins, but you stay on your feet.");
@@ -127,7 +159,10 @@ namespace RavenIron.Tankard
             _followHome = home;
             _followTarget = landing;
             Meter.WakeFromBlackout();
-            Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, waking {distance:0} m away at ({lx:0}, {lz:0}). " +
+            float actual = new Vector2(lx - home.x, lz - home.z).magnitude;
+            bool onGenerated = generated != null && generated.Contains(ZoneSystem.GetZone(landing));
+            Plugin.Log.LogInfo($"BLACKOUT after {drinks} drinks: {left} stack(s) left at {home}, aimed {distance:0} m, woke {actual:0} m away " +
+                               $"at ({lx:0}, {lz:0}) on {(onGenerated ? "already-generated" : "NEW")} ground. " +
                                $"Streak: day {streak.Days} in a row (in-game day {streak.LastDay}), blackout {streak.Count} of the streak, loss {loss:P0}" +
                                (streak.IsTotal ? ", TOTAL." : "."));
             p.Message(MessageHud.MessageType.Center, streak.IsTotal ? "Three nights running. Everything goes black." : "Everything goes black.");
