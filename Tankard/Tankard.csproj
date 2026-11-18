@@ -38,6 +38,10 @@
       <HintPath>$(LibsDir)\assembly_utils_publicized.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="assembly_guiutils">
+      <HintPath>$(LibsDir)\assembly_guiutils_publicized.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(LibsDir)\UnityEngine.dll</HintPath>
       <Private>false</Private>

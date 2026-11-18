@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RavenIron.Tankard.Core;
 
 namespace RavenIron.Tankard.Tests
@@ -98,6 +99,26 @@ namespace RavenIron.Tankard.Tests
             Check(hasStation && hasFermenter, "both brewing paths are represented");
             // A fermented drink should outpunch a station one, or there is no reason to wait.
             Check(minFerment > maxStation, "every fermented drink is stronger than every station drink");
+
+            // ---- Tokens and the English table -------------------------------------------------------------------------
+            var tokens = new HashSet<string>();
+            var english = Words.English();
+            foreach (var d in Drinks.All)
+            {
+                Check(d.NameToken.StartsWith("$tk_") && d.NameToken == d.NameToken.ToLowerInvariant(), $"{d.PrefabName}: lowercase $tk_ name token");
+                Check(tokens.Add(d.NameToken) && tokens.Add(d.DescriptionToken), $"{d.PrefabName}: tokens are unique");
+                Check(english.ContainsKey(d.NameToken.Substring(1)) && english[d.NameToken.Substring(1)] == d.DisplayName,
+                      $"{d.PrefabName}: English table carries the display name");
+                Check(english.ContainsKey(d.DescriptionToken.Substring(1)) && !string.IsNullOrEmpty(english[d.DescriptionToken.Substring(1)]),
+                      $"{d.PrefabName}: English table carries a description");
+                Check(ReferenceEquals(Words.ByNameToken(d.NameToken), d), $"{d.PrefabName}: a consumed item's name token finds its drink");
+            }
+            Check(english.Count == Drinks.All.Count * 2, "the English table has exactly a name and a description per drink");
+            Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
+            Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
+            // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Ale,TK_BlueberryWine,TK_HoneyMead,TK_SkaldicMead",
+                  "shipped prefab names are pinned (saves store them)");
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

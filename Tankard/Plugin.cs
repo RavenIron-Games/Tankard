@@ -43,8 +43,7 @@ namespace RavenIron.Tankard
             {
                 _harmony = new Harmony(Guid);
                 _harmony.PatchAll(typeof(Plugin).Assembly);
-                Log.LogInfo($"Tankard {Version} loaded (enabled: {Enabled.Value}), {Drinks.All.Count} drink(s) defined, " +
-                            "none registered yet. Scaffold.");
+                Log.LogInfo($"Tankard {Version} loaded (enabled: {Enabled.Value}), {Drinks.All.Count} drink(s) defined.");
                 foreach (var d in Drinks.All)
                     Log.LogInfo($"  {d.PrefabName}: {d.DisplayName}, {d.Path}, +{d.Potency}");
             }
@@ -52,6 +51,13 @@ namespace RavenIron.Tankard
             {
                 Log.LogError($"Harmony patching failed: {ex}");
             }
+        }
+
+        private void Update()
+        {
+            // The one clock. A player who is not in a world (menu, loading) has no meter.
+            if (Player.m_localPlayer == null) { Meter.Reset(); return; }
+            Meter.Tick(UnityEngine.Time.deltaTime);
         }
 
         private void OnDestroy() => _harmony?.UnpatchSelf();
