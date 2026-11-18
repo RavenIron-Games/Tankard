@@ -109,8 +109,10 @@ namespace RavenIron.Tankard.Core
             // morning goes away.
             new DrinkDef { PrefabName = "TK_BloodyIvar", Effect = new DrinkEffect { Name = "Morning mended", Seconds = 300f, HealthRegen = 1.25f }, CuresHangover = true,
                 DisplayName = "Bloody Ivar", DonorPrefab = "MeadHealthMinor",
-                Path = BrewPath.Station, Abv = 6f, Blurb = "Raspberry, honey and a fistful of dandelion. Cures a hangover. Starts the next one.",
-                Ingredients = new[] { new Ingredient("Raspberry", 5), new Ingredient("Honey", 1), new Ingredient("Dandelion", 2) }, CraftAmount = 1 },
+                Path = BrewPath.Station, Abv = 6f, Blurb = "Berries, an ale, dandelion and a strip of boar jerky stirred in. Cures a hangover. Starts the next one.",
+                // TK_Ale is our own item: Brewing resolves ingredients through ObjectDB, where Items registers it first.
+                Ingredients = new[] { new Ingredient("Raspberry", 5), new Ingredient("Blueberries", 4), new Ingredient("TK_Ale", 1),
+                                      new Ingredient("Dandelion", 2), new Ingredient("BoarJerky", 1) }, CraftAmount = 1 },
 
             // ---- the fermenter: a base from the Mead Ketill, then time. One per biome, each stronger -----------------
             new DrinkDef { PrefabName = "TK_HoneyMead", Effect = new DrinkEffect { Name = "Honeyed", Seconds = 600f, HealthRegen = 1.5f }, FermentSeconds = 1200f, DisplayName = "Honey mead", DonorPrefab = "MeadHealthMinor",

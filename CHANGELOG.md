@@ -64,7 +64,7 @@
 - **Liquid courage.** While Drunk you hit 10% harder and blocking costs 25% more stamina; from Hammered, 20% and 50%.
 - **Hangovers.** When a binge that reached Drunk is over you get a hangover: 40% less stamina regen, 25% less health
   regen, 5 to 15 minutes by how drunk you got, 20 after a blackout.
-- **The Bloody Ivar** (5 Raspberry, 1 Honey, 2 Dandelion at the cauldron, 6% alcohol) cures it.
+- **The Bloody Ivar** (5 Raspberry, 4 Blueberries, 1 Ale, 2 Dandelion and 1 Boar jerky at the cauldron, 6% alcohol) cures it.
 - **Each fermented drink has its own barrel time**, longer the stronger it is: honey mead 20 minutes, bog wine 40,
   frostmead 50, skaldic mead 60, Jotun's draught 80, fire wine 100 (vanilla mead is 40).
 - **Quitting no longer sobers you up.** The meter, the binge and the hangover are saved with the character, and no time

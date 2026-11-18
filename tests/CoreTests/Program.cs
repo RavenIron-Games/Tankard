@@ -743,7 +743,11 @@ namespace RavenIron.Tankard.Tests
                 {
                     Check(ing.Amount > 0, $"{r.Name}: {ing.Item} amount is positive");
                     Check(!string.IsNullOrEmpty(ing.Item) && seen.Add(ing.Item), $"{r.Name}: {ing.Item} is named once");
-                    Check(!itemNames.Contains(ing.Item), $"{r.Name}: {ing.Item} is a vanilla item, not one of ours");
+                    // Vanilla items, or one of our CAULDRON drinks (the Bloody Ivar takes an Ale, owner 2026-11-18): always
+                    // craftable first, so no recipe can depend on itself or on a fermenter chain.
+                    var ours = Drinks.All.FirstOrDefault(d => d.PrefabName == ing.Item);
+                    Check(!itemNames.Contains(ing.Item) || (ours != null && ours.Path == BrewPath.Station && ing.Item != r.ResultPrefab),
+                          $"{r.Name}: {ing.Item} is vanilla, or one of our cauldron drinks that is not the result itself");
                 }
                 var owner = items.Find(i => i.PrefabName == r.ResultPrefab);
                 Check(owner.Drink.Path == BrewPath.Fermenter ? r.Station == StationKind.MeadKetill : r.Station == StationKind.Cauldron,
