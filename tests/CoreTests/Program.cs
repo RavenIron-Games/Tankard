@@ -372,6 +372,36 @@ namespace RavenIron.Tankard.Tests
             Check(!Blackout.ShouldRestoreMap(ref a2, true, 5000f, 0f, 0f, 0f) && !a2, "far away but mid-teleport does not arm");
             bool a3 = false;
             Check(!Blackout.ShouldRestoreMap(ref a3, false, 90f, 0f, 0f, 0f) && !a3, "90 m is not far enough to arm (needs 100)");
+            // Remembering: only looking advances it, it never goes back, and 90 s of looking finishes it.
+            float mem = 0f;
+            for (int f = 0; f < 90 * 60; f++) mem = Blackout.Remember(mem, 1f / 60f, 90f);
+            Check(mem > 0.999f, $"90 s of looking at 60 fps remembers it all ({mem:0.0000})");
+            Check(Blackout.Remember(0.5f, 10f, 90f) <= 0.5f + 0.25f / 90f + 1e-6f, "a 10 s frame hitch counts as a quarter second");
+            Check(Blackout.Remember(0.5f, 0f, 90f) == 0.5f && Blackout.Remember(0.5f, -1f, 90f) == 0.5f && Blackout.Remember(0.5f, float.NaN, 90f) == 0.5f,
+                  "no time, no memory; never backwards");
+            Check(Blackout.Remember(0.99f, 0.25f, 1f) == 1f && Blackout.Remember(2f, 0.1f, 90f) == 1f, "capped at 1");
+            Check(Blackout.Remember(float.NaN, 0.1f, 90f) > 0f && Blackout.Remember(-3f, 0.1f, 90f) > 0f, "a damaged progress restarts from 0");
+            Check(Blackout.Remember(0.3f, 0.1f, 0f) == 0.3f, "a zero duration setting changes nothing (never divides by zero)");
+            Check(Blackout.FogAlpha(0f) == 1f && Blackout.FogAlpha(1f) == 0f && Blackout.FogAlpha(float.NaN) == 1f, "fog: solid at 0, clear at 1");
+            Check(Blackout.FogAlpha(0.1f) >= 0.97f, "a quick peek shows almost nothing");
+            bool fogMono = true; float lastFog = 2f;
+            for (float p = 0f; p <= 1f; p += 0.01f) { float a = Blackout.FogAlpha(p); fogMono &= a <= lastFog && a >= 0f && a <= 1f; lastFog = a; }
+            Check(fogMono, "fog only ever clears");
+            Check(Blackout.MilestoneCrossed(0.2f, 0.3f) == 0 && Blackout.MilestoneCrossed(0.49f, 0.5f) == 1 && Blackout.MilestoneCrossed(0.74f, 0.9f) == 2,
+                  "each milestone is announced when crossed");
+            Check(Blackout.MilestoneCrossed(0.3f, 0.4f) == -1 && Blackout.MilestoneCrossed(0.5f, 0.5f) == -1, "no line between milestones");
+            Check(Blackout.MemoryLines.Length == Blackout.MemoryMilestones.Length, "a line per milestone");
+            var savedCulture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                Check(Blackout.ParseProgress(Blackout.FormatProgress(0.625f)) == 0.625f && !Blackout.FormatProgress(0.625f).Contains(","),
+                      "progress round-trips under de-DE");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = savedCulture; }
+            Check(Blackout.ParseProgress(null) == 0f && Blackout.ParseProgress("x") == 0f && Blackout.ParseProgress("NaN") == 0f &&
+                  Blackout.ParseProgress("7") == 1f && Blackout.ParseProgress("-2") == 0f, "damaged progress reads as a clamp, never NaN");
+            Check(Blackout.MemoryKeyFor("1") != Blackout.KeyFor("1"), "memory and home are separate keys");
             Check(Blackout.KeyFor("123") != Blackout.KeyFor("456") && Blackout.KeyFor(null) == Blackout.KeyFor(""), "one key per world");
         }
 

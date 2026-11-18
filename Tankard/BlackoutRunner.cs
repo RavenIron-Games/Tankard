@@ -31,10 +31,21 @@ namespace RavenIron.Tankard
         /// <summary>Read by the Minimap patch every frame; refreshed from the saved key twice a second.</summary>
         public static bool MapHidden => _mapHidden && Plugin.Enabled.Value;
 
-        private static string WorldKey()
+        internal static string WorldId()
         {
             long uid = ZNet.instance != null ? ZNet.instance.GetWorldUID() : 0;
-            return Blackout.KeyFor(uid == 0 ? null : uid.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return uid == 0 ? null : uid.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private static string WorldKey() => Blackout.KeyFor(WorldId());
+
+        /// <summary>The blackout is over: by walking home, by remembering the whole map, or by a damaged save.</summary>
+        internal static void EndBlackout(Player p, bool restoreMinimap)
+        {
+            if (p != null) p.m_customData.Remove(WorldKey());
+            _mapHidden = false;
+            MapMemory.Clear(p);
+            if (restoreMinimap) Minimap.instance?.SetMapMode(Minimap.MapMode.Small); // nothing else would bring it back
         }
 
         // ---- the drink that might do it ---------------------------------------------------------------------------
@@ -100,6 +111,7 @@ namespace RavenIron.Tankard
             p.m_customData[WorldKey()] = Blackout.FormatHome(home.x, home.y, home.z);
             _mapHidden = true;
             _homeArmed = false; // you are still standing at the spot for the teleport's first 2 s
+            MapMemory.Start(p);
             Minimap.instance?.SetMapMode(Minimap.MapMode.None);
 
             _followUp = 0f;
@@ -199,19 +211,16 @@ namespace RavenIron.Tankard
             if (!Blackout.TryParseHome(saved, out float hx, out float _, out float hz))
             {
                 Plugin.Log.LogWarning($"Blackout: the saved drinking spot '{saved}' cannot be read; giving your map back.");
-                p.m_customData.Remove(key);
-                _mapHidden = false;
+                EndBlackout(p, restoreMinimap: true);
                 return;
             }
             _mapHidden = true;
             Vector3 pos = p.transform.position;
             if (Blackout.ShouldRestoreMap(ref _homeArmed, p.IsTeleporting(), pos.x, pos.z, hx, hz))
             {
-                p.m_customData.Remove(key);
-                _mapHidden = false;
                 Plugin.Log.LogInfo("Back at the drinking spot: map restored.");
                 p.Message(MessageHud.MessageType.Center, "You find your way back. The world makes sense again.");
-                Minimap.instance?.SetMapMode(Minimap.MapMode.Small); // nothing else would bring the minimap back
+                EndBlackout(p, restoreMinimap: true);
             }
         }
     }
@@ -226,9 +235,20 @@ namespace RavenIron.Tankard
     {
         [HarmonyPriority(Priority.Low)]
         [HarmonyPrefix]
-        private static bool Prefix(ref Minimap.MapMode mode)
+        private static bool Prefix(Minimap __instance, ref Minimap.MapMode mode)
         {
-            if (BlackoutRunner.MapHidden) mode = Minimap.MapMode.None;
+            // The big map may open: that is where you remember it (MapMemory lays the fog over it). The minimap may not,
+            // until the blackout is over, so the corner of the screen never gives your position away.
+            //
+            // Vanilla only ever reaches Large FROM Small (Minimap.Update, decompiled: in None, the Map key asks for Small,
+            // and every frame in None it asks for Small too; only Small + Map asks for Large). With Small forbidden that
+            // path is cut, so a Small request is read for its intent:
+            //   from Large  -> you are closing the map    -> None
+            //   from None, with the Map key down this frame -> you are opening it -> Large
+            //   anything else (the every-frame "None? show Small") -> None
+            if (!BlackoutRunner.MapHidden || mode != Minimap.MapMode.Small) return true;
+            bool mapKey = ZInput.GetButtonDown("Map") || ZInput.GetButtonDown("JoyMap");
+            mode = __instance.m_mode == Minimap.MapMode.None && mapKey ? Minimap.MapMode.Large : Minimap.MapMode.None;
             return true;
         }
     }

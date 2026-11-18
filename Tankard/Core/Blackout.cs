@@ -200,6 +200,64 @@ namespace RavenIron.Tankard.Core
             return d2 <= HomeRadius * HomeRadius;
         }
 
+        // ---- remembering the map ----------------------------------------------------------------------------------
+        // The owner, 2026-11-17: "the longer you look the more the map comes back, because you start remembering".
+        // The big map opens under a fog; only time spent LOOKING at it (the large map open) clears the fog. When it is
+        // clear you remember everything and the minimap returns too. Walking home still restores it at once.
+
+        public const float DefaultRememberSeconds = 90f;
+
+        /// <summary>Progress after looking for <paramref name="dt"/> more seconds. Never falls, never passes 1.</summary>
+        public static float Remember(float progress, float dt, float secondsToRemember)
+        {
+            if (float.IsNaN(progress) || progress < 0f) progress = 0f;
+            if (progress > 1f) progress = 1f;
+            if (float.IsNaN(dt) || dt <= 0f || float.IsNaN(secondsToRemember) || secondsToRemember <= 0f) return progress;
+            float p = progress + Math.Min(dt, 0.25f) / secondsToRemember; // a frame hitch is not a quarter-minute of memory
+            return p > 1f ? 1f : p;
+        }
+
+        /// <summary>
+        /// Fog opacity over the map for a progress. Fully opaque at 0, clear at 1. Ease-in: the first glances bring back
+        /// little, then it comes in a rush, the way a memory does. Never below 0.97 opacity in the first 10%, so a quick
+        /// peek cannot read your own marker off the map.
+        /// </summary>
+        public static float FogAlpha(float progress)
+        {
+            if (float.IsNaN(progress) || progress <= 0f) return 1f;
+            if (progress >= 1f) return 0f;
+            float t = progress * progress; // ease in
+            return 1f - t;
+        }
+
+        public static readonly float[] MemoryMilestones = { 0.25f, 0.5f, 0.75f };
+
+        public static readonly string[] MemoryLines =
+        {
+            "Bits of the land are coming back to you...",
+            "You start to remember where you've been.",
+            "It's nearly all there now.",
+        };
+
+        /// <summary>Index of the milestone crossed between two progress values, or -1. At most one per call.</summary>
+        public static int MilestoneCrossed(float before, float after)
+        {
+            for (int i = MemoryMilestones.Length - 1; i >= 0; i--)
+                if (before < MemoryMilestones[i] && after >= MemoryMilestones[i]) return i;
+            return -1;
+        }
+
+        public static string FormatProgress(float p) => p.ToString("R", CultureInfo.InvariantCulture);
+
+        public static float ParseProgress(string s)
+        {
+            if (string.IsNullOrEmpty(s) || !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float p) || float.IsNaN(p))
+                return 0f;
+            return p < 0f ? 0f : (p > 1f ? 1f : p);
+        }
+
+        public static string MemoryKeyFor(string worldId) => "Tankard.BlackoutMemory." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
+
         /// <summary>The custom-data key for one world, so a blackout in one world never hides the map in another.</summary>
         public static string KeyFor(string worldId) => "Tankard.BlackoutHome." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
     }

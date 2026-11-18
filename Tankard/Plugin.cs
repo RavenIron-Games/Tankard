@@ -36,6 +36,7 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<bool> Blackouts;
         internal static ConfigEntry<int> BlackoutMinDrinks;
         internal static ConfigEntry<bool> BlackoutLeavesGear;
+        internal static ConfigEntry<float> MapRememberSeconds;
 
         private Harmony _harmony;
 
@@ -77,6 +78,11 @@ namespace RavenIron.Tankard
                 "On, a blackout leaves a share of your things in a grave at the drinking spot (25% of your stacks on the first " +
                 "possible drink, up to everything). Off, you keep it all. Either way, ore and anything else that can't go " +
                 "through a portal stays behind, and a world set to keep inventory on death keeps it here too.");
+            MapRememberSeconds = Config.Bind("5 - Blackout", "MapRememberSeconds", Blackout.DefaultRememberSeconds,
+                new ConfigDescription("After a blackout the big map opens under a fog that clears only while you look at it: you " +
+                                      "start remembering. This is how many seconds of looking bring it all back (the minimap " +
+                                      "returns then too). Walking back to the drinking spot restores it at once either way.",
+                    new AcceptableValueRange<float>(5f, 1800f)));
             try
             {
                 _harmony = new Harmony(Guid);
@@ -99,6 +105,7 @@ namespace RavenIron.Tankard
             Meter.Tick(dt);
             if (Enabled.Value) Stumbler.Tick(dt);
             BlackoutRunner.Tick(dt); // runs even when disabled, so turning Tankard off can never strand a hidden map
+            MapMemory.Tick(dt);
         }
 
         // ---- fault reporting from the hot path ----------------------------------------------------------------------

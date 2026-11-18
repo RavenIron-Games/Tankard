@@ -50,6 +50,14 @@
       <HintPath>$(LibsDir)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(LibsDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(LibsDir)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(LibsDir)\BepInEx.dll</HintPath>
       <Private>false</Private>
