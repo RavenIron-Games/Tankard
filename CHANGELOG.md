@@ -31,8 +31,8 @@
   50 m of the spot, so you'll need a friend to bring you home. That survives a relog, and each world tracks its own.
   A world set to keep inventory on death keeps it here too. Settings: `Blackouts`, `MinDrinks`, `LeavesGear`.
 - **Remembering the map.** The big map opens under a fog that clears only while you look at it: you start
-  remembering. It takes about 5 minutes of looking when sober, and much longer while you're still drunk (a tenth of
-  the speed when fully drunk). You come round from a blackout still Hammered. The minimap comes back when the fog has
+  remembering. It takes about 2½ minutes of looking when sober and about 3 once Tipsy, which is where it really
+  starts; while Drunk or worse it barely moves. You come round from a blackout still Hammered. The minimap comes back when the fog has
   cleared, and walking back to the grave still restores everything at once. Setting: `MapRememberSeconds`.
 - **Blackouts in a row.** Every earlier blackout in a streak (consecutive in-game days with at least one blackout,
   same-day ones included) sends you half as far again. On the third day in a row you lose everything and wake at
