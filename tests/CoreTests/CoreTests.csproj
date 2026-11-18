@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>RavenIron.Tankard.Tests</RootNamespace>
+  </PropertyGroup>
+  <!-- Compiles the SHIPPING Core source, not a copy: a harness that duplicates logic proves nothing. -->
+  <ItemGroup>
+    <Compile Include="..\..\Tankard\Core\*.cs" Link="Core\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
