@@ -34,24 +34,24 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 
 | Drink | ABV | Made at | Recipe | What else it does |
 |---|---|---|---|---|
-| **Brambleblush** | 4% | Cauldron, makes 2 | 8 Raspberries, 1 Honey | **Sweet cider**: +25% health regen, 5 min |
-| **Longhouse Ale** | 5% | Cauldron, makes 2 | 4 Barley | **Ale-warmed**: +25% stamina regen, 10 min |
-| **Rootstump Grog** | 7% | Cauldron, makes 2 | 4 Carrot, 2 Thistle | **Grog legs**: +50 carry weight, 15% less stamina spent running, 10 min |
-| **Bilberry Dusk** | 11% | Cauldron, makes 2 | 8 Blueberries, 1 Honey | **Wine-bright**: +30% eitr regen, 10 min |
-| **Bloody Ivar** | 6% | Cauldron, makes 1 | 5 Raspberries, 4 Blueberries, 1 Longhouse Ale, 2 Dandelion, 1 Boar jerky | 🩹 **Cures a hangover.** **Morning mended**: +25% health regen, 5 min |
-| **Hive-Gold Mead** | 12% | Mead Ketill base, then the fermenter (20 min), taps 4 | 6 Honey, 4 Raspberries | **Honeyed**: +50% health regen, 10 min |
-| **Swampmother's Wine** | 14% | Mead Ketill base, then the fermenter (40 min), taps 4 | 6 Turnip, 2 Bloodbag, 4 Honey | **Bog-blooded**: poison resistant, 10 min |
-| **Rimecask Mead** | 17% | Mead Ketill base, then the fermenter (50 min), taps 4 | 4 Onion, 2 Freeze gland, 6 Honey | **Frost-warmed**: frost resistant, 10 min |
-| **Bragi's Tongue** | 20% | Mead Ketill base, then the fermenter (60 min), taps 4 | 8 Honey, 4 Barley, 4 Cloudberries | **Skald's fire**: +25% health regen, +50% stamina regen, 15 min |
-| **Ymir's Marrow** | 28% | Mead Ketill base, then the fermenter (80 min), taps 4 | 6 Sap, 4 Royal jelly, 4 Jotun puffs | **Giant's back**: +25% stamina regen, +150 carry weight, 15 min |
-| **Surtr's Kiss** | 40% | Mead Ketill base, then the fermenter (100 min), taps 4 | 8 Vineberry cluster, 6 Honey | **Fireproof gut**: fire resistant, 15 min |
+| **Brambleblush** | 4% | Cauldron, makes 2 | 8 Raspberries, 1 Honey | **Bramble Glow**: +25% health regen, 5 min |
+| **Longhouse Ale** | 5% | Cauldron, makes 2 | 4 Barley | **Hearth Belly**: +25% stamina regen, 10 min |
+| **Rootstump Grog** | 7% | Cauldron, makes 2 | 4 Carrot, 2 Thistle | **Packmule Stride**: +50 carry weight, 15% less stamina spent running, 10 min |
+| **Bilberry Dusk** | 11% | Cauldron, makes 2 | 8 Blueberries, 1 Honey | **Twilight Wits**: +30% eitr regen, 10 min |
+| **Bloody Ivar** | 6% | Cauldron, makes 1 | 5 Raspberries, 4 Blueberries, 1 Longhouse Ale, 2 Dandelion, 1 Boar jerky | 🩹 **Cures a hangover.** **Ivar's Mercy**: +25% health regen, 5 min |
+| **Hive-Gold Mead** | 12% | Mead Ketill base, then the fermenter (20 min), taps 4 | 6 Honey, 4 Raspberries | **Hive Blessing**: +50% health regen, 10 min |
+| **Swampmother's Wine** | 14% | Mead Ketill base, then the fermenter (40 min), taps 4 | 6 Turnip, 2 Bloodbag, 4 Honey | **Mire Blood**: poison resistant, 10 min |
+| **Rimecask Mead** | 17% | Mead Ketill base, then the fermenter (50 min), taps 4 | 4 Onion, 2 Freeze gland, 6 Honey | **Rime Ward**: frost resistant, 10 min |
+| **Bragi's Tongue** | 20% | Mead Ketill base, then the fermenter (60 min), taps 4 | 8 Honey, 4 Barley, 4 Cloudberries | **Saga Breath**: +25% health regen, +50% stamina regen, 15 min |
+| **Ymir's Marrow** | 28% | Mead Ketill base, then the fermenter (80 min), taps 4 | 6 Sap, 4 Royal jelly, 4 Jotun puffs | **Ymir's Shoulders**: +25% stamina regen, +150 carry weight, 15 min |
+| **Surtr's Kiss** | 40% | Mead Ketill base, then the fermenter (100 min), taps 4 | 8 Vineberry cluster, 6 Honey | **Ember Gut**: fire resistant, 15 min |
 
 ![II THE METER](https://img.shields.io/badge/II-THE_METER-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMiAxM1YxTDggNVYxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2JhYThhIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
 - **Every drink adds to one meter**, by its strength and your tolerance. Time takes it back down. Quitting does not sober you: the meter is saved on your character.
 - **Six stages**: Sober, Buzzed, Tipsy, Drunk, Hammered, Blackout.
   - **Tipsy and up:** the camera leans and drifts, and your walk wanders while you move.
-  - **Drunk:** you hit 10% harder and blocking costs 25% more stamina. From Hammered, 20% and 50%. That is liquid courage.
+  - **Drunk:** you hit 10% harder and blocking costs 25% more stamina. From Hammered, 20% and 50%. Your buff bar calls it **Mead Courage**, then **Berserker's Swagger**.
   - **Hammered:** now and then you trip over your own feet.
   - **Chat** slurs as you drink, and turns to gibberish near the top. Numbers, names and punctuation stay readable.
 - **Tolerance** is yours, per character, from 0 (*paperweight*) to 69 (*iron gut*). Every drink raises it a little, and it never falls. A Surtr's Kiss puts a new player on the floor. A veteran drinks three.

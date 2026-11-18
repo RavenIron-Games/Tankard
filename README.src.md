@@ -43,7 +43,7 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 - **Every drink adds to one meter**, by its strength and your tolerance. Time takes it back down. Quitting does not sober you: the meter is saved on your character.
 - **Six stages**: Sober, Buzzed, Tipsy, Drunk, Hammered, Blackout.
   - **Tipsy and up:** the camera leans and drifts, and your walk wanders while you move.
-  - **Drunk:** you hit 10% harder and blocking costs 25% more stamina. From Hammered, 20% and 50%. That is liquid courage.
+  - **Drunk:** you hit 10% harder and blocking costs 25% more stamina. From Hammered, 20% and 50%. Your buff bar calls it **Mead Courage**, then **Berserker's Swagger**.
   - **Hammered:** now and then you trip over your own feet.
   - **Chat** slurs as you drink, and turns to gibberish near the top. Numbers, names and punctuation stay readable.
 - **Tolerance** is yours, per character, from 0 (*paperweight*) to 69 (*iron gut*). Every drink raises it a little, and it never falls. A Surtr's Kiss puts a new player on the floor. A veteran drinks three.

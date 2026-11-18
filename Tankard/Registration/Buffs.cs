@@ -74,7 +74,7 @@ namespace RavenIron.Tankard.Registration
             foreach (var t in new[] { Tier.Drunk, Tier.Hammered })
             {
                 float dmg = Effects.CourageDamage(t), block = Effects.CourageBlockCost(t);
-                var se = Make(t == Tier.Drunk ? CourageDrunk : CourageHammered, "Liquid courage",
+                var se = Make(t == Tier.Drunk ? CourageDrunk : CourageHammered, t == Tier.Drunk ? "Mead Courage" : "Berserker's Swagger",
                     $"+{Mathf.RoundToInt((dmg - 1f) * 100f)}% damage, +{Mathf.RoundToInt(block * 100f)}% stamina to block. Lasts while you're this drunk.", 0f);
                 se.m_modifyAttackSkill = Skills.SkillType.All;
                 se.m_damageModifier = dmg;
