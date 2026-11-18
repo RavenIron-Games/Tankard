@@ -19,11 +19,11 @@ namespace RavenIron.Tankard.Core
     public static class Symptoms
     {
         // Largest value each effect reaches at severity 1. These are the ceilings the tests pin.
-        public const float MaxRollDegrees = 6f;
-        public const float MaxPitchDegrees = 1.5f;
-        public const float MaxYawDegrees = 2.5f;
-        public const float MaxFovDegrees = 4f;
-        public const float MaxMoveDrift = 0.45f;   // fraction of full stick, sideways
+        public const float MaxRollDegrees = 10f;
+        public const float MaxPitchDegrees = 3f;
+        public const float MaxYawDegrees = 5f;
+        public const float MaxFovDegrees = 7f;
+        public const float MaxMoveDrift = 0.70f;   // fraction of full stick, sideways
 
 
         public static CameraSway Camera(float t, float severity)
@@ -50,10 +50,10 @@ namespace RavenIron.Tankard.Core
 
         // ---- stumbling ------------------------------------------------------------------------------------------
 
-        public const float StumbleStartSeverity = 0.5f;   // below this you wobble but you do not fall over
-        public const float StumbleCooldown = 8f;           // seconds between stumbles when merely hammered
-        public const float BlackoutStumbleCooldown = 3.5f;
-        public const float MaxStumbleChancePerSecond = 0.05f; // one every ~20 s on average at full severity
+        public const float StumbleStartSeverity = 0.35f;  // below this you wobble but you do not fall over
+        public const float StumbleCooldown = 5f;           // seconds between stumbles when merely hammered
+        public const float BlackoutStumbleCooldown = 2.5f;
+        public const float MaxStumbleChancePerSecond = 0.12f; // the owner asked for more (2026-11-17): ~1 per 8 s at full severity, plus the cooldown
         public const float BlackoutChanceMultiplier = 3f;
         public const float MaxFrame = 0.25f;                // a hitch of a second must not count as a second of chances
 

@@ -63,7 +63,7 @@ namespace RavenIron.Tankard
                 "Past Tipsy your walk drifts side to side. Only while moving; standing still never slides you. Read on your own game.");
             Stumbles = Config.Bind("4 - Symptoms", "Stumbles", true,
                 "Once hammered you sometimes trip (vanilla's stagger). Never while swimming, steering, sitting, in the air or " +
-                "already staggering, and never two within 8 seconds. Read on your own game.");
+                "already staggering, and never two within 5 seconds. Read on your own game.");
             SymptomStrength = Config.Bind("4 - Symptoms", "SymptomStrength", 1f,
                 new ConfigDescription("Scales sway, wobble and stumbling together. 0 is off, 2 hits full strength at half the meter.",
                     new AcceptableValueRange<float>(0f, 2f)));

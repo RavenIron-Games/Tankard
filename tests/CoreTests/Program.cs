@@ -190,7 +190,7 @@ namespace RavenIron.Tankard.Tests
             double driftBound = Symptoms.MaxMoveDrift * (0.65 * 2 * Math.PI / 2.9 + 0.35 * 2 * Math.PI / 1.7);
             Check(maxRateRoll <= rollBound * 1.001, $"roll moves smoothly ({maxRateRoll:0.000} deg/s, bound {rollBound:0.000})");
             Check(maxRateDrift <= driftBound * 1.001, $"drift moves smoothly ({maxRateDrift:0.0000} /s, bound {driftBound:0.0000})");
-            Check(rollBound < 10.0, "the fastest lean is under 10 degrees a second");
+            Check(rollBound < 15.0, $"the fastest lean is under 15 degrees a second ({rollBound:0.0})");
 
             // Late in a long session: Time.time is a float that never resets. At ten hours, step it the way the game does
             // and demand the same bound. The first version did its phase maths in float and would have jittered here.
@@ -240,8 +240,9 @@ namespace RavenIron.Tankard.Tests
                 }
             }
             Check(minGap >= Symptoms.StumbleCooldown, $"no two stumbles closer than the cooldown ({minGap:0.0} s)");
-            // Expected interval is cooldown + 1/chance = 8 + 20 = 28 s, so about 129 an hour.
-            Check(stumbles > 100 && stumbles < 160, $"about two a minute at full hammered ({stumbles} in an hour)");
+            // Expected interval is about cooldown + 1/chance; derived from the constants so a retune cannot silently break it.
+            double expected = 3600.0 / (Symptoms.StumbleCooldown + 1.0 / Symptoms.MaxStumbleChancePerSecond);
+            Check(stumbles > expected * 0.8 && stumbles < expected * 1.2, $"stumble rate matches the constants ({stumbles} in an hour, expected about {expected:0})");
         }
 
         private static void BlackoutTests()
