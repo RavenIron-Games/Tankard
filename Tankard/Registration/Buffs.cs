@@ -109,7 +109,7 @@ namespace RavenIron.Tankard.Registration
         private static Sprite IconFor(string assetName)
         {
             string prefab = assetName == Hangover ? "TK_BloodyIvar"
-                          : assetName == CourageDrunk || assetName == CourageHammered ? "TK_FireWine"
+                          : assetName == CourageDrunk || assetName == CourageHammered ? "TK_SurtrsKiss"
                           : assetName.StartsWith("SE_") ? assetName.Substring(3) : assetName;
             var go = Items.Get(prefab);
             var icons = go != null ? go.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons : null;

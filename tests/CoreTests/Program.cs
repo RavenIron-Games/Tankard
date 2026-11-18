@@ -253,20 +253,20 @@ namespace RavenIron.Tankard.Tests
             Check(Drinks.All.Select(d => d.Effect.Name).Distinct().Count() == Drinks.All.Count, "effect names are unique");
             Check(Drinks.All.Select(d => "SE_" + d.PrefabName).Distinct().Count() == Drinks.All.Count, "status effect asset names are unique");
             var by = Drinks.All.ToDictionary(d => d.PrefabName);
-            Check(by["TK_Frostmead"].Effect.Resist == Resist.Frost && by["TK_FireWine"].Effect.Resist == Resist.Fire &&
-                  by["TK_BogWine"].Effect.Resist == Resist.Poison, "the biome drinks resist their biome");
+            Check(by["TK_RimecaskMead"].Effect.Resist == Resist.Frost && by["TK_SurtrsKiss"].Effect.Resist == Resist.Fire &&
+                  by["TK_SwampmothersWine"].Effect.Resist == Resist.Poison, "the biome drinks resist their biome");
             Check(Drinks.All.Count(d => d.CuresHangover) == 1 && by["TK_BloodyIvar"].CuresHangover, "exactly one cure, the Bloody Ivar");
             Check(by["TK_BloodyIvar"].Path == BrewPath.Station && by["TK_BloodyIvar"].Abv > 0f, "the Bloody Ivar is hair of the dog: a station drink with a little alcohol");
             Check(Words.English()[by["TK_BloodyIvar"].DescriptionToken.Substring(1)].Contains("Cures a hangover"), "its tooltip says it cures");
-            string d1 = by["TK_ForestGrog"].Effect.Describe();
+            string d1 = by["TK_RootstumpGrog"].Effect.Describe();
             Check(d1 == "+50 carry weight, -15% stamina spent running for 10 minutes", $"effect text comes from the numbers ({d1})");
-            Check(by["TK_SkaldicMead"].Effect.Describe() == "+25% health regen, +50% stamina regen for 15 minutes", by["TK_SkaldicMead"].Effect.Describe());
-            Check(Words.English()[by["TK_Ale"].DescriptionToken.Substring(1)].Contains("+25% stamina regen for 10 minutes"), "the tooltip lists the effect");
+            Check(by["TK_BragisTongue"].Effect.Describe() == "+25% health regen, +50% stamina regen for 15 minutes", by["TK_BragisTongue"].Effect.Describe());
+            Check(Words.English()[by["TK_LonghouseAle"].DescriptionToken.Substring(1)].Contains("+25% stamina regen for 10 minutes"), "the tooltip lists the effect");
             var saved = System.Globalization.CultureInfo.CurrentCulture;
             try
             {
                 System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
-                Check(!by["TK_ForestGrog"].Effect.Describe().Contains(","+"0") && by["TK_ForestGrog"].Effect.Describe().Contains("+50 carry"), "effect text is culture-proof");
+                Check(!by["TK_RootstumpGrog"].Effect.Describe().Contains(","+"0") && by["TK_RootstumpGrog"].Effect.Describe().Contains("+50 carry"), "effect text is culture-proof");
             }
             finally { System.Globalization.CultureInfo.CurrentCulture = saved; }
 
@@ -447,8 +447,8 @@ namespace RavenIron.Tankard.Tests
 
         private static void ToleranceTests()
         {
-            var fire = Drinks.All.First(d => d.PrefabName == "TK_FireWine");
-            var ale = Drinks.All.First(d => d.PrefabName == "TK_Ale");
+            var fire = Drinks.All.First(d => d.PrefabName == "TK_SurtrsKiss");
+            var ale = Drinks.All.First(d => d.PrefabName == "TK_LonghouseAle");
 
             // The owner's point: an end-game drink handles a new player, and a hardened drinker handles it.
             Check(Tolerance.Hit(fire.Abv, 0f) >= Intoxication.TierFloor[(int)Tier.Hammered],
@@ -514,8 +514,8 @@ namespace RavenIron.Tankard.Tests
             for (int n = 0; n < 100; n++) Check(Blackout.LossFraction(n + 1) >= Blackout.LossFraction(n), $"loss never falls ({n})");
 
             // What that means at the bar, with the real drinks, sobering ignored (back to back).
-            var fireB = Drinks.All.First(d => d.PrefabName == "TK_FireWine");
-            var ciderB = Drinks.All.First(d => d.PrefabName == "TK_RaspberryCider");
+            var fireB = Drinks.All.First(d => d.PrefabName == "TK_SurtrsKiss");
+            var ciderB = Drinks.All.First(d => d.PrefabName == "TK_Brambleblush");
             float lv = 0f; for (int i = 0; i < 2; i++) lv = Intoxication.Add(lv, Tolerance.Hit(fireB.Abv, 0f));
             Check(Blackout.Chance(Blackout.Over(lv)) >= 0.6, $"a new drinker on two fire wines is likely out ({lv:0}, {Blackout.Chance(Blackout.Over(lv)):P0})");
             lv = 0f; int cups = 0; while (Blackout.Over(lv) <= 0f && cups < 50) { lv = Intoxication.Add(lv, Tolerance.Hit(fireB.Abv, Tolerance.Max)); cups++; }
@@ -866,10 +866,10 @@ namespace RavenIron.Tankard.Tests
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
-            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_BloodyIvar,TK_HoneyMead,TK_BogWine,TK_Frostmead,TK_SkaldicMead,TK_JotunDraught,TK_FireWine",
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_SwampmothersWine,TK_RimecaskMead,TK_BragisTongue,TK_YmirsMarrow,TK_SurtrsKiss",
                   "shipped prefab names are pinned (saves store them)");
             Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
-                  "TK_RaspberryCider,TK_Ale,TK_ForestGrog,TK_BlueberryWine,TK_BloodyIvar,TK_HoneyMead,TK_HoneyMeadBase,TK_BogWine,TK_BogWineBase,TK_Frostmead,TK_FrostmeadBase,TK_SkaldicMead,TK_SkaldicMeadBase,TK_JotunDraught,TK_JotunDraughtBase,TK_FireWine,TK_FireWineBase",
+                  "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_HiveGoldMeadBase,TK_SwampmothersWine,TK_SwampmothersWineBase,TK_RimecaskMead,TK_RimecaskMeadBase,TK_BragisTongue,TK_BragisTongueBase,TK_YmirsMarrow,TK_YmirsMarrowBase,TK_SurtrsKiss,TK_SurtrsKissBase",
                   "shipped item names, bases included, are pinned");
 
             // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------

@@ -4,14 +4,14 @@
 
 - **Own icons.** Every drink, every fermenter base and the lost tankard has its own picture instead of a vanilla mead's: a foaming tankard for Longhouse Ale, a frosted one for Rimecask Mead, a drinking horn for Hive-Gold Mead, a silver goblet for Bragi's Tongue, a glowing flask for Surtr's Kiss, a misty stone flask for Ymir's Marrow, and so on. The bases are lidded crocks banded in the colour of the drink they become. The drink buffs show the same icons. The mod also has a store icon now.
 
-- **New drink names**, because the old ones matched another mod word for word. Brambleblush (was Raspberry cider), Longhouse Ale (Ale), Rootstump Grog (Forest grog), Bilberry Dusk (Blueberry wine), Hive-Gold Mead (Honey mead), Swampmother's Wine (Bog wine), Rimecask Mead (Frostmead), Bragi's Tongue (Skaldic mead), Ymir's Marrow (Jotun's draught) and Surtr's Kiss (Fire wine). Bloody Ivar keeps its name. Only the names changed: every item ID (TK_*) is the same, so drinks in a chest and bases in a barrel keep working, and `spawn TK_FireWine` still spawns a Surtr's Kiss.
+- **New drink names**, because the old ones matched another mod word for word. Brambleblush (was Raspberry cider), Longhouse Ale (Ale), Rootstump Grog (Forest grog), Bilberry Dusk (Blueberry wine), Hive-Gold Mead (Honey mead), Swampmother's Wine (Bog wine), Rimecask Mead (Frostmead), Bragi's Tongue (Skaldic mead), Ymir's Marrow (Jotun's draught) and Surtr's Kiss (Fire wine). Bloody Ivar keeps its name. The item IDs follow the names (`spawn TK_SurtrsKiss`, `TK_LonghouseAle`, `TK_HiveGoldMeadBase` and so on), so drinks and bases made by an earlier test build vanish from chests and barrels.
 
 - Scaffold. The plugin loads, binds `Enabled` and `SoberPerSecond`, and logs the four-drink table. The intoxication
   meter (add, decay, tiers, symptom severity) is written and covered by the off-game harness.
 - The four drinks (Ale, Blueberry wine, Honey mead, Skaldic mead) are registered as items, cloned from a vanilla mead,
   with English names. Drinking one adds its potency to the local player's meter, which sobers at `SoberPerSecond`; each
   drink and each tier change is logged. A drink does nothing else yet: no symptoms, no recipe to make one, and the
-  meter is not saved across a relog. Use `spawn TK_Ale` (devcommands) to get one.
+  meter is not saved across a relog. Use `spawn TK_LonghouseAle` (devcommands) to get one.
 - You can now make them. **Ale** (4 Barley, makes 2) and **Blueberry wine** (8 Blueberries and 1 Honey, makes 2) are
   crafted at the cauldron. **Honey mead** and **Skaldic mead** are fermented: craft a base at the Mead Ketill
   (Honey 6 and Raspberry 4, or Honey 8, Barley 4 and Cloudberry 4), put it in a fermenter under a roof, and tap four
