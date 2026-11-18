@@ -155,10 +155,21 @@ namespace RavenIron.Tankard
         /// in a blackout wakes with the full post-blackout one (Effects.HangoverAfterDeath). Applied by Tick once the new
         /// body is alive. The meter itself is untouched: dying does not sober you.
         /// </summary>
+        // The hangover left on the body just BEFORE vanilla's OnDeath strips every status effect (Patch_Death's prefix).
+        // Negative means "not noted": nothing ran before this death, so fall back to reading the body.
+        private static float _hangoverAtDeath = -1f;
+
+        /// <summary>Called by Patch_Death's prefix, while the dying body still has its effects.</summary>
+        public static void NoteHangoverBeforeDeath(Player p)
+        {
+            _hangoverAtDeath = HangoverLeft(p);
+        }
+
         public static void OnDeath(Player p, bool inBlackout)
         {
             Attach(p);
-            float left = HangoverLeft(p);
+            float left = _hangoverAtDeath >= 0f ? _hangoverAtDeath : HangoverLeft(p);
+            _hangoverAtDeath = -1f;
             float next = Plugin.Hangovers.Value && Plugin.Enabled.Value ? Effects.HangoverAfterDeath(left, inBlackout) : left;
             if (next <= 0f) return;
             _pendingHangover = next;

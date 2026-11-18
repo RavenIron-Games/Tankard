@@ -93,6 +93,26 @@ namespace RavenIron.Tankard.Core
             return false;
         }
 
+        /// <summary>Seconds of real time still left to find it (0 once too late or unreadable). For `tankard find`.</summary>
+        public static double SecondsLeft(string droppedTicks, long nowUtcTicks)
+        {
+            if (IsExpired(droppedTicks, nowUtcTicks)) return 0.0;
+            long dropped = long.Parse(droppedTicks, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            double gone = nowUtcTicks <= dropped ? 0.0 : (nowUtcTicks - dropped) / (double)TimeSpan.TicksPerSecond;
+            return Math.Max(0.0, FindSeconds - gone);
+        }
+
+        static readonly string[] Points = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+
+        /// <summary>Which way to walk, in Valheim's axes (+z north, +x east), as one of eight compass points.</summary>
+        public static string Compass(float dx, float dz)
+        {
+            if (float.IsNaN(dx) || float.IsNaN(dz) || (dx == 0f && dz == 0f)) return "right here";
+            double deg = Math.Atan2(dx, dz) * 180.0 / Math.PI;
+            if (deg < 0) deg += 360.0;
+            return Points[(int)Math.Round(deg / 45.0) % 8];
+        }
+
         public static string FormatOwner(long playerId) => playerId.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>True only for a tankard marked with this player's id. Anyone else's, or an unmarked one, ends nothing.</summary>

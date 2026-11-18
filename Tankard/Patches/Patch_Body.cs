@@ -7,10 +7,28 @@ using UnityEngine;
 namespace RavenIron.Tankard.Patches
 {
     /// <summary>Dying carries the hangover to the new body, and in a blackout keeps the map dark and gives the full
-    /// post-blackout hangover (owner, 2026-11-18). An observing postfix.</summary>
+    /// post-blackout hangover (owner, 2026-11-18). Both halves only observe.
+    ///
+    /// The PREFIX exists because vanilla Player.OnDeath calls m_seman.RemoveAllStatusEffects() near its end (decompiled
+    /// 1.0.21), so by the postfix the hangover is already gone. Found live on Storm10, 2026-11-18: a death with ~1000 s of
+    /// hangover left logged "had 0 s", so every ordinary death still cured a hangover. The prefix reads it first; it
+    /// changes nothing and lets vanilla run (no opinion: return true), and records nothing if another prefix skipped it.
+    /// </summary>
     [HarmonyPatch(typeof(Player), nameof(Player.OnDeath))]
     internal static class Patch_Death
     {
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.Low)]
+        private static bool Prefix(Player __instance, bool __runOriginal)
+        {
+            try
+            {
+                if (__runOriginal && __instance != null && __instance == Player.m_localPlayer) Meter.NoteHangoverBeforeDeath(__instance);
+            }
+            catch (Exception ex) { Plugin.Log.LogWarning($"Death hook (before) failed: {ex.Message}"); }
+            return true;
+        }
+
         [HarmonyPostfix]
         private static void Postfix(Player __instance)
         {

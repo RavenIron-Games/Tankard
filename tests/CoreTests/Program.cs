@@ -381,6 +381,17 @@ namespace RavenIron.Tankard.Tests
             Check(LostTankard.IsExpired(null, t0) && LostTankard.IsExpired("", t0) && LostTankard.IsExpired("soon", t0) && LostTankard.IsExpired("0", t0),
                   "a missing or garbled stamp counts as too late");
 
+            // `tankard find`: which way, and how long is left.
+            Check(LostTankard.Compass(0f, 10f) == "north" && LostTankard.Compass(10f, 0f) == "east" && LostTankard.Compass(0f, -10f) == "south" &&
+                  LostTankard.Compass(-10f, 0f) == "west" && LostTankard.Compass(7f, 7f) == "north-east" && LostTankard.Compass(-7f, -7f) == "south-west",
+                  "the compass points the right way (+z is north, +x is east)");
+            Check(LostTankard.Compass(0f, 0f) == "right here" && LostTankard.Compass(float.NaN, 1f) == "right here", "standing on it");
+            Check(Math.Abs(LostTankard.SecondsLeft(stamp, t0 + TimeSpan.FromSeconds(100).Ticks) - 200.0) < 0.01 &&
+                  LostTankard.SecondsLeft(stamp, t0) == 300.0 && LostTankard.SecondsLeft(stamp, t0 - TimeSpan.FromMinutes(1).Ticks) == 300.0,
+                  "time left counts down from 300 s");
+            Check(LostTankard.SecondsLeft(stamp, t0 + TimeSpan.FromSeconds(301).Ticks) == 0.0 && LostTankard.SecondsLeft("junk", t0) == 0.0,
+                  "and is 0 once too late or unreadable");
+
             var words = LostTankard.English();
             Check(words.Count == 2 && words["tk_lost_tankard"] == LostTankard.DisplayName && words.ContainsKey("tk_lost_tankard_desc"),
                   "the lost tankard has its name and description");

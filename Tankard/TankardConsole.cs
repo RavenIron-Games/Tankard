@@ -34,11 +34,59 @@ namespace RavenIron.Tankard
             return n;
         }
 
+        /// <summary>
+        /// `tankard find`: every lost tankard this game has loaded, nearest first, with which way to walk, how far, whose it
+        /// is and how long is left to find it; and whether yours is already in your bag. Only the loaded area can be seen
+        /// (a dropped item is a ZDO with no body until its zone loads), which always covers yours: it lands 10-20 m away.
+        /// A one-off scene search, so it costs nothing until it is typed.
+        /// </summary>
+        private static System.Collections.Generic.List<string> FindLostTankards(Player p)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            long me = p.GetPlayerID();
+            long now = DateTime.UtcNow.Ticks;
+            UnityEngine.Vector3 at = p.transform.position;
+
+            foreach (ItemDrop.ItemData it in p.GetInventory().GetAllItems())
+            {
+                if (it?.m_shared == null || it.m_shared.m_name != LostTankard.NameToken) continue;
+                it.m_customData.TryGetValue(LostTankard.OwnerKey, out string bagOwner);
+                bool mine = LostTankard.IsMine(bagOwner, me);
+                lines.Add(mine ? "tankard: your lost tankard is in your bag. Drink from it to end the blackout."
+                               : "tankard: you are carrying someone else's lost tankard. It does nothing for you.");
+            }
+
+            var found = new System.Collections.Generic.List<(float d, string text)>();
+            foreach (ItemDrop drop in UnityEngine.Object.FindObjectsByType<ItemDrop>(UnityEngine.FindObjectsSortMode.None))
+            {
+                var data = drop != null ? drop.m_itemData : null;
+                if (data?.m_shared == null || data.m_shared.m_name != LostTankard.NameToken) continue;
+                data.m_customData.TryGetValue(LostTankard.OwnerKey, out string owner);
+                data.m_customData.TryGetValue(LostTankard.DroppedKey, out string dropped);
+                UnityEngine.Vector3 pos = drop.transform.position;
+                float dx = pos.x - at.x, dz = pos.z - at.z;
+                float d = (float)Math.Sqrt(dx * dx + dz * dz);
+                double left = LostTankard.SecondsLeft(dropped, now);
+                string whose = LostTankard.IsMine(owner, me) ? "YOURS" : "someone else's";
+                string time = left > 0 ? $"{left:0} s left to find it" : "too late: it crumbles when picked up";
+                found.Add((d, $"tankard: {whose} lost tankard {d:0} m {LostTankard.Compass(dx, dz)}, {pos.y - at.y:+0;-0;0} m up/down, {time}"));
+            }
+            found.Sort((a, b) => a.d.CompareTo(b.d));
+            foreach (var f in found) lines.Add(f.text);
+
+            if (lines.Count == 0)
+                lines.Add(BlackoutRunner.MapHidden
+                    ? "tankard: no lost tankard nearby. It is only dropped when you die during a blackout, and it despawns after 5 minutes unfound. Walk back to the drinking spot instead."
+                    : "tankard: no lost tankard nearby, and no blackout running.");
+            Plugin.Log.LogInfo($"Console: tankard find listed {found.Count} lost tankard(s) nearby.");
+            return lines;
+        }
+
         private static void Postfix()
         {
             try
             {
-                new Terminal.ConsoleCommand("tankard", "Tankard: tankard status | map (end a blackout, map back) | sober | tolerance [0-69]", args =>
+                new Terminal.ConsoleCommand("tankard", "Tankard: tankard status | find (your lost tankard) | map (end a blackout, map back) | sober | tolerance [0-69]", args =>
                 {
                     try
                     {
@@ -46,6 +94,10 @@ namespace RavenIron.Tankard
                         Player p = Player.m_localPlayer;
                         switch (sub)
                         {
+                            case "find":
+                                if (p == null) { args.Context.AddString("tankard: no local player"); return; }
+                                foreach (string line in FindLostTankards(p)) args.Context.AddString(line);
+                                return;
                             case "map":
                                 if (p == null) { args.Context.AddString("tankard: no local player"); return; }
                                 BlackoutRunner.EndBlackout(p, restoreMinimap: true);

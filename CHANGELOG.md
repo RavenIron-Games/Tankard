@@ -95,3 +95,5 @@
 - **The third day of a blackout streak always throws you at least 5 km.** Before, the landing could fall up to 20%
   short of the aim, and two test blackouts woke 4897 m and 4859 m away. Only if there is no allowed dry land beyond
   5 km at all (a small island, say) does it fall back to the nearest ground it can find, so you still wake somewhere.
+- **`tankard find`** says where your lost tankard is. It gives which way to walk, how far, how far up or down, and how many seconds are left to find it, or tells you it's already in your bag. Lost tankards belonging to other players are listed too, marked as theirs.
+- **An ordinary death no longer cures a hangover.** The game wipes every status effect when you die, before Tankard could read how much hangover was left, so the new body woke with none. Found on a live server: "had 0 s" with about 1000 s still to go.
