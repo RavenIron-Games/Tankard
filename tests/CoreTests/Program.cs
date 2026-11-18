@@ -360,6 +360,18 @@ namespace RavenIron.Tankard.Tests
                   !Blackout.TryParseHome("NaN;1;2", out _, out _, out _) && !Blackout.TryParseHome("1;Infinity;2", out _, out _, out _),
                   "a damaged home value is refused, never half-read");
             Check(Blackout.IsHome(10f, 10f, 40f, 40f) && !Blackout.IsHome(0f, 0f, 40f, 40f), "home is 50 m, flat");
+            // Coming home: replays the first in-game run. Standing AT the spot during the teleport's 2 s wait, then carried
+            // 1300 m away, then walking back. The buggy check restored the map on the very first tick.
+            bool armed = false;
+            Check(!Blackout.ShouldRestoreMap(ref armed, true, 0f, 0f, 0f, 0f), "mid-teleport at the spot: map stays off");
+            Check(!Blackout.ShouldRestoreMap(ref armed, false, 0f, 0f, 0f, 0f) && !armed, "at the spot but never away yet: still off, not armed");
+            Check(!Blackout.ShouldRestoreMap(ref armed, false, 1300f, 0f, 0f, 0f) && armed, "woken far away: armed, still off");
+            Check(!Blackout.ShouldRestoreMap(ref armed, false, 60f, 0f, 0f, 0f), "60 m out: not home yet");
+            Check(Blackout.ShouldRestoreMap(ref armed, false, 30f, 20f, 0f, 0f), "back within 50 m: map returns");
+            bool a2 = false;
+            Check(!Blackout.ShouldRestoreMap(ref a2, true, 5000f, 0f, 0f, 0f) && !a2, "far away but mid-teleport does not arm");
+            bool a3 = false;
+            Check(!Blackout.ShouldRestoreMap(ref a3, false, 90f, 0f, 0f, 0f) && !a3, "90 m is not far enough to arm (needs 100)");
             Check(Blackout.KeyFor("123") != Blackout.KeyFor("456") && Blackout.KeyFor(null) == Blackout.KeyFor(""), "one key per world");
         }
 

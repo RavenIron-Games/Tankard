@@ -24,6 +24,9 @@ namespace RavenIron.Tankard
         private static readonly System.Random Rng = new System.Random();
         private static bool _mapHidden;
         private static float _checkTimer;
+        // Not saved: a fresh session starts disarmed and arms the moment you are seen away from the spot, which after a
+        // blackout is immediately (you wake at least ~240 m off, unless the island fallback put you closer).
+        private static bool _homeArmed;
 
         /// <summary>Read by the Minimap patch every frame; refreshed from the saved key twice a second.</summary>
         public static bool MapHidden => _mapHidden && Plugin.Enabled.Value;
@@ -91,6 +94,7 @@ namespace RavenIron.Tankard
             int left = LeaveGear(p, drinks, min);
             p.m_customData[WorldKey()] = Blackout.FormatHome(home.x, home.y, home.z);
             _mapHidden = true;
+            _homeArmed = false; // you are still standing at the spot for the teleport's first 2 s
             Minimap.instance?.SetMapMode(Minimap.MapMode.None);
 
             Meter.WakeFromBlackout();
@@ -166,7 +170,7 @@ namespace RavenIron.Tankard
             }
             _mapHidden = true;
             Vector3 pos = p.transform.position;
-            if (Blackout.IsHome(pos.x, pos.z, hx, hz))
+            if (Blackout.ShouldRestoreMap(ref _homeArmed, p.IsTeleporting(), pos.x, pos.z, hx, hz))
             {
                 p.m_customData.Remove(key);
                 _mapHidden = false;

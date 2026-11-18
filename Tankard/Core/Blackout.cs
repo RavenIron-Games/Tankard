@@ -178,6 +178,28 @@ namespace RavenIron.Tankard.Core
             return dx * dx + dz * dz <= HomeRadius * HomeRadius;
         }
 
+        /// <summary>How far you must have been from the drinking spot before reaching it again counts as coming home.</summary>
+        public const float ArmRadius = HomeRadius * 2f;
+
+        /// <summary>
+        /// The coming-home check, as a two-state machine. It stays DISARMED until you have been seen more than
+        /// <see cref="ArmRadius"/> from the spot while not mid-teleport, and only an armed check can give the map back.
+        /// Found in the first in-game run (2026-11-17): vanilla's teleport waits 2 s before it moves you, the check ran
+        /// in that window, saw you still standing at the drinking spot and restored the map at once.
+        /// </summary>
+        public static bool ShouldRestoreMap(ref bool armed, bool teleporting, float px, float pz, float homeX, float homeZ)
+        {
+            if (teleporting) return false;
+            float dx = px - homeX, dz = pz - homeZ;
+            float d2 = dx * dx + dz * dz;
+            if (!armed)
+            {
+                if (d2 > ArmRadius * ArmRadius) armed = true;
+                return false;
+            }
+            return d2 <= HomeRadius * HomeRadius;
+        }
+
         /// <summary>The custom-data key for one world, so a blackout in one world never hides the map in another.</summary>
         public static string KeyFor(string worldId) => "Tankard.BlackoutHome." + (string.IsNullOrEmpty(worldId) ? "unknown" : worldId);
     }
