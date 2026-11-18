@@ -45,6 +45,9 @@ namespace RavenIron.Tankard.Registration
             return _updateRegisters != null;
         }
 
+        public static GameObject Get(string prefabName) =>
+            Prefabs.TryGetValue(prefabName, out GameObject go) ? go : null;
+
         // ---- ObjectDB pass ------------------------------------------------------------------------------------
 
         public static void EnsureItems()
@@ -57,7 +60,7 @@ namespace RavenIron.Tankard.Registration
             if (db == null || db.m_items == null || db.m_items.Count == 0 || db.GetItemPrefab("Wood") == null) return;
 
             bool added = false;
-            foreach (DrinkDef def in Drinks.All)
+            foreach (ItemSpec def in Drinks.Items())
             {
                 try
                 {
@@ -83,7 +86,7 @@ namespace RavenIron.Tankard.Registration
             }
         }
 
-        private static GameObject BuildOrGet(ObjectDB db, DrinkDef def)
+        private static GameObject BuildOrGet(ObjectDB db, ItemSpec def)
         {
             if (Prefabs.TryGetValue(def.PrefabName, out GameObject existing) && Holder.IsAlive(existing))
                 return existing;
@@ -118,7 +121,7 @@ namespace RavenIron.Tankard.Registration
         /// Writes every stat the item has rather than inheriting the donor's. The clone owns its SharedData outright
         /// (Instantiate deep-copies the serializable ItemData), so nothing written here reaches the vanilla donor.
         /// </summary>
-        private static void ApplyStats(DrinkDef def, GameObject prefab)
+        private static void ApplyStats(ItemSpec def, GameObject prefab)
         {
             ItemDrop drop = prefab.GetComponent<ItemDrop>();
             if (drop == null || drop.m_itemData == null || drop.m_itemData.m_shared == null) return;
@@ -130,8 +133,10 @@ namespace RavenIron.Tankard.Registration
             ItemDrop.ItemData.SharedData s = drop.m_itemData.m_shared;
             s.m_name = def.NameToken;
             s.m_description = def.DescriptionToken;
-            s.m_itemType = ItemDrop.ItemData.ItemType.Consumable;
-            s.m_maxStackSize = 10;
+            // A drink is a consumable. A base is a MATERIAL: Humanoid.CanConsumeItem refuses anything that is not
+            // ItemType.Consumable (decompiled), so a base can never be swallowed for nothing; only the fermenter takes it.
+            s.m_itemType = def.IsDrink ? ItemDrop.ItemData.ItemType.Consumable : ItemDrop.ItemData.ItemType.Material;
+            s.m_maxStackSize = def.IsDrink ? 10 : 20;
             s.m_weight = 0.5f;
             s.m_teleportable = true;
             s.m_questItem = false;
@@ -183,7 +188,7 @@ namespace RavenIron.Tankard.Registration
             if (scene == null || Prefabs.Count == 0 || !ResolveNamedPrefabs()) return;
             Dictionary<int, GameObject> named = _namedPrefabs(scene);
 
-            foreach (DrinkDef def in Drinks.All)
+            foreach (ItemSpec def in Drinks.Items())
             {
                 if (!Prefabs.TryGetValue(def.PrefabName, out GameObject prefab) || prefab == null) continue;
                 int hash = def.PrefabName.GetStableHashCode();

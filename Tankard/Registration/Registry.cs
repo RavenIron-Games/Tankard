@@ -19,6 +19,7 @@ namespace RavenIron.Tankard.Registration
             {
                 Items.EnsureItems();
                 Items.EnsurePrefabs();
+                Brewing.EnsureAll();
             }
             catch (Exception ex)
             {

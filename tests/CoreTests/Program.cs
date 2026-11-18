@@ -84,8 +84,9 @@ namespace RavenIron.Tankard.Tests
                 Check(d.PrefabName.IndexOfAny(new[] { ' ', '(' }) < 0, $"{d.PrefabName}: no space or '(' (ItemDrop truncates there)");
                 Check(d.Potency > 0f && d.Potency < Intoxication.Max, $"{d.PrefabName}: potency inside the meter");
                 Check(!string.IsNullOrEmpty(d.DonorPrefab), $"{d.PrefabName}: names a donor");
-                Check(d.Path == BrewPath.Fermenter ? d.FermentSeconds > 0 : d.FermentSeconds == 0,
-                      $"{d.PrefabName}: only fermenter drinks have a ferment time");
+                Check(d.Path == BrewPath.Fermenter ? (d.FermentYield > 0 && d.CraftAmount == 1) : (d.FermentYield == 0 && d.CraftAmount > 0),
+                      $"{d.PrefabName}: only fermenter drinks yield from a barrel, and a base is crafted one at a time");
+                Check(d.Path == BrewPath.Fermenter == (d.BasePrefabName != null), $"{d.PrefabName}: only fermenter drinks have a base");
             }
             Check(Drinks.All.Count == 4, "four drinks in the first cut");
 
@@ -113,12 +114,67 @@ namespace RavenIron.Tankard.Tests
                       $"{d.PrefabName}: English table carries a description");
                 Check(ReferenceEquals(Words.ByNameToken(d.NameToken), d), $"{d.PrefabName}: a consumed item's name token finds its drink");
             }
-            Check(english.Count == Drinks.All.Count * 2, "the English table has exactly a name and a description per drink");
+            // 4 drinks + 2 bases, each with a name and a description.
+            Check(english.Count == Drinks.Items().Count * 2, "the English table has exactly a name and a description per item");
+            foreach (var spec in Drinks.Items())
+            {
+                Check(english.ContainsKey(spec.NameToken.Substring(1)) && english.ContainsKey(spec.DescriptionToken.Substring(1)),
+                      $"{spec.PrefabName}: its tokens are in the English table");
+                if (!spec.IsDrink)
+                    Check(Words.ByNameToken(spec.NameToken) == null, $"{spec.PrefabName}: a base is not drinkable, so it finds no drink");
+            }
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
             Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Ale,TK_BlueberryWine,TK_HoneyMead,TK_SkaldicMead",
                   "shipped prefab names are pinned (saves store them)");
+            Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
+                  "TK_Ale,TK_BlueberryWine,TK_HoneyMead,TK_HoneyMeadBase,TK_SkaldicMead,TK_SkaldicMeadBase",
+                  "shipped item names, bases included, are pinned");
+
+            // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------
+            var items = Drinks.Items();
+            var itemNames = new HashSet<string>();
+            foreach (var i in items)
+            {
+                Check(itemNames.Add(i.PrefabName), $"{i.PrefabName}: item names are unique across drinks and bases");
+                Check(i.PrefabName.IndexOfAny(new[] { ' ', '(' }) < 0, $"{i.PrefabName}: no space or '('");
+                Check(i.IsDrink ? i.DonorPrefab != Drinks.BaseDonorPrefab : i.DonorPrefab == Drinks.BaseDonorPrefab,
+                      $"{i.PrefabName}: drinks clone a consumable and bases clone a material");
+            }
+            var recipes = Drinks.Recipes();
+            var recipeNames = new HashSet<string>();
+            Check(recipes.Count == Drinks.All.Count, "one recipe per drink: itself, or its base");
+            foreach (var r in recipes)
+            {
+                Check(recipeNames.Add(r.Name), $"{r.Name}: recipe names are unique");
+                Check(itemNames.Contains(r.ResultPrefab), $"{r.Name}: produces a registered item");
+                Check(r.Amount > 0, $"{r.Name}: produces at least one");
+                Check(r.Ingredients != null && r.Ingredients.Length > 0, $"{r.Name}: a recipe with no ingredients would be free");
+                var seen = new HashSet<string>();
+                foreach (var ing in r.Ingredients)
+                {
+                    Check(ing.Amount > 0, $"{r.Name}: {ing.Item} amount is positive");
+                    Check(!string.IsNullOrEmpty(ing.Item) && seen.Add(ing.Item), $"{r.Name}: {ing.Item} is named once");
+                    Check(!itemNames.Contains(ing.Item), $"{r.Name}: {ing.Item} is a vanilla item, not one of ours");
+                }
+                var owner = items.Find(i => i.PrefabName == r.ResultPrefab);
+                Check(owner.Drink.Path == BrewPath.Fermenter ? r.Station == StationKind.MeadKetill : r.Station == StationKind.Cauldron,
+                      $"{r.Name}: bases are made at the Mead Ketill, station drinks at the cauldron");
+            }
+            var convs = Drinks.Conversions();
+            Check(convs.Count == Drinks.All.Count(d => d.Path == BrewPath.Fermenter), "one conversion per fermented drink");
+            foreach (var c in convs)
+            {
+                var from = items.Find(i => i.PrefabName == c.FromPrefab);
+                var to = items.Find(i => i.PrefabName == c.ToPrefab);
+                Check(from != null && !from.IsDrink && to != null && to.IsDrink && from.Drink == to.Drink,
+                      $"{c.FromPrefab} -> {c.ToPrefab}: a base becomes its own drink");
+                Check(c.Yield > 0, $"{c.FromPrefab}: yields at least one drink");
+            }
+            foreach (var r in recipes)
+                foreach (var ing in r.Ingredients)
+                    Check(!ing.Item.EndsWith("Base"), $"{r.Name}: no recipe takes a base as an ingredient");
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;
