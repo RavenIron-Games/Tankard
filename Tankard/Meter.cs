@@ -15,6 +15,7 @@ namespace RavenIron.Tankard
     {
         public static float Level { get; private set; }
         public static int BingeDrinks { get; private set; }
+        public const float WakeLevel = 90f;
         public static Tier Tier => Intoxication.TierOf(Level);
 
         /// <summary>Symptom severity 0 to 1, with the SymptomStrength setting applied. Zero below Tipsy.</summary>
@@ -54,7 +55,10 @@ namespace RavenIron.Tankard
         /// </summary>
         public static void WakeFromBlackout()
         {
-            Level = Intoxication.TierFloor[(int)Tier.Hammered];
+            // 90, not the Hammered floor of 75: at exactly the floor the next tick dropped you to Drunk, so "wake
+            // hammered" lasted one frame (seen in the log 2026-11-17). 90 is a minute of Hammered, then Drunk, then the
+            // long way down: about six minutes to sober at the default rate.
+            Level = WakeLevel;
             BingeDrinks = 0;
         }
 
