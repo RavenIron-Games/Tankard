@@ -28,12 +28,38 @@ namespace RavenIron.Tankard
             }
         }
 
-        public static void Drink(DrinkDef drink)
+        /// <summary>The character's alcohol tolerance, 0 to 69. Saved in Player.m_customData: your body, so it follows the
+        /// character across worlds (unlike the blackout keys, which are per world).</summary>
+        public static float ToleranceOf(Player p)
+        {
+            if (p == null) return 0f;
+            p.m_customData.TryGetValue(Tolerance.Key, out string s);
+            return Tolerance.Parse(s);
+        }
+
+        public static void Drink(DrinkDef drink, Player p)
         {
             float before = Level;
-            Level = Intoxication.Add(Level, drink.Potency);
+            float tol = ToleranceOf(p);
+            float hit = Tolerance.Hit(drink.Abv, tol);
+            Level = Intoxication.Add(Level, hit);
             BingeDrinks++;
-            Plugin.Log.LogInfo($"Drank {drink.DisplayName}: meter {before:0.0} -> {Level:0.0} ({Tier}), drink {BingeDrinks} of this binge.");
+            float tolAfter = Tolerance.AfterDrink(tol, drink.Abv);
+            if (p != null) p.m_customData[Tolerance.Key] = Tolerance.Format(tolAfter);
+            Plugin.Log.LogInfo($"Drank {drink.DisplayName} ({drink.Abv:0}%): +{hit:0.0} at tolerance {tol:0.00}, meter {before:0.0} -> {Level:0.0} " +
+                               $"({Tier}), drink {BingeDrinks} of this binge. Tolerance now {tolAfter:0.00}.");
+            int shownBefore = Tolerance.Shown(tol), shownAfter = Tolerance.Shown(tolAfter);
+            if (shownAfter > shownBefore && p != null)
+            {
+                try
+                {
+                    string text = shownAfter >= (int)Tolerance.Max
+                        ? $"Tolerance {shownAfter}: iron gut. You can't get any harder."
+                        : $"Tolerance {shownAfter} ({Tolerance.Describe(tolAfter)})";
+                    p.Message(MessageHud.MessageType.TopLeft, text);
+                }
+                catch (System.Exception ex) { Plugin.Report("Tolerance message", ex); }
+            }
         }
 
         public static void Tick(float dt)

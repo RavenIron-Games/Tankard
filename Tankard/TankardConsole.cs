@@ -38,7 +38,7 @@ namespace RavenIron.Tankard
         {
             try
             {
-                new Terminal.ConsoleCommand("tankard", "Tankard: tankard status | map (end a blackout, map back) | sober", args =>
+                new Terminal.ConsoleCommand("tankard", "Tankard: tankard status | map (end a blackout, map back) | sober | tolerance [0-69]", args =>
                 {
                     try
                     {
@@ -52,6 +52,13 @@ namespace RavenIron.Tankard
                                 Plugin.Log.LogInfo("Console: blackout ended by hand, map restored.");
                                 args.Context.AddString("tankard: blackout ended, map back");
                                 return;
+                            case "tolerance":
+                                if (p == null) { args.Context.AddString("tankard: no local player"); return; }
+                                if (args.Args.Length > 2)
+                                    p.m_customData[Tolerance.Key] = Tolerance.Format(Tolerance.Parse(args.Args[2]));
+                                args.Context.AddString($"tankard: tolerance {Meter.ToleranceOf(p):0.00} of {Tolerance.Max:0} " +
+                                                       $"({Tolerance.Describe(Meter.ToleranceOf(p))})");
+                                return;
                             case "sober":
                                 Meter.Reset();
                                 args.Context.AddString("tankard: sober (meter and binge reset)");
@@ -59,6 +66,7 @@ namespace RavenIron.Tankard
                             default:
                                 args.Context.AddString(
                                     $"tankard: meter {Meter.Level:0.0} ({Meter.Tier}), drink {Meter.BingeDrinks} of this binge, " +
+                                    $"tolerance {Meter.ToleranceOf(p):0.00} of {Tolerance.Max:0} ({Tolerance.Describe(Meter.ToleranceOf(p))}), " +
                                     $"blackout {(BlackoutRunner.MapHidden ? "ON" : "off")}, map remembered {MapMemory.Progress:P0}, " +
                                     $"minimap mode {(Minimap.instance != null ? Minimap.instance.m_mode.ToString() : "none")}, " +
                                     $"world no-map modifier {(Game.m_noMap ? "ON" : "off")}, " +

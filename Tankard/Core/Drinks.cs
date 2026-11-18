@@ -31,7 +31,8 @@ namespace RavenIron.Tankard.Core
         public string DisplayName;  // English; the localisation hook maps the token onto this
         public string DonorPrefab;  // vanilla consumable the item is cloned from
         public BrewPath Path;
-        public float Potency;       // meter units added per drink
+        public float Abv;           // alcohol by volume, percent. The hit on the meter comes from this and tolerance (Core/Tolerance.cs)
+        public float Potency => Tolerance.Hit(Abv, 0f); // the hit for a brand-new drinker (tolerance 0)
         public string Blurb;
 
         // What it costs to make. Station drinks are crafted from these directly (CraftAmount per craft). Fermenter drinks
@@ -89,38 +90,38 @@ namespace RavenIron.Tankard.Core
         {
             // ---- the cauldron: quick, weak, made in one go -----------------------------------------------------------
             new DrinkDef { PrefabName = "TK_RaspberryCider", DisplayName = "Raspberry cider", DonorPrefab = "MeadHealthMinor",
-                Path = BrewPath.Station, Potency = 8f, Blurb = "Barely counts as a drink. Everyone starts somewhere.",
+                Path = BrewPath.Station, Abv = 4f, Blurb = "Barely counts as a drink. Everyone starts somewhere.",
                 Ingredients = new[] { new Ingredient("Raspberry", 8), new Ingredient("Honey", 1) }, CraftAmount = 2 },
             new DrinkDef { PrefabName = "TK_Ale", DisplayName = "Ale", DonorPrefab = "MeadHealthMinor",
-                Path = BrewPath.Station, Potency = 10f, Blurb = "Thin and cheap. A warm start to the evening.",
+                Path = BrewPath.Station, Abv = 5f, Blurb = "Thin and cheap. A warm start to the evening.",
                 Ingredients = new[] { new Ingredient("Barley", 4) }, CraftAmount = 2 },
             new DrinkDef { PrefabName = "TK_ForestGrog", DisplayName = "Forest grog", DonorPrefab = "MeadEitrMinor",
-                Path = BrewPath.Station, Potency = 12f, Blurb = "Carrots and thistle, boiled until it stops arguing.",
+                Path = BrewPath.Station, Abv = 7f, Blurb = "Carrots and thistle, boiled until it stops arguing.",
                 Ingredients = new[] { new Ingredient("Carrot", 4), new Ingredient("Thistle", 2) }, CraftAmount = 2 },
             new DrinkDef { PrefabName = "TK_BlueberryWine", DisplayName = "Blueberry wine", DonorPrefab = "MeadPoisonResist",
-                Path = BrewPath.Station, Potency = 14f, Blurb = "Sweet enough that you forget to count.",
+                Path = BrewPath.Station, Abv = 11f, Blurb = "Sweet enough that you forget to count.",
                 Ingredients = new[] { new Ingredient("Blueberries", 8), new Ingredient("Honey", 1) }, CraftAmount = 2 },
 
             // ---- the fermenter: a base from the Mead Ketill, then time. One per biome, each stronger -----------------
             new DrinkDef { PrefabName = "TK_HoneyMead", DisplayName = "Honey mead", DonorPrefab = "MeadHealthMinor",
-                Path = BrewPath.Fermenter, Potency = 18f, Blurb = "Aged in the fermenter. Goes down easy.",
+                Path = BrewPath.Fermenter, Abv = 12f, Blurb = "Aged in the fermenter. Goes down easy.",
                 Ingredients = new[] { new Ingredient("Honey", 6), new Ingredient("Raspberry", 4) }, FermentYield = 4 },
             new DrinkDef { PrefabName = "TK_BogWine", DisplayName = "Bog wine", DonorPrefab = "MeadPoisonResist",
-                Path = BrewPath.Fermenter, Potency = 22f, Blurb = "Turnip, honey and something from a leech. Don't ask which part.",
+                Path = BrewPath.Fermenter, Abv = 14f, Blurb = "Turnip, honey and something from a leech. Don't ask which part.",
                 Ingredients = new[] { new Ingredient("Turnip", 6), new Ingredient("Bloodbag", 2), new Ingredient("Honey", 4) }, FermentYield = 4 },
             new DrinkDef { PrefabName = "TK_Frostmead", DisplayName = "Frostmead", DonorPrefab = "MeadFrostResist",
-                Path = BrewPath.Fermenter, Potency = 26f, Blurb = "Cold going down, a fire once it lands.",
+                Path = BrewPath.Fermenter, Abv = 17f, Blurb = "Cold going down, a fire once it lands.",
                 Ingredients = new[] { new Ingredient("Onion", 4), new Ingredient("FreezeGland", 2), new Ingredient("Honey", 6) }, FermentYield = 4 },
             new DrinkDef { PrefabName = "TK_SkaldicMead", DisplayName = "Skaldic mead", DonorPrefab = "MeadHealthMedium",
-                Path = BrewPath.Fermenter, Potency = 30f, Blurb = "The kind a skald sings after. Not for a short night.",
+                Path = BrewPath.Fermenter, Abv = 20f, Blurb = "The kind a skald sings after. Not for a short night.",
                 Ingredients = new[] { new Ingredient("Honey", 8), new Ingredient("Barley", 4), new Ingredient("Cloudberry", 4) },
                 FermentYield = 4 },
             new DrinkDef { PrefabName = "TK_JotunDraught", DisplayName = "Jotun's draught", DonorPrefab = "MeadEitrMinor",
-                Path = BrewPath.Fermenter, Potency = 36f, Blurb = "Brewed from the mist itself. Giants drink it to feel small.",
+                Path = BrewPath.Fermenter, Abv = 28f, Blurb = "Brewed from the mist itself. Giants drink it to feel small.",
                 Ingredients = new[] { new Ingredient("Sap", 6), new Ingredient("RoyalJelly", 4), new Ingredient("MushroomJotunPuffs", 4) },
                 FermentYield = 4 },
             new DrinkDef { PrefabName = "TK_FireWine", DisplayName = "Fire wine", DonorPrefab = "MeadHealthMedium",
-                Path = BrewPath.Fermenter, Potency = 42f, Blurb = "Vineberries from the burning lands. Two of these and the floor is lava.",
+                Path = BrewPath.Fermenter, Abv = 40f, Blurb = "Vineberries from the burning lands. One of these and the floor is lava.",
                 Ingredients = new[] { new Ingredient("Vineberry", 8), new Ingredient("Honey", 6) }, FermentYield = 4 },
         };
 
@@ -178,7 +179,7 @@ namespace RavenIron.Tankard.Core
             foreach (var d in Drinks.All)
             {
                 words[d.NameToken.Substring(1)] = d.DisplayName;
-                words[d.DescriptionToken.Substring(1)] = d.Blurb;
+                words[d.DescriptionToken.Substring(1)] = d.Blurb + " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)";
                 if (d.Path == BrewPath.Fermenter)
                 {
                     words[d.BaseNameToken.Substring(1)] = d.BaseDisplayName;

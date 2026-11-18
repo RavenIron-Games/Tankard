@@ -25,7 +25,7 @@ namespace RavenIron.Tankard.Patches
 
                 DrinkDef drink = Words.ByNameToken(item.m_shared.m_name);
                 if (drink == null) return;
-                Meter.Drink(drink);
+                Meter.Drink(drink, __instance);
                 BlackoutRunner.AfterDrink(__instance);
             }
             catch (Exception ex)

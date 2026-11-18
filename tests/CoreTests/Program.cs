@@ -245,6 +245,52 @@ namespace RavenIron.Tankard.Tests
             Check(stumbles > expected * 0.8 && stumbles < expected * 1.2, $"stumble rate matches the constants ({stumbles} in an hour, expected about {expected:0})");
         }
 
+        private static void ToleranceTests()
+        {
+            var fire = Drinks.All.First(d => d.PrefabName == "TK_FireWine");
+            var ale = Drinks.All.First(d => d.PrefabName == "TK_Ale");
+
+            // The owner's point: an end-game drink handles a new player, and a hardened drinker handles it.
+            Check(Tolerance.Hit(fire.Abv, 0f) >= Intoxication.TierFloor[(int)Tier.Hammered],
+                  $"one Fire wine puts a new player at Hammered or worse ({Tolerance.Hit(fire.Abv, 0f):0})");
+            Check(Tolerance.Hit(fire.Abv, Tolerance.Max) < Intoxication.TierFloor[(int)Tier.Drunk],
+                  $"at 69 tolerance one Fire wine is under Drunk ({Tolerance.Hit(fire.Abv, Tolerance.Max):0})");
+            Check(Tolerance.Hit(ale.Abv, Tolerance.Max) < Intoxication.TierFloor[(int)Tier.Buzzed],
+                  $"at 69 an ale barely registers ({Tolerance.Hit(ale.Abv, Tolerance.Max):0.0})");
+            Near(Tolerance.Hit(10f, 0f), 20f, "the hit is ABV x 2 at tolerance 0");
+            Near(Tolerance.Hit(10f, Tolerance.Max), 8f, "and 40% of that at 69");
+            float lastHit = float.MaxValue; bool hitFalls = true;
+            for (float t = 0f; t <= 69f; t += 0.5f) { float h = Tolerance.Hit(20f, t); hitFalls &= h <= lastHit; lastHit = h; }
+            Check(hitFalls, "more tolerance never makes a drink hit harder");
+            Check(Tolerance.Hit(0f, 0f) == 0f && Tolerance.Hit(-5f, 0f) == 0f && Tolerance.Hit(float.NaN, 0f) == 0f, "no alcohol, no hit");
+            Check(Tolerance.Hit(10f, 500f) == Tolerance.Hit(10f, Tolerance.Max) && Tolerance.Hit(10f, -3f) == Tolerance.Hit(10f, 0f) &&
+                  Tolerance.Hit(10f, float.NaN) == Tolerance.Hit(10f, 0f), "a bad tolerance clamps into 0..69");
+
+            // Growing: never down, never past 69, strong drinks train faster, and it does reach 69.
+            Check(Tolerance.AfterDrink(10f, 20f) > 10f && Tolerance.AfterDrink(10f, 0f) == 10f, "a drink raises tolerance; water does not");
+            Check(Tolerance.AfterDrink(0f, fire.Abv) > Tolerance.AfterDrink(0f, ale.Abv), "strong drinks train you faster");
+            Check(Tolerance.AfterDrink(68.9f, 40f) == Tolerance.Max && Tolerance.AfterDrink(Tolerance.Max, 40f) == Tolerance.Max, "it stops at 69");
+            Check(Tolerance.AfterDrink(60f, 5f) - 60f < Tolerance.AfterDrink(0f, 5f), "the gains slow as you climb");
+            float tol = 0f; int n = 0;
+            while (tol < Tolerance.Max && n < 10000) { tol = Tolerance.AfterDrink(tol, fire.Abv); n++; }
+            Check(tol == Tolerance.Max && n < 200, $"Fire wine alone gets you to 69 ({n} drinks)");
+            tol = 0f; n = 0;
+            while (Tolerance.Shown(tol) < 30 && n < 10000) { tol = Tolerance.AfterDrink(tol, ale.Abv); n++; }
+            Check(n > 40 && n < 200, $"ale alone takes a good while to reach 30 ({n} drinks)");
+            Check(Tolerance.Shown(68.99f) == 68 && Tolerance.Shown(69f) == 69 && Tolerance.Shown(-1f) == 0, "shown as a floored whole number, 0..69");
+            Check(Tolerance.Describe(0f) == "lightweight" && Tolerance.Describe(69f) == "iron gut", "described at both ends");
+            var savedTol = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                Check(Tolerance.Parse(Tolerance.Format(23.75f)) == 23.75f && !Tolerance.Format(23.75f).Contains(","), "tolerance round-trips under de-DE");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = savedTol; }
+            Check(Tolerance.Parse(null) == 0f && Tolerance.Parse("x") == 0f && Tolerance.Parse("1000") == Tolerance.Max && Tolerance.Parse("NaN") == 0f,
+                  "a damaged tolerance clamps, never NaN");
+            Check(Words.English()[fire.DescriptionToken.Substring(1)].Contains("40% alcohol"), "the tooltip shows the alcohol content");
+        }
+
         private static void BlackoutTests()
         {
             // Chance: zero below 12, 10% on the 12th, climbing 10% a drink, certain by the 21st.
@@ -638,6 +684,7 @@ namespace RavenIron.Tankard.Tests
             DrunkTextTests();
             SymptomTests();
             BlackoutTests();
+            ToleranceTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;

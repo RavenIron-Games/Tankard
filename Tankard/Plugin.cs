@@ -94,7 +94,7 @@ namespace RavenIron.Tankard
                 _harmony.PatchAll(typeof(Plugin).Assembly);
                 Log.LogInfo($"Tankard {Version} loaded (enabled: {Enabled.Value}), {Drinks.All.Count} drink(s) defined.");
                 foreach (var d in Drinks.All)
-                    Log.LogInfo($"  {d.PrefabName}: {d.DisplayName}, {d.Path}, +{d.Potency}");
+                    Log.LogInfo($"  {d.PrefabName}: {d.DisplayName}, {d.Path}, {d.Abv}% (+{d.Potency} to a new drinker, +{Tolerance.Hit(d.Abv, Tolerance.Max):0.#} at {Tolerance.Max:0})");
             }
             catch (Exception ex)
             {

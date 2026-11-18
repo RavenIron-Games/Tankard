@@ -46,3 +46,10 @@
   different in the inventory.
 - `PreferExploredGround` (off by default): a blackout prefers ground the world has already generated, which avoids
   the hitch of building new land as you wake, at the cost of landing only where the world has been loaded.
+- **Alcohol content and tolerance.** Every drink now has an ABV, shown in its tooltip: cider 4%, ale 5%, grog 7%,
+  blueberry wine 11%, honey mead 12%, bog wine 14%, frostmead 17%, skaldic mead 20%, Jotun's draught 28%, fire wine
+  40%. Each character also has an alcohol tolerance from 0 to 69. A drink's hit is its ABV x 2 for a new drinker, so one
+  fire wine (80) puts a lightweight at Hammered, and it shrinks to 40% of that at 69 (fire wine 32, ale 4). Every drink
+  raises your tolerance by a tenth of its ABV, more slowly the higher you are, and it never falls or passes 69. A message
+  tells you when it goes up. It is saved with the character, not the world. `tankard status` shows it, and
+  `tankard tolerance [0-69]` reads or sets it for testing.
