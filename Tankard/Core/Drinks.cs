@@ -120,9 +120,11 @@ namespace RavenIron.Tankard.Core
             // morning goes away.
             new DrinkDef { PrefabName = "TK_BloodyIvar", Effect = new DrinkEffect { Name = "Ivar's Mercy", Seconds = 300f, HealthRegen = 1.25f }, CuresHangover = true,
                 DisplayName = "Bloody Ivar", DonorPrefab = "MeadHealthMinor",
-                Path = BrewPath.Station, Abv = 6f, Blurb = "Berries, a Longhouse Ale, dandelion and a strip of boar jerky stirred in. Cures a hangover. Starts the next one.",
-                // TK_LonghouseAle is our own item: Brewing resolves ingredients through ObjectDB, where Items registers it first.
-                Ingredients = new[] { new Ingredient("Raspberry", 5), new Ingredient("Blueberries", 4), new Ingredient("TK_LonghouseAle", 1),
+                Path = BrewPath.Station, Abv = 6f, Blurb = "Berries, a Brambleblush, dandelion and a strip of boar jerky stirred in. Cures a hangover. Starts the next one.",
+                // TK_Brambleblush is our own item: Brewing resolves ingredients through ObjectDB, where Items registers it first.
+                // It was a Longhouse Ale until 2026-11-19, but barley grows only in the Plains, which locked the hangover cure
+                // behind the Plains while hangovers start in the Black Forest (owner: "make all three").
+                Ingredients = new[] { new Ingredient("Raspberry", 5), new Ingredient("Blueberries", 4), new Ingredient("TK_Brambleblush", 1),
                                       new Ingredient("Dandelion", 2), new Ingredient("BoarJerky", 1) }, CraftAmount = 1 },
 
             // ---- the fermenter: a base from the Mead Ketill, then time. One per biome, each stronger -----------------
@@ -165,15 +167,16 @@ namespace RavenIron.Tankard.Core
                               "Only more drink takes the edge off. The Bloody Ivar can't help, and nobody drinks another until it's over.",
                 Ingredients = new[] { new Ingredient("TK_SurtrsKiss", 1), new Ingredient("TK_YmirsMarrow", 1), new Ingredient("TK_BragisTongue", 1),
                                       new Ingredient("TK_SwampmothersWine", 1) }, CraftAmount = 1 },
-            // Kaffi (owner, 2026-11-19): the way back. Barley roasted over coal, sweetened with honey, no alcohol.
+            // Kaffi (owner, 2026-11-19): the way back. Mushrooms roasted over coal, sweetened with honey, no alcohol. It was
+            // barley at first, but barley grows only in the Plains, and sobering up should be there from the start.
             // The effect is the jitters: a little stamina regen, and while it lasts another cup does nothing for your head.
             new DrinkDef { PrefabName = "TK_Kaffi", Special = Special.Kaffi, DisplayName = "Kaffi", DonorPrefab = "MeadStaminaMinor",
                 // 600f written out, not Kaffi.JitterSeconds: the README forge reads literal numbers (the harness pins they agree).
                 Effect = new DrinkEffect { Name = "Kaffi Jitters", Seconds = 600f, StaminaRegen = 1.15f },
-                Path = BrewPath.Station, Abv = 0f, Blurb = "Barley roasted black over the coals, with a spoon of honey. It won't fix your morning, but it'll get you to it.",
+                Path = BrewPath.Station, Abv = 0f, Blurb = "Forest mushrooms roasted black over the coals, with a spoon of honey. It won't fix your morning, but it'll get you to it.",
                 SpecialLine = "No alcohol. Takes 40 off your drunk meter. Another cup does nothing for your head until the jitters wear off. " +
                               "It doesn't touch a hangover, a blackout or the Valhalla.",
-                Ingredients = new[] { new Ingredient("Barley", 3), new Ingredient("Coal", 1), new Ingredient("Honey", 1) }, CraftAmount = 2 },
+                Ingredients = new[] { new Ingredient("Mushroom", 3), new Ingredient("Coal", 1), new Ingredient("Honey", 1) }, CraftAmount = 2 },
         };
 
         /// <summary>The vanilla item a base is cloned from. A base must be a material the fermenter takes, not a consumable.</summary>

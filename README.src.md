@@ -68,8 +68,8 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 
 - **A binge that reached Drunk ends in a hangover**: less stamina and health regen for 5 to 15 minutes, by how far you went, and 20 after a blackout.
 - **Dying does not cure it**, and a new hangover never shortens one that is already running.
-- **The Bloody Ivar cures it**: raspberries, blueberries, a Longhouse Ale, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
-- **☕ Kaffi clears your head**: barley roasted over coal with a spoon of honey, made at the cauldron. No alcohol. One cup takes 40 off your meter, then you're jittery for 10 minutes and another cup does nothing for your head. It won't touch a hangover, a blackout or the Valhalla.
+- **The Bloody Ivar cures it**: raspberries, blueberries, a Brambleblush, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
+- **☕ Kaffi clears your head**: mushrooms roasted over coal with a spoon of honey, made at the cauldron. No alcohol. One cup takes 40 off your meter, then you're jittery for 10 minutes and another cup does nothing for your head. It won't touch a hangover, a blackout or the Valhalla.
 
 {{rune ᛏ | V | THE TWO LEGENDS | 8b1e1e}}
 
@@ -97,7 +97,7 @@ The numbers below are read from the code when this page is built.
 
 {{rune ᚠ | THE TOOLBOX | FIRST TEN MINUTES | b8860b}}
 
-1. Build a **cauldron** and brew a few **Longhouse Ales** from barley.
+1. Build a **cauldron** and brew a few **Brambleblushes** from raspberries and honey.
 2. Drink two and watch the world start to lean. Keep going and you find out where the line is.
 3. Make a **Hive-Gold Mead** base at the Mead Ketill and put it in a fermenter under a roof.
 4. Keep a **Bloody Ivar** for the morning.

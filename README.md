@@ -1,7 +1,7 @@
 <!-- README schema v3 -->
 # 🍺 Tankard
 
-![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.2.0](https://img.shields.io/badge/VERSION-0.2.0-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
+![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.2.1](https://img.shields.io/badge/VERSION-0.2.1-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
 | 🍺 **14 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
 |---|---|---|---|
@@ -17,7 +17,7 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-![NEW IN 0.2.0 TWO LEGENDS AND A CUP](https://img.shields.io/badge/NEW_IN_0.2.0-TWO_LEGENDS_AND_A_CUP-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
+![NEW IN 0.2.1 TWO LEGENDS AND A CUP](https://img.shields.io/badge/NEW_IN_0.2.1-TWO_LEGENDS_AND_A_CUP-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
 > **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
 
@@ -40,7 +40,7 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 | **Longhouse Ale** | 5% | Cauldron, makes 2 | 4 Barley | **Hearth Belly**: +25% stamina regen, 10 min |
 | **Rootstump Grog** | 7% | Cauldron, makes 2 | 4 Carrot, 2 Thistle | **Packmule Stride**: +50 carry weight, 15% less stamina spent running, 10 min |
 | **Bilberry Dusk** | 11% | Cauldron, makes 2 | 8 Blueberries, 1 Honey | **Twilight Wits**: +30% eitr regen, 10 min |
-| **Bloody Ivar** | 6% | Cauldron, makes 1 | 5 Raspberries, 4 Blueberries, 1 Longhouse Ale, 2 Dandelion, 1 Boar jerky | 🩹 **Cures a hangover.** **Ivar's Mercy**: +25% health regen, 5 min |
+| **Bloody Ivar** | 6% | Cauldron, makes 1 | 5 Raspberries, 4 Blueberries, 1 Brambleblush, 2 Dandelion, 1 Boar jerky | 🩹 **Cures a hangover.** **Ivar's Mercy**: +25% health regen, 5 min |
 | **Hive-Gold Mead** | 12% | Mead Ketill base, then the fermenter (20 min), taps 4 | 6 Honey, 4 Raspberries | **Hive Blessing**: +50% health regen, 10 min |
 | **Swampmother's Wine** | 14% | Mead Ketill base, then the fermenter (40 min), taps 4 | 6 Turnip, 2 Bloodbag, 4 Honey | **Mire Blood**: poison resistant, 10 min |
 | **Rimecask Mead** | 17% | Mead Ketill base, then the fermenter (50 min), taps 4 | 4 Onion, 2 Freeze gland, 6 Honey | **Rime Ward**: frost resistant, 10 min |
@@ -49,7 +49,7 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 | **Surtr's Kiss** | 40% | Mead Ketill base, then the fermenter (100 min), taps 4 | 8 Vineberry cluster, 6 Honey | **Ember Gut**: fire resistant, 15 min |
 | **Skadi's Nightmare** | 35% | Mead Ketill base, then the fermenter (90 min), taps 2 | 25 Coins, 4 Freeze gland, 8 Honey, 2 Thistle | ❄️ **See Skadi's Nightmare below.** |
 | **The Valhalla** | 60% | Cauldron, makes 1 | 1 Surtr's Kiss, 1 Ymir's Marrow, 1 Bragi's Tongue, 1 Swampmother's Wine | 💀 **See The Valhalla below.** |
-| **Kaffi** | 0% | Cauldron, makes 2 | 3 Barley, 1 Coal, 1 Honey | ☕ **Takes 40 off the meter.** **Kaffi Jitters**: +15% stamina regen, 10 min |
+| **Kaffi** | 0% | Cauldron, makes 2 | 3 Mushrooms, 1 Coal, 1 Honey | ☕ **Takes 40 off the meter.** **Kaffi Jitters**: +15% stamina regen, 10 min |
 
 ![II THE METER](https://img.shields.io/badge/II-THE_METER-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMiAxM1YxTDggNVYxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2JhYThhIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
@@ -94,8 +94,8 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 
 - **A binge that reached Drunk ends in a hangover**: less stamina and health regen for 5 to 15 minutes, by how far you went, and 20 after a blackout.
 - **Dying does not cure it**, and a new hangover never shortens one that is already running.
-- **The Bloody Ivar cures it**: raspberries, blueberries, a Longhouse Ale, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
-- **☕ Kaffi clears your head**: barley roasted over coal with a spoon of honey, made at the cauldron. No alcohol. One cup takes 40 off your meter, then you're jittery for 10 minutes and another cup does nothing for your head. It won't touch a hangover, a blackout or the Valhalla.
+- **The Bloody Ivar cures it**: raspberries, blueberries, a Brambleblush, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
+- **☕ Kaffi clears your head**: mushrooms roasted over coal with a spoon of honey, made at the cauldron. No alcohol. One cup takes 40 off your meter, then you're jittery for 10 minutes and another cup does nothing for your head. It won't touch a hangover, a blackout or the Valhalla.
 
 ![V THE TWO LEGENDS](https://img.shields.io/badge/V-THE_TWO_LEGENDS-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNSAxVjEzTTUgMUwxLjUgNU01IDFMOC41IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2JmODM4MyIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 
@@ -136,7 +136,7 @@ The numbers below are read from the code when this page is built.
 
 ![THE TOOLBOX FIRST TEN MINUTES](https://img.shields.io/badge/THE_TOOLBOX-FIRST_TEN_MINUTES-b8860b?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgNkw4IDJNMyA5LjVMOCA1LjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4YmM3OSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 
-1. Build a **cauldron** and brew a few **Longhouse Ales** from barley.
+1. Build a **cauldron** and brew a few **Brambleblushes** from raspberries and honey.
 2. Drink two and watch the world start to lean. Keep going and you find out where the line is.
 3. Make a **Hive-Gold Mead** base at the Mead Ketill and put it in a fermenter under a roof.
 4. Keep a **Bloody Ivar** for the morning.

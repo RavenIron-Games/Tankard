@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+Recipes for the early game.
+
+- **The Bloody Ivar** now takes a Brambleblush instead of a Longhouse Ale. Barley only grows in the Plains, so the hangover cure used to be out of reach until then, while hangovers start in the Black Forest.
+- **Kaffi** is now roasted mushrooms (3 Mushrooms, 1 Coal, 1 Honey) instead of barley, so you can clear your head from the start.
+- The Longhouse Ale stays a barley ale: a Plains drink.
+
 ## 0.2.0
 
 Two legends.

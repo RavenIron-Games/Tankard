@@ -847,8 +847,17 @@ namespace RavenIron.Tankard.Tests
             }
             Check(Drinks.All.Count == 14, "fourteen drinks: eleven ordinary ones (five cauldron, six fermenter), the two legends and Kaffi");
             var kaffiDef = Drinks.All.Single(d => d.Special == Special.Kaffi);
-            Check(kaffiDef.Path == BrewPath.Station && kaffiDef.Ingredients.Any(i => i.Item == "Barley") && kaffiDef.Effect != null
-                  && kaffiDef.Effect.Seconds == Kaffi.JitterSeconds, "Kaffi: barley at the cauldron, and its effect is the jitters");
+            Check(kaffiDef.Path == BrewPath.Station && kaffiDef.Ingredients.Any(i => i.Item == "Mushroom") && kaffiDef.Effect != null
+                  && kaffiDef.Effect.Seconds == Kaffi.JitterSeconds, "Kaffi: roasted mushrooms at the cauldron, and its effect is the jitters");
+            // Barley grows only in the Plains. The hangover cure and the way to sober up must be makeable before then
+            // (owner, 2026-11-19), so neither may need barley, directly or through one of our drinks.
+            Func<DrinkDef, bool> needsBarley = null;
+            needsBarley = d => d.Ingredients.Any(i => i.Item == "Barley"
+                || Drinks.All.Any(o => o.PrefabName == i.Item && o != d && needsBarley(o)));
+            var ivarDef = Drinks.All.Single(d => d.CuresHangover);
+            Check(!needsBarley(ivarDef), "the Bloody Ivar never needs barley (the cure is there before the Plains)");
+            Check(!needsBarley(kaffiDef), "Kaffi never needs barley (sobering up is there from the start)");
+            Check(ivarDef.Ingredients.Any(i => i.Item == "TK_Brambleblush"), "the Bloody Ivar takes a Brambleblush");
             Check(!Words.English()[kaffiDef.DescriptionToken.Substring(1)].Contains("% alcohol"), "Kaffi's tooltip claims no alcohol content");
             Near(Kaffi.After(60f, false), 20f, "Kaffi: takes 40 off the meter");
             Near(Kaffi.After(25f, false), 0f, "Kaffi: never below sober");
