@@ -214,9 +214,17 @@ namespace RavenIron.Tankard.Core
         public static string ProvokedZdoKey(long playerId) =>
             "tk_skadi_prov_" + playerId.ToString(CultureInfo.InvariantCulture);
 
-        /// <summary>Calm right now: drunk on it (Buzzed or worse) and not blacked out.</summary>
-        public static bool CalmActive(bool owed, float level, bool blackout) =>
-            owed && !blackout && Intoxication.TierOf(level) >= Tier.Buzzed;
+        /// <summary>
+        /// Calm right now: drunk on it, from Buzzed up to (not into) the Blackout stage, and not passed out. The owner,
+        /// Storm10 2026-11-19: "end it at the blackout stage". The first build kept it on through the Blackout stage
+        /// (95+) and only dropped it in a real blackout, so a player at 98.9 was still left alone.
+        /// </summary>
+        public static bool CalmActive(bool owed, float level, bool blackout)
+        {
+            if (!owed || blackout) return false;
+            Tier t = Intoxication.TierOf(level);
+            return t >= Tier.Buzzed && t < Tier.Blackout;
+        }
 
         /// <summary>The calm is spent: the meter has dropped below Buzzed. That is when the Frozen morning lands.</summary>
         public static bool CalmSpent(bool owed, float level) =>

@@ -75,7 +75,7 @@ namespace RavenIron.Tankard
                 "wakes you somewhere dangerous with things that aren't yours, then three game days of triple damage against " +
                 "creatures, double stamina cost and half stamina regen, fading as the days pass. Off: it is just a 60% drink.");
             SkadisNightmare = Config.Bind("6 - Effects", "SkadisNightmare", true,
-                "Skadi's Nightmare. On: while you're drunk on it (Buzzed or worse, not blacked out) every creature but bosses and " +
+                "Skadi's Nightmare. On: while you're drunk on it (Buzzed to Hammered: it ends at the Blackout stage) every creature but bosses and " +
                 "raids leaves you alone, and one you hit fights back; when it wears off you're Frozen for 10 minutes unless a fire " +
                 "or a frost mead thaws you. Off: it is just a 35% drink.");
             PerDrinkFermentTimes = Config.Bind("6 - Effects", "PerDrinkFermentTimes", true,

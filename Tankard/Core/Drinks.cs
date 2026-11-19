@@ -153,7 +153,7 @@ namespace RavenIron.Tankard.Core
             new DrinkDef { PrefabName = "TK_SkadisNightmare", Special = Special.SkadisNightmare, FermentSeconds = 5400f,
                 DisplayName = "Skadi's Nightmare", DonorPrefab = "MeadFrostResist",
                 Path = BrewPath.Fermenter, Abv = 35f, Blurb = "Ice-clear, with gold flakes turning in it. Cold going down, then it burns.",
-                SpecialLine = "While you're drunk on it, nothing wild will touch you. Bosses and raids don't care, and anything you hit hits back. " +
+                SpecialLine = "While you're drunk on it (short of the Blackout stage), nothing wild will touch you. Bosses and raids don't care, and anything you hit hits back. " +
                               "When it wears off you're Frozen for 10 minutes. A fire or a frost mead thaws you.",
                 Ingredients = new[] { new Ingredient("Coins", 25), new Ingredient("FreezeGland", 4), new Ingredient("Honey", 8), new Ingredient("Thistle", 2) },
                 FermentYield = 2 },

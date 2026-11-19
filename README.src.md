@@ -82,7 +82,7 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 
 **❄️ Skadi's Nightmare**, the gold-flake schnapps. Mid game: coins for the gold, freeze glands, honey and thistle at the Mead Ketill, then a long wait in the fermenter, and only two cups to a base. 35%.
 
-- **The wild leaves you alone** from the first cup until your meter drops below Buzzed, whatever else you drink. Not during a blackout.
+- **The wild leaves you alone** from the first cup until your meter drops below Buzzed, whatever else you drink. Not at the Blackout stage (95 and up): drink that far and the wild remembers you.
 - **Bosses and raids don't care**, and anything you hit hits back.
 - **When it wears off, you're Frozen for 10 minutes**, whatever the weather. A fire or a frost mead (vanilla's, or a Rimecask Mead) thaws you.
 

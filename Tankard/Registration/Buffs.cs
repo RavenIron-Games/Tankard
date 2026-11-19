@@ -129,7 +129,7 @@ namespace RavenIron.Tankard.Registration
                 v.m_runStaminaDrainModifier = Core.Valhalla.StartStaminaUse;
             v.m_startMessage = "The fury of Valhalla is in you. Your arms ache for it.";
 
-            Make(SkadiCalm, "Skadi's Calm", "Nothing wild will touch you while you're drunk on it. Bosses and raids don't care, and anything you hit hits back.", 0f);
+            Make(SkadiCalm, "Skadi's Calm", "Nothing wild will touch you while you're drunk on it, short of the Blackout stage. Bosses and raids don't care, and anything you hit hits back.", 0f);
         }
 
         private static SE_Stats Make(string assetName, string display, string tooltip, float ttl)

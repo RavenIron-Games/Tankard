@@ -1051,7 +1051,12 @@ namespace RavenIron.Tankard.Tests
             Check(Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Buzzed], false), "skadi: calm from Buzzed");
             Check(!Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Buzzed] - 0.01f, false), "skadi: not below Buzzed");
             Check(!Skadi.CalmActive(true, 120f, true), "skadi: never during a blackout");
-            Check(Skadi.CalmActive(true, 120f, false), "skadi: still calm when hammered past the line, as long as you are not blacked out");
+            // The owner, Storm10 2026-11-19: "end it at the blackout stage".
+            Check(Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Blackout] - 0.01f, false), "skadi: still calm at the top of Hammered");
+            Check(!Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Blackout], false), "skadi: the calm ends at the Blackout stage (95)");
+            Check(!Skadi.CalmActive(true, 98.9f, false), "skadi: not calm at 98.9, the reading from Storm10");
+            Check(!Skadi.CalmActive(true, 120f, false), "skadi: not calm past the line either, passed out or not");
+            Check(!Skadi.CalmSpent(true, 98.9f), "skadi: the Blackout stage pauses the calm, it does not spend it (no Frozen morning yet)");
             Check(!Skadi.CalmActive(false, 60f, false), "skadi: no calm without drinking it");
             Check(Skadi.CalmSpent(true, 3f) && !Skadi.CalmSpent(true, 30f) && !Skadi.CalmSpent(false, 0f), "skadi: spent when the meter drops below Buzzed, only if owed");
             Check(Skadi.LeavesAlone(true, false, false, false), "skadi: an ordinary creature leaves a calm player alone");
