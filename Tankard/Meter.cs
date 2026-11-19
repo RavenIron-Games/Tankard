@@ -296,7 +296,7 @@ namespace RavenIron.Tankard
             Save(Player.m_localPlayer);
         }
 
-        /// <summary>`tankard sober`: meter, binge and hangover gone, as if the night never happened.</summary>
+        /// <summary>`tankard sober`: meter, binge, hangover and Kaffi's jitters gone, as if the night never happened.</summary>
         public static void Reset()
         {
             Level = 0f;
@@ -308,6 +308,7 @@ namespace RavenIron.Tankard
             if (p != null)
             {
                 try { p.GetSEMan().RemoveStatusEffect(Buffs.Hash(Buffs.Hangover), quiet: true); } catch (System.Exception) { }
+                try { p.GetSEMan().RemoveStatusEffect(Buffs.Hash("SE_TK_Kaffi"), quiet: true); } catch (System.Exception) { }
                 UpdateCourage(p);
                 Save(p);
             }
