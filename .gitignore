@@ -30,3 +30,6 @@ dist/
 
 # tools/ is private (owner, 2026-11-18: "tools are private"): the build, package, test, icon, README and video scripts and the robot. Never on GitHub.
 tools/
+
+# CLAUDE.md is private too (owner, 2026-11-18: "scrub claude.md as well"): the dev notes stay on this PC.
+CLAUDE.md
