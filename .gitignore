@@ -27,3 +27,6 @@ dist/
 
 # Local DLL backups
 *.bak
+
+# The robot tester (Player AutoTester Kit) stays local: never on GitHub (owner, 2026-11-18).
+tools/autotest/
