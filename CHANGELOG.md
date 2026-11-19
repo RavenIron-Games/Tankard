@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- **The Valhalla is less predictable.** Where it leaves you was almost always the same kind of place. Not any more.
+
 ## 0.2.2
 
 - **The Valhalla keeps its secrets.** Its tooltip, setting and README no longer say what it does. Find out the hard way.
