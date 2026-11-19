@@ -13,10 +13,7 @@ Recipes for the early game.
 Two legends.
 
 - **The Valhalla**, the final boss of cocktails. Late game, mixed at the cauldron from a Surtr's Kiss, a Ymir's Marrow, a Bragi's Tongue and a Swampmother's Wine.
-  - One cup always blacks you out and takes everything into the grave. It counts toward your streak.
-  - You wake somewhere dangerous in the lands your world has opened, carrying a few things that aren't yours: mostly junk, about one time in ten something good.
-  - Then three game days of fury: triple damage against creatures (not players), double stamina cost and half stamina regen, fading as the days pass.
-  - Any drink eases it for a while. The Bloody Ivar doesn't, death doesn't end it, and you can't drink another until it's over.
+  - What it does is a surprise. Bring nothing you can't stand to lose, and don't plan anything for a while.
 - **Skadi's Nightmare**, the gold-flake schnapps. Mid game, brewed from coins, freeze glands, honey and thistle; 35%, two cups to a base.
   - While you're drunk on it, every creature but bosses and raids leaves you alone. Anything you hit hits back. It stops at the Blackout stage.
   - When it wears off you're Frozen for 10 minutes, unless a fire or a frost mead thaws you.

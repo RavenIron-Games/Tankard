@@ -71,9 +71,8 @@ namespace RavenIron.Tankard
                 "When a binge that reached Drunk is over, you wake with a hangover: 40% less stamina regen and 25% less health regen, " +
                 "for 5 to 15 minutes by how drunk you got, 20 after a blackout. A Bloody Ivar cures it.");
             Valhalla = Config.Bind("6 - Effects", "Valhalla", true,
-                "The Valhalla, the final boss of cocktails. On: one cup always blacks you out, takes everything into the grave, " +
-                "wakes you somewhere dangerous with things that aren't yours, then three game days of triple damage against " +
-                "creatures, double stamina cost and half stamina regen, fading as the days pass. Off: it is just a 60% drink.");
+                "The Valhalla, the final boss of cocktails. On: it does everything it does, which we're keeping a surprise. " +
+                "Off: it is just a 60% drink.");
             SkadisNightmare = Config.Bind("6 - Effects", "SkadisNightmare", true,
                 "Skadi's Nightmare. On: while you're drunk on it (Buzzed to Hammered: it ends at the Blackout stage) every creature but bosses and " +
                 "raids leaves you alone, and one you hit fights back; when it wears off you're Frozen for 10 minutes unless a fire " +

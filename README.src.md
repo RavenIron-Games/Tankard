@@ -23,7 +23,7 @@ Strong drinks flatten a new viking and barely warm an old one. Tolerance is earn
 
 {{rune ᛞ | NEW IN {{version}} | TWO LEGENDS AND A CUP | 8b1e1e}}
 
-> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
+> **💀 The Valhalla**, the final boss of cocktails. What it does, we're not telling. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
 
 {{rune ᚾ | BEFORE YOU INSTALL | READ THIS | b8860b}}
 
@@ -75,13 +75,11 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 
 **💀 The Valhalla**, the final boss of cocktails. Late game: a Surtr's Kiss, a Ymir's Marrow, a Bragi's Tongue and a Swampmother's Wine, poured into one cup at the cauldron.
 
-- **It puts you on the floor. Every time.** Your meter goes to the top, and you black out.
-- **You lose everything.** All of it stays in a grave where you were drinking, as on the third night of a streak, and the blackout counts toward your streak.
-- **You wake somewhere you should never be**: beside a crypt, a troll cave, a Fuling camp, a drake nest, somewhere in the lands your world has opened, near or far.
-- **With things that aren't yours**: a few random items, mostly junk. About one time in ten, something worth keeping.
-- **Then three days of fury** (game days, counted while you play): triple damage against creatures (never against players), double stamina for everything, and half the stamina back. It all fades as the days pass.
-- **Only more drink takes the edge off.** Any drink eases the stamina for a while, stronger ones for longer. It still fills your meter, so you can black out again.
-- **Nothing else helps.** The Bloody Ivar can't touch it, dying doesn't end it, and you can't drink another Valhalla until it's over.
+What it does is a surprise, and we'd like to keep it that way. Ask someone who's had one, if they remember.
+
+- **Bring nothing you can't stand to lose.**
+- **Don't make plans for a while.**
+- **One is enough.** The hall won't pour you a second.
 
 **❄️ Skadi's Nightmare**, the gold-flake schnapps. Mid game: coins for the gold, freeze glands, honey and thistle at the Mead Ketill, then a long wait in the fermenter, and only two cups to a base. 35%.
 
@@ -154,7 +152,7 @@ The numbers below are read from the code when this page is built.
 | {{key DrinkEffects}} | on | Each drink's buff |
 | {{key LiquidCourage}} | on | Hit harder, block worse when drunk |
 | {{key Hangovers}} | on | Hangovers |
-| {{key Valhalla}} | on | The Valhalla's blackout, loot and three days of fury (off: just a 60% drink) |
+| {{key Valhalla}} | on | Everything the Valhalla does (off: just a 60% drink) |
 | {{key SkadisNightmare}} | on | Skadi's calm and the Frozen morning (off: just a 35% drink) |
 | {{key PerDrinkFermentTimes}} | on | Stronger drinks ferment longer (off: vanilla's 40 minutes) |
 

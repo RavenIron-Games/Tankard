@@ -162,9 +162,9 @@ namespace RavenIron.Tankard.Core
             // The Valhalla, the final boss of cocktails: the strong brewed drinks poured into one cup at the cauldron.
             new DrinkDef { PrefabName = "TK_Valhalla", Special = Special.Valhalla, DisplayName = "The Valhalla", DonorPrefab = "MeadStaminaMedium",
                 Path = BrewPath.Station, Abv = 60f, Blurb = "Everything strong in the hall, in one cup. Nobody remembers the second half of the night.",
-                SpecialLine = "Puts you on the floor. You wake somewhere you shouldn't be, with nothing of yours and things that aren't. " +
-                              "Then three days of fury: triple damage, double stamina cost, half the stamina back, fading as the days pass. " +
-                              "Only more drink takes the edge off. The Bloody Ivar can't help, and nobody drinks another until it's over.",
+                // A teaser on purpose (owner, 2026-11-19: "i want it to be a suprise"). What it does is in Core\Specials.cs.
+                SpecialLine = "What happens after the cup is between you and the gods. " +
+                              "One is enough: the hall won't pour you a second.",
                 Ingredients = new[] { new Ingredient("TK_SurtrsKiss", 1), new Ingredient("TK_YmirsMarrow", 1), new Ingredient("TK_BragisTongue", 1),
                                       new Ingredient("TK_SwampmothersWine", 1) }, CraftAmount = 1 },
             // Kaffi (owner, 2026-11-19): the way back. Mushrooms roasted over coal, sweetened with honey, no alcohol. It was
