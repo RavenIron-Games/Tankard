@@ -21,9 +21,9 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-{{rune ᛞ | NEW IN {{version}} | TWO LEGENDS | 8b1e1e}}
+{{rune ᛞ | NEW IN {{version}} | TWO LEGENDS AND A CUP | 8b1e1e}}
 
-> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze.
+> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
 
 {{rune ᚾ | BEFORE YOU INSTALL | READ THIS | b8860b}}
 

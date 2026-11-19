@@ -17,9 +17,9 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-![NEW IN 0.2.0 TWO LEGENDS](https://img.shields.io/badge/NEW_IN_0.2.0-TWO_LEGENDS-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
+![NEW IN 0.2.0 TWO LEGENDS AND A CUP](https://img.shields.io/badge/NEW_IN_0.2.0-TWO_LEGENDS_AND_A_CUP-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
-> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze.
+> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
 
 ![BEFORE YOU INSTALL READ THIS](https://img.shields.io/badge/BEFORE_YOU_INSTALL-READ_THIS-b8860b?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNSAxVjEzTTIgNUw4IDkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4YmM3OSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 
