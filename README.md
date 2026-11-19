@@ -181,4 +181,4 @@ The numbers below are read from the code when this page is built.
   - Patreon: <https://www.patreon.com/cw/RavenIronGames>
   - Discord: <https://discord.gg/AGKDEurAVa>
 - **ServerSync** by blaxxun, used as published.
-- **Special thanks** to **Sargent StrechyNuts**, for his priceless expertise.
+- **Special thanks** to **Sargent StrechyNuts**, for his priceless expertise and the countless hours we spent testing the effects in real life.
