@@ -7,7 +7,7 @@
 
 {{rune ᚹ | TANKARD | ALE, MEAD AND REGRET | a0652a}} {{badge VERSION | {{version}} | 8b1e1e}} {{badge INSTALL ON | SERVER AND EVERY PLAYER | 1f4e79}}
 
-| 🍺 **13 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
+| 🍺 **14 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
 |---|---|---|---|
 | two of them legends | earned one cup at a time | wake far from home | a Bloody Ivar fixes most |
 
@@ -69,6 +69,7 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 - **A binge that reached Drunk ends in a hangover**: less stamina and health regen for 5 to 15 minutes, by how far you went, and 20 after a blackout.
 - **Dying does not cure it**, and a new hangover never shortens one that is already running.
 - **The Bloody Ivar cures it**: raspberries, blueberries, a Longhouse Ale, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
+- **☕ Kaffi clears your head**: barley roasted over coal with a spoon of honey, made at the cauldron. No alcohol. One cup takes 40 off your meter, then you're jittery for 10 minutes and another cup does nothing for your head. It won't touch a hangover, a blackout or the Valhalla.
 
 {{rune ᛏ | V | THE TWO LEGENDS | 8b1e1e}}
 

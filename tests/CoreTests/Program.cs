@@ -834,7 +834,10 @@ namespace RavenIron.Tankard.Tests
                 Check(names.Add(d.PrefabName), $"{d.PrefabName}: prefab names are unique");
                 Check(d.PrefabName.IndexOfAny(new[] { ' ', '(' }) < 0, $"{d.PrefabName}: no space or '(' (ItemDrop truncates there)");
                 // The Valhalla is the one exception: it fills the meter to the cap whatever its strength (Core\Specials).
-                Check(d.Potency > 0f && (d.Potency < Intoxication.Max || d.Special == Special.Valhalla), $"{d.PrefabName}: potency inside the meter");
+                // Kaffi is the other: no alcohol at all (owner, 2026-11-19).
+                Check(d.Special == Special.Kaffi ? d.Abv == 0f && d.Potency == 0f
+                                                 : d.Potency > 0f && (d.Potency < Intoxication.Max || d.Special == Special.Valhalla),
+                      $"{d.PrefabName}: potency inside the meter (Kaffi: none at all)");
                 Check(d.Special == Special.None ? string.IsNullOrEmpty(d.SpecialLine) : !string.IsNullOrEmpty(d.SpecialLine),
                       $"{d.PrefabName}: a drink with rules of its own says so in its tooltip, and only such a drink");
                 Check(!string.IsNullOrEmpty(d.DonorPrefab), $"{d.PrefabName}: names a donor");
@@ -842,7 +845,16 @@ namespace RavenIron.Tankard.Tests
                       $"{d.PrefabName}: only fermenter drinks yield from a barrel, and a base is crafted one at a time");
                 Check(d.Path == BrewPath.Fermenter == (d.BasePrefabName != null), $"{d.PrefabName}: only fermenter drinks have a base");
             }
-            Check(Drinks.All.Count == 13, "thirteen drinks: eleven ordinary ones (five cauldron, six fermenter) and the two specials");
+            Check(Drinks.All.Count == 14, "fourteen drinks: eleven ordinary ones (five cauldron, six fermenter), the two legends and Kaffi");
+            var kaffiDef = Drinks.All.Single(d => d.Special == Special.Kaffi);
+            Check(kaffiDef.Path == BrewPath.Station && kaffiDef.Ingredients.Any(i => i.Item == "Barley") && kaffiDef.Effect != null
+                  && kaffiDef.Effect.Seconds == Kaffi.JitterSeconds, "Kaffi: barley at the cauldron, and its effect is the jitters");
+            Check(!Words.English()[kaffiDef.DescriptionToken.Substring(1)].Contains("% alcohol"), "Kaffi's tooltip claims no alcohol content");
+            Near(Kaffi.After(60f, false), 20f, "Kaffi: takes 40 off the meter");
+            Near(Kaffi.After(25f, false), 0f, "Kaffi: never below sober");
+            Near(Kaffi.After(60f, true), 60f, "Kaffi: does nothing for your head while the jitters last");
+            Near(Kaffi.After(250f, false), Intoxication.Cap - Kaffi.SoberPoints, "Kaffi: reads an out-of-range meter as the cap");
+            Near(Kaffi.After(float.NaN, false), 0f, "Kaffi: NaN reads as sober");
             Check(Drinks.All.Count(d => d.Special == Special.Valhalla) == 1 && Drinks.All.Count(d => d.Special == Special.SkadisNightmare) == 1,
                   "one Valhalla and one Skadi's Nightmare");
             var valhallaDef = Drinks.All.First(d => d.Special == Special.Valhalla);
@@ -896,10 +908,10 @@ namespace RavenIron.Tankard.Tests
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
-            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_SwampmothersWine,TK_RimecaskMead,TK_BragisTongue,TK_YmirsMarrow,TK_SurtrsKiss,TK_SkadisNightmare,TK_Valhalla",
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_SwampmothersWine,TK_RimecaskMead,TK_BragisTongue,TK_YmirsMarrow,TK_SurtrsKiss,TK_SkadisNightmare,TK_Valhalla,TK_Kaffi",
                   "shipped prefab names are pinned (saves store them)");
             Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
-                  "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_HiveGoldMeadBase,TK_SwampmothersWine,TK_SwampmothersWineBase,TK_RimecaskMead,TK_RimecaskMeadBase,TK_BragisTongue,TK_BragisTongueBase,TK_YmirsMarrow,TK_YmirsMarrowBase,TK_SurtrsKiss,TK_SurtrsKissBase,TK_SkadisNightmare,TK_SkadisNightmareBase,TK_Valhalla",
+                  "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_HiveGoldMeadBase,TK_SwampmothersWine,TK_SwampmothersWineBase,TK_RimecaskMead,TK_RimecaskMeadBase,TK_BragisTongue,TK_BragisTongueBase,TK_YmirsMarrow,TK_YmirsMarrowBase,TK_SurtrsKiss,TK_SurtrsKissBase,TK_SkadisNightmare,TK_SkadisNightmareBase,TK_Valhalla,TK_Kaffi",
                   "shipped item names, bases included, are pinned");
 
             // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------

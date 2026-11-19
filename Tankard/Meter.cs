@@ -83,6 +83,40 @@ namespace RavenIron.Tankard
             Save(p);
         }
 
+        /// <summary>
+        /// A cup of Kaffi (Core\Specials.cs, Kaffi): no alcohol, no tolerance, no binge count. It takes a chunk off the meter
+        /// unless the jitters from the last cup are still on, and starts (or restarts) the jitters. The jitters go on even
+        /// with DrinkEffects off, because they are the only thing that stops Kaffi from being an instant sober button.
+        /// </summary>
+        public static void DrinkKaffi(DrinkDef drink, Player p)
+        {
+            Attach(p);
+            int hash = Buffs.Hash(Buffs.AssetNameFor(drink));
+            bool jittery = false;
+            try { jittery = p != null && p.GetSEMan().HaveStatusEffect(hash); } catch (System.Exception) { }
+            float before = Level;
+            Tier tierBefore = Tier;
+            Level = Kaffi.After(Level, jittery);
+            Plugin.Log.LogInfo(jittery
+                ? $"Kaffi: still jittery from the last cup, so this one does nothing for your head (meter {Level:0.0})."
+                : $"Kaffi: meter {before:0.0} -> {Level:0.0} ({tierBefore} -> {Tier}).");
+            if (p != null)
+            {
+                try
+                {
+                    string text = jittery ? "Your hands are shaking. Another cup won't clear your head yet."
+                                : before <= 0f ? "Strong and black. You were sober anyway."
+                                : Tier != tierBefore ? $"The Kaffi clears your head. ({tierBefore} -> {Tier})" : "The Kaffi clears your head a little.";
+                    p.Message(MessageHud.MessageType.TopLeft, text);
+                    var se = Buffs.ForDrink(drink);
+                    if (se != null) p.GetSEMan().AddStatusEffect(se, resetTime: true);
+                }
+                catch (System.Exception ex) { Plugin.Report("Kaffi", ex); }
+            }
+            UpdateCourage(p);
+            Save(p);
+        }
+
         /// <summary>The Valhalla: you come round still flattened, the meter at the cap.</summary>
         public static void FillToCap()
         {

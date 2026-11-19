@@ -165,6 +165,15 @@ namespace RavenIron.Tankard.Core
                               "Only more drink takes the edge off. The Bloody Ivar can't help, and nobody drinks another until it's over.",
                 Ingredients = new[] { new Ingredient("TK_SurtrsKiss", 1), new Ingredient("TK_YmirsMarrow", 1), new Ingredient("TK_BragisTongue", 1),
                                       new Ingredient("TK_SwampmothersWine", 1) }, CraftAmount = 1 },
+            // Kaffi (owner, 2026-11-19): the way back. Barley roasted over coal, sweetened with honey, no alcohol.
+            // The effect is the jitters: a little stamina regen, and while it lasts another cup does nothing for your head.
+            new DrinkDef { PrefabName = "TK_Kaffi", Special = Special.Kaffi, DisplayName = "Kaffi", DonorPrefab = "MeadStaminaMinor",
+                // 600f written out, not Kaffi.JitterSeconds: the README forge reads literal numbers (the harness pins they agree).
+                Effect = new DrinkEffect { Name = "Kaffi Jitters", Seconds = 600f, StaminaRegen = 1.15f },
+                Path = BrewPath.Station, Abv = 0f, Blurb = "Barley roasted black over the coals, with a spoon of honey. It won't fix your morning, but it'll get you to it.",
+                SpecialLine = "No alcohol. Takes 40 off your drunk meter. Another cup does nothing for your head until the jitters wear off. " +
+                              "It doesn't touch a hangover, a blackout or the Valhalla.",
+                Ingredients = new[] { new Ingredient("Barley", 3), new Ingredient("Coal", 1), new Ingredient("Honey", 1) }, CraftAmount = 2 },
         };
 
         /// <summary>The vanilla item a base is cloned from. A base must be a material the fermenter takes, not a consumable.</summary>
@@ -221,7 +230,7 @@ namespace RavenIron.Tankard.Core
             foreach (var d in Drinks.All)
             {
                 words[d.NameToken.Substring(1)] = d.DisplayName;
-                words[d.DescriptionToken.Substring(1)] = d.Blurb + " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)" +
+                words[d.DescriptionToken.Substring(1)] = d.Blurb + (d.Abv > 0f ? " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)" : "") +
                     (d.Effect != null ? "\n" + d.Effect.Describe() + "." : "") + (d.CuresHangover ? "\nCures a hangover." : "") +
                     (string.IsNullOrEmpty(d.SpecialLine) ? "" : "\n" + d.SpecialLine);
                 if (d.Path == BrewPath.Fermenter)

@@ -38,6 +38,7 @@ namespace RavenIron.Tankard.Patches
                             SameFoodBefore(__instance, item.m_shared.m_name));
                     return;
                 }
+                if (drink.Special == Special.Kaffi) { Meter.DrinkKaffi(drink, __instance); return; } // no alcohol: no roll
                 Meter.Drink(drink, __instance);
                 if (drink.Special == Special.Valhalla && Plugin.Valhalla.Value) ValhallaRunner.Drank(__instance);
                 else BlackoutRunner.AfterDrink(__instance);

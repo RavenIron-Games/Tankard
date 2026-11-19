@@ -12,6 +12,8 @@ Two legends.
 - **Skadi's Nightmare**, the gold-flake schnapps. Mid game, brewed from coins, freeze glands, honey and thistle; 35%, two cups to a base.
   - While you're drunk on it, every creature but bosses and raids leaves you alone. Anything you hit hits back. It stops at the Blackout stage.
   - When it wears off you're Frozen for 10 minutes, unless a fire or a frost mead thaws you.
+- **Kaffi**, the Norse coffee: barley roasted over coal with honey, at the cauldron. No alcohol. One cup takes 40 off your meter, then 10 minutes of jitters during which another cup does nothing for your head. It leaves hangovers, blackouts and the Valhalla alone.
+- A word before the first round, at the top of the README: Raven Iron does not condone the abuse of alcohol or drugs. Please drink responsibly.
 - Two new settings, both on: **Valhalla** and **SkadisNightmare**.
 - `tankard status` shows both, and `tankard sober` clears both (admins only).
 

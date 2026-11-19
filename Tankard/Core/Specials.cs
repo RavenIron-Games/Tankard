@@ -9,7 +9,29 @@ namespace RavenIron.Tankard.Core
     {
         None,
         Valhalla,       // the final boss of cocktails
-        SkadisNightmare // the gold-flake schnapps
+        SkadisNightmare, // the gold-flake schnapps
+        Kaffi            // the way back: roasted barley, no alcohol
+    }
+
+    /// <summary>
+    /// Kaffi, the Norse coffee (owner, 2026-11-19: "we dont have a way to clear your head or sober up", then "Kaffi is
+    /// perfect"). Roasted barley, no alcohol. One cup takes a chunk off the meter and leaves you jittery; while the jitters
+    /// last, another cup does nothing for your head. It never touches a hangover, a blackout, the Valhalla or tolerance,
+    /// and since it holds no alcohol it neither earns a hangover nor eases the Valhalla.
+    /// </summary>
+    public static class Kaffi
+    {
+        public const float SoberPoints = 40f;
+        public const float JitterSeconds = 600f;
+
+        /// <summary>The meter after a cup: <see cref="SoberPoints"/> off, never below 0. Jittery: no change.</summary>
+        public static float After(float level, bool jittery)
+        {
+            float l = float.IsNaN(level) || float.IsInfinity(level) || level < 0f ? 0f : (level > Intoxication.Cap ? Intoxication.Cap : level);
+            if (jittery) return l;
+            float next = l - SoberPoints;
+            return next < 0f ? 0f : next;
+        }
     }
 
     /// <summary>
