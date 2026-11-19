@@ -9,6 +9,8 @@
 
 *"One more," said Ivar, and the hall agreed. Morning found him three valleys east, without his axe, without his map, and with no memory of the troll he had apparently insulted.*
 
+> **⚠️ A word before the first round.** Tankard is a game about vikings drinking too much, played for laughs. Raven Iron does not condone the abuse of alcohol or drugs. In real life, please drink responsibly, never drink and drive, and if drinking is hurting you or someone you love, reach out for help.
+
 ### Drink with your crew. Wake up somewhere else.
 
 Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs as you drink and falls as you sober. Climb it and your camera sways, your feet wander, your words slur, and you hit harder while blocking worse. Climb past the line and you black out: you wake far from the table, part of your pack still lying where you sat, and your map gone until you find your way back.
