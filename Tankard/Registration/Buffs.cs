@@ -19,6 +19,38 @@ namespace RavenIron.Tankard.Registration
         public const string CourageDrunk = "SE_TK_CourageDrunk";
         public const string CourageHammered = "SE_TK_CourageHammered";
         public const string Hangover = "SE_TK_Hangover";
+        public const string ValhallaPrice = "SE_TK_Valhalla";      // the three-day hangover; ValhallaRunner writes its numbers
+        public const string SkadiCalm = "SE_TK_SkadiCalm";         // shown while the wild leaves you alone
+        public const string FrozenMorning = "SE_TK_FrozenMorning"; // a copy of vanilla's Freezing under our own name
+
+        private static SE_Stats _frozen;
+
+        /// <summary>
+        /// The Frozen morning: vanilla's own Freezing effect, copied and renamed. Vanilla adds and removes Freezing BY NAME
+        /// every frame from the weather (Player.UpdateEnvStatusEffects, decompiled), so the real one would vanish on a warm
+        /// day; the copy keeps every number Freezing has and answers to none of that. Built lazily, from ObjectDB, the
+        /// first time it is needed, because the original lives there.
+        /// </summary>
+        public static SE_Stats FrozenMorningEffect()
+        {
+            if (_frozen != null) return _frozen;
+            try
+            {
+                var vanilla = ObjectDB.instance != null ? ObjectDB.instance.GetStatusEffect(SEMan.s_statusEffectFreezing) as SE_Stats : null;
+                if (vanilla == null) { Plugin.Log.LogWarning("Skadi's Nightmare: vanilla's Freezing effect is missing, so there is no Frozen morning."); return null; }
+                var se = UnityEngine.Object.Instantiate(vanilla);
+                se.name = FrozenMorning;
+                se.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                se.m_name = "Frozen Morning";
+                se.m_tooltip = "Skadi wants her due. Frozen to the bone, whatever the weather. A fire or a frost mead thaws you.";
+                se.m_ttl = Core.Skadi.FrozenSeconds;
+                se.m_startMessage = "";
+                se.m_stopMessage = "The cold lets go of you.";
+                _frozen = se;
+                return se;
+            }
+            catch (System.Exception ex) { Plugin.Report("Frozen morning", ex); return null; }
+        }
 
         private static readonly Dictionary<string, SE_Stats> _all = new Dictionary<string, SE_Stats>();
 
@@ -88,6 +120,16 @@ namespace RavenIron.Tankard.Registration
             h.m_healthRegenMultiplier = Effects.HangoverHealthRegen;
             h.m_startMessage = "Your head is pounding.";
             h.m_stopMessage = "The hangover lifts.";
+
+            // The Valhalla's price. Starts at full strength; ValhallaRunner rewrites the numbers on the live copy each second
+            // as they fade, and ends it itself (m_ttl 0 never runs out on its own).
+            var v = Make(ValhallaPrice, "Valhalla's Fury", "Three days of it. Only more drink takes the edge off.", 0f);
+            v.m_staminaRegenMultiplier = Core.Valhalla.StartRegen;
+            v.m_attackStaminaUseModifier = v.m_blockStaminaUseModifier = v.m_dodgeStaminaUseModifier = v.m_jumpStaminaUseModifier =
+                v.m_runStaminaDrainModifier = Core.Valhalla.StartStaminaUse;
+            v.m_startMessage = "The fury of Valhalla is in you. Your arms ache for it.";
+
+            Make(SkadiCalm, "Skadi's Calm", "Nothing wild will touch you while you're drunk on it. Bosses and raids don't care, and anything you hit hits back.", 0f);
         }
 
         private static SE_Stats Make(string assetName, string display, string tooltip, float ttl)
@@ -109,6 +151,8 @@ namespace RavenIron.Tankard.Registration
         private static Sprite IconFor(string assetName)
         {
             string prefab = assetName == Hangover ? "TK_BloodyIvar"
+                          : assetName == ValhallaPrice ? "TK_Valhalla"
+                          : assetName == SkadiCalm ? "TK_SkadisNightmare"
                           : assetName == CourageDrunk || assetName == CourageHammered ? "TK_SurtrsKiss"
                           : assetName.StartsWith("SE_") ? assetName.Substring(3) : assetName;
             var go = Items.Get(prefab);

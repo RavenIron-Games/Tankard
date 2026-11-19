@@ -1,11 +1,11 @@
 <!-- README schema v3 -->
 # 🍺 Tankard
 
-![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.1.0](https://img.shields.io/badge/VERSION-0.1.0-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
+![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.2.0](https://img.shields.io/badge/VERSION-0.2.0-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
-| 🍺 **11 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
+| 🍺 **13 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
 |---|---|---|---|
-| cauldron and fermenter | earned one cup at a time | wake far from home | a Bloody Ivar fixes it |
+| two of them legends | earned one cup at a time | wake far from home | a Bloody Ivar fixes most |
 
 *"One more," said Ivar, and the hall agreed. Morning found him three valleys east, without his axe, without his map, and with no memory of the troll he had apparently insulted.*
 
@@ -15,9 +15,9 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-![NEW IN 0.1.0 FIRST POUR](https://img.shields.io/badge/NEW_IN_0.1.0-FIRST_POUR-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
+![NEW IN 0.2.0 TWO LEGENDS](https://img.shields.io/badge/NEW_IN_0.2.0-TWO_LEGENDS-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
-> **🍺 The first release.** Eleven drinks from the cauldron and the fermenter, a meter with tolerance, drunk walking, swaying and slurring, liquid courage, hangovers and their cure, and blackouts that send you home the long way. Every setting follows the server.
+> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze.
 
 ![BEFORE YOU INSTALL READ THIS](https://img.shields.io/badge/BEFORE_YOU_INSTALL-READ_THIS-b8860b?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNSAxVjEzTTIgNUw4IDkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4YmM3OSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 
@@ -45,6 +45,8 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 | **Bragi's Tongue** | 20% | Mead Ketill base, then the fermenter (60 min), taps 4 | 8 Honey, 4 Barley, 4 Cloudberries | **Saga Breath**: +25% health regen, +50% stamina regen, 15 min |
 | **Ymir's Marrow** | 28% | Mead Ketill base, then the fermenter (80 min), taps 4 | 6 Sap, 4 Royal jelly, 4 Jotun puffs | **Ymir's Shoulders**: +25% stamina regen, +150 carry weight, 15 min |
 | **Surtr's Kiss** | 40% | Mead Ketill base, then the fermenter (100 min), taps 4 | 8 Vineberry cluster, 6 Honey | **Ember Gut**: fire resistant, 15 min |
+| **Skadi's Nightmare** | 35% | Mead Ketill base, then the fermenter (90 min), taps 2 | 25 Coins, 4 Freeze gland, 8 Honey, 2 Thistle | ❄️ **See Skadi's Nightmare below.** |
+| **The Valhalla** | 60% | Cauldron, makes 1 | 1 Surtr's Kiss, 1 Ymir's Marrow, 1 Bragi's Tongue, 1 Swampmother's Wine | 💀 **See The Valhalla below.** |
 
 ![II THE METER](https://img.shields.io/badge/II-THE_METER-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMiAxM1YxTDggNVYxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2JhYThhIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
@@ -70,6 +72,8 @@ Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed
 | Bragi's Tongue | 🟧🟧🟧🟧 **+40** | 🟩🟩 **+16** |
 | Ymir's Marrow | 🟧🟧🟧🟧🟧🟧 **+56** | 🟩🟩 **+22** |
 | Surtr's Kiss | 🟧🟧🟧🟧🟧🟧🟧🟧 **+80** | 🟩🟩🟩 **+32** |
+| Skadi's Nightmare | 🟧🟧🟧🟧🟧🟧🟧 **+70** | 🟩🟩🟩 **+28** |
+| The Valhalla | 💀 **fills the meter** | 💀 **fills the meter** |
 
 ![III THE BLACKOUT](https://img.shields.io/badge/III-THE_BLACKOUT-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMiAxVjEzTTIgMUw1IDRMOCAxTTIgMTNMNSAxMEw4IDEzIiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D)
 
@@ -87,6 +91,24 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 - **A binge that reached Drunk ends in a hangover**: less stamina and health regen for 5 to 15 minutes, by how far you went, and 20 after a blackout.
 - **Dying does not cure it**, and a new hangover never shortens one that is already running.
 - **The Bloody Ivar cures it**: raspberries, blueberries, a Longhouse Ale, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
+
+![V THE TWO LEGENDS](https://img.shields.io/badge/V-THE_TWO_LEGENDS-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNSAxVjEzTTUgMUwxLjUgNU01IDFMOC41IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2JmODM4MyIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
+
+**💀 The Valhalla**, the final boss of cocktails. Late game: a Surtr's Kiss, a Ymir's Marrow, a Bragi's Tongue and a Swampmother's Wine, poured into one cup at the cauldron.
+
+- **It puts you on the floor. Every time.** Your meter goes to the top, and you black out.
+- **You lose everything.** All of it stays in a grave where you were drinking, as on the third night of a streak, and the blackout counts toward your streak.
+- **You wake somewhere you should never be**: beside a crypt, a troll cave, a Fuling camp, a drake nest, somewhere in the lands your world has opened, near or far.
+- **With things that aren't yours**: a few random items, mostly junk. About one time in ten, something worth keeping.
+- **Then three days of fury** (game days, counted while you play): triple damage against creatures (never against players), double stamina for everything, and half the stamina back. It all fades as the days pass.
+- **Only more drink takes the edge off.** Any drink eases the stamina for a while, stronger ones for longer. It still fills your meter, so you can black out again.
+- **Nothing else helps.** The Bloody Ivar can't touch it, dying doesn't end it, and you can't drink another Valhalla until it's over.
+
+**❄️ Skadi's Nightmare**, the gold-flake schnapps. Mid game: coins for the gold, freeze glands, honey and thistle at the Mead Ketill, then a long wait in the fermenter, and only two cups to a base. 35%.
+
+- **The wild leaves you alone** from the first cup until your meter drops below Buzzed, whatever else you drink. Not during a blackout.
+- **Bosses and raids don't care**, and anything you hit hits back.
+- **When it wears off, you're Frozen for 10 minutes**, whatever the weather. A fire or a frost mead (vanilla's, or a Rimecask Mead) thaws you.
 
 ![THE LEDGER EVERY NUMBER](https://img.shields.io/badge/THE_LEDGER-EVERY_NUMBER-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNSAyTDIgNUw1IDhNNSA2TDggOUw1IDEyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D)
 
@@ -166,6 +188,8 @@ The numbers below are read from the code when this page is built.
 | `DrinkEffects` | on | Each drink's buff |
 | `LiquidCourage` | on | Hit harder, block worse when drunk |
 | `Hangovers` | on | Hangovers |
+| `Valhalla` | on | The Valhalla's blackout, loot and three days of fury (off: just a 60% drink) |
+| `SkadisNightmare` | on | Skadi's calm and the Frozen morning (off: just a 35% drink) |
 | `PerDrinkFermentTimes` | on | Stronger drinks ferment longer (off: vanilla's 40 minutes) |
 
 🖥️ **Your own** (each player keeps it, whatever the server says):

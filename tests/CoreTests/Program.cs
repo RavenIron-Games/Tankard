@@ -248,9 +248,11 @@ namespace RavenIron.Tankard.Tests
         private static void EffectTests()
         {
             // Every drink does something besides get you drunk.
-            Check(Drinks.All.All(d => d.Effect != null && d.Effect.Seconds >= 60f && !string.IsNullOrEmpty(d.Effect.Name)),
-                  "every drink has an effect with a name and a duration");
-            Check(Drinks.All.Select(d => d.Effect.Name).Distinct().Count() == Drinks.All.Count, "effect names are unique");
+            // Every ordinary drink does something besides get you drunk; the two specials have rules of their own instead.
+            var ordinary = Drinks.All.Where(d => d.Special == Special.None).ToList();
+            Check(ordinary.All(d => d.Effect != null && d.Effect.Seconds >= 60f && !string.IsNullOrEmpty(d.Effect.Name)),
+                  "every ordinary drink has an effect with a name and a duration");
+            Check(ordinary.Select(d => d.Effect.Name).Distinct().Count() == ordinary.Count, "effect names are unique");
             Check(Drinks.All.Select(d => "SE_" + d.PrefabName).Distinct().Count() == Drinks.All.Count, "status effect asset names are unique");
             var by = Drinks.All.ToDictionary(d => d.PrefabName);
             Check(by["TK_RimecaskMead"].Effect.Resist == Resist.Frost && by["TK_SurtrsKiss"].Effect.Resist == Resist.Fire &&
@@ -315,7 +317,7 @@ namespace RavenIron.Tankard.Tests
             Check(Effects.HangoverSeconds(pk, bo) == 0f, "the Storm10 sequence (blackout death, Bloody Ivar, sober) ends with no second hangover");
 
             // Fermenting: every fermented drink has its own time, and stronger drinks take longer.
-            var ferm = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
+            var ferm = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).OrderBy(d => d.Abv).ToList();
             Check(ferm.All(d => d.FermentSeconds >= 600f), "every fermented drink has a barrel time");
             bool longer = true;
             for (int i = 1; i < ferm.Count; i++) longer &= ferm[i].FermentSeconds > ferm[i - 1].FermentSeconds;
@@ -831,17 +833,30 @@ namespace RavenIron.Tankard.Tests
                 Check(!string.IsNullOrEmpty(d.PrefabName) && d.PrefabName.StartsWith("TK_"), $"{d.PrefabName}: prefixed name");
                 Check(names.Add(d.PrefabName), $"{d.PrefabName}: prefab names are unique");
                 Check(d.PrefabName.IndexOfAny(new[] { ' ', '(' }) < 0, $"{d.PrefabName}: no space or '(' (ItemDrop truncates there)");
-                Check(d.Potency > 0f && d.Potency < Intoxication.Max, $"{d.PrefabName}: potency inside the meter");
+                // The Valhalla is the one exception: it fills the meter to the cap whatever its strength (Core\Specials).
+                Check(d.Potency > 0f && (d.Potency < Intoxication.Max || d.Special == Special.Valhalla), $"{d.PrefabName}: potency inside the meter");
+                Check(d.Special == Special.None ? string.IsNullOrEmpty(d.SpecialLine) : !string.IsNullOrEmpty(d.SpecialLine),
+                      $"{d.PrefabName}: a drink with rules of its own says so in its tooltip, and only such a drink");
                 Check(!string.IsNullOrEmpty(d.DonorPrefab), $"{d.PrefabName}: names a donor");
                 Check(d.Path == BrewPath.Fermenter ? (d.FermentYield > 0 && d.CraftAmount == 1) : (d.FermentYield == 0 && d.CraftAmount > 0),
                       $"{d.PrefabName}: only fermenter drinks yield from a barrel, and a base is crafted one at a time");
                 Check(d.Path == BrewPath.Fermenter == (d.BasePrefabName != null), $"{d.PrefabName}: only fermenter drinks have a base");
             }
-            Check(Drinks.All.Count == 11, "eleven drinks: five from the cauldron (the Bloody Ivar among them), six from the fermenter");
+            Check(Drinks.All.Count == 13, "thirteen drinks: eleven ordinary ones (five cauldron, six fermenter) and the two specials");
+            Check(Drinks.All.Count(d => d.Special == Special.Valhalla) == 1 && Drinks.All.Count(d => d.Special == Special.SkadisNightmare) == 1,
+                  "one Valhalla and one Skadi's Nightmare");
+            var valhallaDef = Drinks.All.First(d => d.Special == Special.Valhalla);
+            var skadiDef = Drinks.All.First(d => d.Special == Special.SkadisNightmare);
+            Check(valhallaDef.Path == BrewPath.Station && skadiDef.Path == BrewPath.Fermenter && skadiDef.FermentYield == 2,
+                  "the Valhalla is mixed at the cauldron; Skadi's Nightmare is brewed, two cups to a base");
+            Check(skadiDef.Abv == 35f && skadiDef.Ingredients.Any(i => i.Item == "Coins") && skadiDef.Ingredients.Any(i => i.Item == "FreezeGland"),
+                  "Skadi's Nightmare: 35%, coins for the gold flakes, frost glands (mid game)");
+            Check(valhallaDef.Ingredients.Any(i => i.Item == "TK_SurtrsKiss") && valhallaDef.Ingredients.Any(i => i.Item == "TK_YmirsMarrow"),
+                  "the Valhalla takes Surtr's Kiss and Ymir's Marrow (late game)");
 
             bool hasStation = false, hasFermenter = false;
             float maxStation = 0f, minFerment = float.MaxValue;
-            foreach (var d in Drinks.All)
+            foreach (var d in Drinks.All.Where(x => x.Special == Special.None)) // the specials break these rules on purpose
             {
                 if (d.Path == BrewPath.Station) { hasStation = true; maxStation = Math.Max(maxStation, d.Potency); }
                 else { hasFermenter = true; minFerment = Math.Min(minFerment, d.Potency); }
@@ -850,7 +865,7 @@ namespace RavenIron.Tankard.Tests
             // A fermented drink should outpunch a station one, or there is no reason to wait.
             Check(minFerment > maxStation, "every fermented drink is stronger than every station drink");
             // The fermenter list climbs the biomes: each drink is stronger than the one before it.
-            var fermented = Drinks.All.Where(d => d.Path == BrewPath.Fermenter).ToList();
+            var fermented = Drinks.All.Where(d => d.Path == BrewPath.Fermenter && d.Special == Special.None).ToList();
             bool climbs = true;
             for (int i = 1; i < fermented.Count; i++) climbs &= fermented[i].Potency > fermented[i - 1].Potency;
             Check(climbs, "fermented drinks get stronger in table order (one per biome)");
@@ -881,10 +896,10 @@ namespace RavenIron.Tankard.Tests
             Check(Words.ByNameToken("$item_meadhealthminor") == null, "vanilla mead is not mistaken for a drink");
             Check(Words.ByNameToken(null) == null && Words.ByNameToken("") == null, "null or empty token finds nothing");
             // A name must hash the same everywhere, so it can never be renamed after shipping. Pin the four we have.
-            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_SwampmothersWine,TK_RimecaskMead,TK_BragisTongue,TK_YmirsMarrow,TK_SurtrsKiss",
+            Check(string.Join(",", Drinks.All.Select(d => d.PrefabName)) == "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_SwampmothersWine,TK_RimecaskMead,TK_BragisTongue,TK_YmirsMarrow,TK_SurtrsKiss,TK_SkadisNightmare,TK_Valhalla",
                   "shipped prefab names are pinned (saves store them)");
             Check(string.Join(",", Drinks.Items().Select(i => i.PrefabName)) ==
-                  "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_HiveGoldMeadBase,TK_SwampmothersWine,TK_SwampmothersWineBase,TK_RimecaskMead,TK_RimecaskMeadBase,TK_BragisTongue,TK_BragisTongueBase,TK_YmirsMarrow,TK_YmirsMarrowBase,TK_SurtrsKiss,TK_SurtrsKissBase",
+                  "TK_Brambleblush,TK_LonghouseAle,TK_RootstumpGrog,TK_BilberryDusk,TK_BloodyIvar,TK_HiveGoldMead,TK_HiveGoldMeadBase,TK_SwampmothersWine,TK_SwampmothersWineBase,TK_RimecaskMead,TK_RimecaskMeadBase,TK_BragisTongue,TK_BragisTongueBase,TK_YmirsMarrow,TK_YmirsMarrowBase,TK_SurtrsKiss,TK_SurtrsKissBase,TK_SkadisNightmare,TK_SkadisNightmareBase,TK_Valhalla",
                   "shipped item names, bases included, are pinned");
 
             // ---- Items, recipes, conversions: the three tables must agree --------------------------------------------
@@ -914,8 +929,12 @@ namespace RavenIron.Tankard.Tests
                     // Vanilla items, or one of our CAULDRON drinks (the Bloody Ivar takes an Ale, owner 2026-11-18): always
                     // craftable first, so no recipe can depend on itself or on a fermenter chain.
                     var ours = Drinks.All.FirstOrDefault(d => d.PrefabName == ing.Item);
-                    Check(!itemNames.Contains(ing.Item) || (ours != null && ours.Path == BrewPath.Station && ing.Item != r.ResultPrefab),
-                          $"{r.Name}: {ing.Item} is vanilla, or one of our cauldron drinks that is not the result itself");
+                    // The Valhalla is the exception the owner asked for (2026-11-18): it is poured from the ordinary brewed
+                    // drinks. No special drink is ever an ingredient, so the chain still cannot loop.
+                    bool resultIsValhalla = r.ResultPrefab == "TK_Valhalla";
+                    Check(!itemNames.Contains(ing.Item) || (ours != null && ing.Item != r.ResultPrefab && ours.Special == Special.None &&
+                                                            (ours.Path == BrewPath.Station || resultIsValhalla)),
+                          $"{r.Name}: {ing.Item} is vanilla, or one of our ordinary drinks that is not the result itself");
                 }
                 var owner = items.Find(i => i.PrefabName == r.ResultPrefab);
                 Check(owner.Drink.Path == BrewPath.Fermenter ? r.Station == StationKind.MeadKetill : r.Station == StationKind.Cauldron,
@@ -942,9 +961,111 @@ namespace RavenIron.Tankard.Tests
             FoodTests();
             EffectTests();
             LostTankardTests();
+            SpecialTests();
 
             Console.WriteLine($"{_run - _failed}/{_run} passed" + (_failed > 0 ? $", {_failed} FAILED" : ""));
             return _failed == 0 ? 0 : 1;
+        }
+
+        // ---- the Valhalla and Skadi's Nightmare (owner, 2026-11-18) -----------------------------------------------------
+        private static void SpecialTests()
+        {
+            // The Valhalla's hangover: three game days, fading in a straight line from full to nothing.
+            float total = Valhalla.TotalSeconds(1800f);
+            Near(total, 5400f, "valhalla: three vanilla game days are 5400 s of play");
+            Near(Valhalla.TotalSeconds(0f), 5400f, "valhalla: a broken day length falls back to vanilla's");
+            Near(Valhalla.TotalSeconds(float.NaN), 5400f, "valhalla: a NaN day length falls back to vanilla's");
+            Near(Valhalla.Strength(total, total), 1f, "valhalla: full strength at the start");
+            Near(Valhalla.Strength(total / 2f, total), 0.5f, "valhalla: half way through, half strength");
+            Near(Valhalla.Strength(0f, total), 0f, "valhalla: over at zero");
+            Near(Valhalla.Strength(total * 2f, total), 1f, "valhalla: never stronger than full");
+            Near(Valhalla.Strength(float.NaN, total), 0f, "valhalla: NaN left is over");
+            Near(Valhalla.DamageMultiplier(1f), 3f, "valhalla: triple damage at the start");
+            Near(Valhalla.DamageMultiplier(0.5f), 2f, "valhalla: double damage half way");
+            Near(Valhalla.DamageMultiplier(0f), 1f, "valhalla: normal damage when it is over");
+            Near(Valhalla.StaminaUseExtra(1f), 1f, "valhalla: double stamina cost at the start (+100%)");
+            Near(Valhalla.StaminaUseExtra(0f), 0f, "valhalla: normal stamina cost when it is over");
+            Near(Valhalla.RegenMultiplier(1f, false), 0.5f, "valhalla: stamina regen halved at the start");
+            Near(Valhalla.RegenMultiplier(1f, true), 0.75f, "valhalla: a drink eases the regen penalty, never removes it");
+            Check(Valhalla.RegenMultiplier(1f, true) < 1f, "valhalla: relief never takes the penalty away");
+            Near(Valhalla.RegenMultiplier(0f, false), 1f, "valhalla: regen normal when it is over");
+            Near(Valhalla.RegenMultiplier(0.5f, false), 0.75f, "valhalla: regen penalty fades too");
+
+            // Relief: stronger drinks for longer, and a weak drink never shortens what a strong one gave.
+            Near(Valhalla.ReliefSeconds(40f), 720f, "valhalla: a 40% drink eases it for 12 minutes");
+            Near(Valhalla.ReliefSeconds(5f), 195f, "valhalla: an ale for a little over 3");
+            Near(Valhalla.ReliefSeconds(0f), 0f, "valhalla: no alcohol, no relief");
+            Near(Valhalla.ReliefAfterDrink(600f, 5f), 600f, "valhalla: a weak drink never cuts a longer relief short");
+            Near(Valhalla.ReliefAfterDrink(100f, 40f), 720f, "valhalla: a strong drink after a weak one gives its own relief");
+            Near(Valhalla.ReliefAfterDrink(float.NaN, 5f), 195f, "valhalla: NaN relief reads as none");
+
+            // Ticking: counts down while you play, relief with it; nothing negative, and over means over.
+            var st = new Valhalla.State { Left = 100f, Total = total, Relief = 30f };
+            st = Valhalla.Tick(st, 10f);
+            Near(st.Left, 90f, "valhalla: ticks down with play time"); Near(st.Relief, 20f, "valhalla: relief ticks down too");
+            st = Valhalla.Tick(st, 1000f);
+            Check(!st.Active && st.Left == 0f && st.Relief == 0f, "valhalla: runs out cleanly, relief with it");
+            var same = Valhalla.Tick(new Valhalla.State { Left = 50f, Total = total }, -5f);
+            Near(same.Left, 50f, "valhalla: a negative frame changes nothing");
+
+            // Saved on the character: round trip, junk refused, never longer than its own total.
+            var saved = new Valhalla.State { Left = 1234.5f, Total = total, Relief = 77.25f };
+            var back = Valhalla.Parse(Valhalla.Format(saved));
+            Near(back.Left, 1234.5f, "valhalla: left round-trips"); Near(back.Total, total, "valhalla: total round-trips");
+            Near(back.Relief, 77.25f, "valhalla: relief round-trips");
+            Check(!Valhalla.Parse(null).Active && !Valhalla.Parse("").Active && !Valhalla.Parse("x;y").Active, "valhalla: junk is no hangover");
+            Near(Valhalla.Parse("9999;100;0").Left, 100f, "valhalla: left is never more than the total");
+            Near(Valhalla.Parse("-5;100;-1").Left, 0f, "valhalla: negatives read as zero");
+            Check(Valhalla.Format(saved).IndexOf(',') < 0, "valhalla: saved with a dot, never a comma (InvariantCulture)");
+
+            // What you wake up holding: 3 to 5 distinct things, about one time in ten something lucky.
+            var rng = new Random(7);
+            int lucky = 0, runs = 4000;
+            var luckyNames = new HashSet<string>(Valhalla.Lucky.Select(l => l.Item));
+            bool sizes = true, distinct = true, amounts = true;
+            for (int i = 0; i < runs; i++)
+            {
+                var loot = Valhalla.PickLoot(rng);
+                sizes &= loot.Count >= Valhalla.MinJunk && loot.Count <= Valhalla.MaxJunk;
+                distinct &= loot.Select(l => l.Key).Distinct().Count() == loot.Count || loot.Any(l => luckyNames.Contains(l.Key));
+                amounts &= loot.All(l => l.Value >= 1);
+                if (loot.Any(l => luckyNames.Contains(l.Key) && !Valhalla.Junk.Any(j => j.Item == l.Key && (j.Item != "Coins" || l.Value <= 12)))) lucky++;
+            }
+            Check(sizes, "valhalla loot: three to five things every time");
+            Check(distinct, "valhalla loot: no junk twice in one wake-up");
+            Check(amounts, "valhalla loot: every stack at least one");
+            Check(lucky > runs * 0.07 && lucky < runs * 0.13, $"valhalla loot: about one in ten is lucky ({lucky} of {runs})");
+            Check(Valhalla.PickLoot(null).Count == 0, "valhalla loot: no random source, nothing");
+            Check(Valhalla.Junk.Concat(Valhalla.Lucky).All(l => l.Min >= 1 && l.Max >= l.Min && !string.IsNullOrEmpty(l.Item)),
+                  "valhalla loot: every entry has a name and a sane amount");
+
+            // Somewhere you shouldn't be.
+            Check(Valhalla.IsDangerous("Crypt3") && Valhalla.IsDangerous("TrollCave02") && Valhalla.IsDangerous("GoblinCamp2")
+                  && Valhalla.IsDangerous("SunkenCrypt4") && Valhalla.IsDangerous("goblincamp2"), "valhalla: crypts, troll caves and Fuling camps are dangerous, any case");
+            Check(!Valhalla.IsDangerous("StartTemple") && !Valhalla.IsDangerous("Vendor_BlackForest") && !Valhalla.IsDangerous("")
+                  && !Valhalla.IsDangerous(null), "valhalla: the start, the trader and nothing are not");
+            Check(Valhalla.WakeMin > 0f && Valhalla.WakeMax > Valhalla.WakeMin, "valhalla: you wake near the place, not inside it");
+
+            // Skadi's Nightmare: calm while drunk on it (Buzzed and up), not in a blackout, and spent below Buzzed.
+            Check(Skadi.CalmActive(true, 30f, false), "skadi: calm while tipsy on it");
+            Check(Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Buzzed], false), "skadi: calm from Buzzed");
+            Check(!Skadi.CalmActive(true, Intoxication.TierFloor[(int)Tier.Buzzed] - 0.01f, false), "skadi: not below Buzzed");
+            Check(!Skadi.CalmActive(true, 120f, true), "skadi: never during a blackout");
+            Check(Skadi.CalmActive(true, 120f, false), "skadi: still calm when hammered past the line, as long as you are not blacked out");
+            Check(!Skadi.CalmActive(false, 60f, false), "skadi: no calm without drinking it");
+            Check(Skadi.CalmSpent(true, 3f) && !Skadi.CalmSpent(true, 30f) && !Skadi.CalmSpent(false, 0f), "skadi: spent when the meter drops below Buzzed, only if owed");
+            Check(Skadi.LeavesAlone(true, false, false, false), "skadi: an ordinary creature leaves a calm player alone");
+            Check(!Skadi.LeavesAlone(true, true, false, false), "skadi: a boss never does");
+            Check(!Skadi.LeavesAlone(true, false, true, false), "skadi: a raid never does");
+            Check(!Skadi.LeavesAlone(true, false, false, true), "skadi: one you hit fights back");
+            Check(!Skadi.LeavesAlone(false, false, false, false), "skadi: no calm, no mercy");
+            Check(Skadi.ProvokedZdoKey(42L) != Skadi.ProvokedZdoKey(43L), "skadi: provoked is per player");
+            Near(Skadi.FrozenAfter(600f, 10f), 590f, "skadi: Frozen morning counts down");
+            Near(Skadi.FrozenAfter(5f, 10f), 0f, "skadi: and stops at zero");
+            Near(Skadi.FrozenAfter(float.NaN, 1f), 0f, "skadi: NaN reads as none");
+            Near(Skadi.ParseSeconds(Skadi.FormatSeconds(321.5f)), 321.5f, "skadi: frozen seconds round-trip");
+            Near(Skadi.ParseSeconds("99999"), Skadi.FrozenSeconds, "skadi: never more than ten minutes");
+            Near(Skadi.ParseSeconds("junk"), 0f, "skadi: junk is no frost");
         }
     }
 }

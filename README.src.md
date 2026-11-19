@@ -7,9 +7,9 @@
 
 {{rune ᚹ | TANKARD | ALE, MEAD AND REGRET | a0652a}} {{badge VERSION | {{version}} | 8b1e1e}} {{badge INSTALL ON | SERVER AND EVERY PLAYER | 1f4e79}}
 
-| 🍺 **11 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
+| 🍺 **13 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
 |---|---|---|---|
-| cauldron and fermenter | earned one cup at a time | wake far from home | a Bloody Ivar fixes it |
+| two of them legends | earned one cup at a time | wake far from home | a Bloody Ivar fixes most |
 
 *"One more," said Ivar, and the hall agreed. Morning found him three valleys east, without his axe, without his map, and with no memory of the troll he had apparently insulted.*
 
@@ -19,9 +19,9 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-{{rune ᛞ | NEW IN {{version}} | FIRST POUR | 8b1e1e}}
+{{rune ᛞ | NEW IN {{version}} | TWO LEGENDS | 8b1e1e}}
 
-> **🍺 The first release.** Eleven drinks from the cauldron and the fermenter, a meter with tolerance, drunk walking, swaying and slurring, liquid courage, hangovers and their cure, and blackouts that send you home the long way. Every setting follows the server.
+> **💀 The Valhalla**, the final boss of cocktails: one cup, and you wake somewhere you should never be, with nothing of yours, then three days of fury. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze.
 
 {{rune ᚾ | BEFORE YOU INSTALL | READ THIS | b8860b}}
 
@@ -67,6 +67,24 @@ The meter keeps going past full. Any drink that leaves you past the line can bla
 - **A binge that reached Drunk ends in a hangover**: less stamina and health regen for 5 to 15 minutes, by how far you went, and 20 after a blackout.
 - **Dying does not cure it**, and a new hangover never shortens one that is already running.
 - **The Bloody Ivar cures it**: raspberries, blueberries, a Longhouse Ale, dandelion and a strip of boar jerky, made at the cauldron. Hair of the dog. Drinking it never starts the next hangover.
+
+{{rune ᛏ | V | THE TWO LEGENDS | 8b1e1e}}
+
+**💀 The Valhalla**, the final boss of cocktails. Late game: a Surtr's Kiss, a Ymir's Marrow, a Bragi's Tongue and a Swampmother's Wine, poured into one cup at the cauldron.
+
+- **It puts you on the floor. Every time.** Your meter goes to the top, and you black out.
+- **You lose everything.** All of it stays in a grave where you were drinking, as on the third night of a streak, and the blackout counts toward your streak.
+- **You wake somewhere you should never be**: beside a crypt, a troll cave, a Fuling camp, a drake nest, somewhere in the lands your world has opened, near or far.
+- **With things that aren't yours**: a few random items, mostly junk. About one time in ten, something worth keeping.
+- **Then three days of fury** (game days, counted while you play): triple damage against creatures (never against players), double stamina for everything, and half the stamina back. It all fades as the days pass.
+- **Only more drink takes the edge off.** Any drink eases the stamina for a while, stronger ones for longer. It still fills your meter, so you can black out again.
+- **Nothing else helps.** The Bloody Ivar can't touch it, dying doesn't end it, and you can't drink another Valhalla until it's over.
+
+**❄️ Skadi's Nightmare**, the gold-flake schnapps. Mid game: coins for the gold, freeze glands, honey and thistle at the Mead Ketill, then a long wait in the fermenter, and only two cups to a base. 35%.
+
+- **The wild leaves you alone** from the first cup until your meter drops below Buzzed, whatever else you drink. Not during a blackout.
+- **Bosses and raids don't care**, and anything you hit hits back.
+- **When it wears off, you're Frozen for 10 minutes**, whatever the weather. A fire or a frost mead (vanilla's, or a Rimecask Mead) thaws you.
 
 {{rune ᛃ | THE LEDGER | EVERY NUMBER | a0652a}}
 
@@ -133,6 +151,8 @@ The numbers below are read from the code when this page is built.
 | {{key DrinkEffects}} | on | Each drink's buff |
 | {{key LiquidCourage}} | on | Hit harder, block worse when drunk |
 | {{key Hangovers}} | on | Hangovers |
+| {{key Valhalla}} | on | The Valhalla's blackout, loot and three days of fury (off: just a 60% drink) |
+| {{key SkadisNightmare}} | on | Skadi's calm and the Frozen morning (off: just a 35% drink) |
 | {{key PerDrinkFermentTimes}} | on | Stronger drinks ferment longer (off: vanilla's 40 minutes) |
 
 🖥️ **Your own** (each player keeps it, whatever the server says):

@@ -56,6 +56,8 @@ namespace RavenIron.Tankard
             float tol = ToleranceOf(p);
             float hit = Tolerance.Hit(drink.Abv, tol);
             Level = Intoxication.Add(Level, hit);
+            // The Valhalla fills the meter to the cap whatever your tolerance (Core\Specials).
+            if (drink.Special == Special.Valhalla && Plugin.Valhalla.Value) { hit = Intoxication.Cap - before; Level = Intoxication.Cap; }
             Peak = Effects.PeakAfterDrink(Peak, Level, drink.CuresHangover); // the cure never earns the next hangover
             BingeDrinks++;
             float tolAfter = Tolerance.AfterDrink(tol, drink.Abv);
@@ -76,7 +78,17 @@ namespace RavenIron.Tankard
             }
             ApplyDrinkEffect(drink, p);
             UpdateCourage(p);
+            if (drink.Special != Special.Valhalla) ValhallaRunner.OnAnyDrink(p, drink.Abv);
+            if (drink.Special == Special.SkadisNightmare) SkadiRunner.Drank(p);
             Save(p);
+        }
+
+        /// <summary>The Valhalla: you come round still flattened, the meter at the cap.</summary>
+        public static void FillToCap()
+        {
+            Level = Intoxication.Cap;
+            if (Level > Peak) Peak = Level;
+            Save(Player.m_localPlayer);
         }
 
         private static void ApplyDrinkEffect(DrinkDef drink, Player p)

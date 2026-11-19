@@ -118,7 +118,7 @@ namespace RavenIron.Tankard
                                                        $"({Tolerance.Describe(Meter.ToleranceOf(p))})");
                                 return;
                             case "sober":
-                                Meter.Reset();
+                                Meter.Reset(); ValhallaRunner.Clear(p); SkadiRunner.Clear(p);
                                 args.Context.AddString("tankard: sober (meter and binge reset)");
                                 return;
                             default:
@@ -130,7 +130,7 @@ namespace RavenIron.Tankard
                                     $"bed {(BlackoutRunner.OnLongWalk ? "NO (long walk home until the hangover is over)" : "yes")}, map remembered {MapMemory.Progress:P0}, " +
                                     $"minimap mode {(Minimap.instance != null ? Minimap.instance.m_mode.ToString() : "none")}, " +
                                     $"world no-map modifier {(Game.m_noMap ? "ON" : "off")}, " +
-                                    $"saved blackout keys here: {CountKeys(p)}, " + StreakText(p) + ", " + ServerSyncSetup.Describe());
+                                    $"saved blackout keys here: {CountKeys(p)}, " + StreakText(p) + ", " + ValhallaRunner.Describe() + ", " + SkadiRunner.Describe() + ", " + ServerSyncSetup.Describe());
                                 return;
                         }
                     }

@@ -46,6 +46,8 @@ namespace RavenIron.Tankard.Core
 
         public DrinkEffect Effect;     // what it does for you besides the meter; null for none
         public bool CuresHangover;     // the Bloody Ivar
+        public Special Special;        // rules of its own (Core\Specials.cs): the Valhalla, Skadi's Nightmare
+        public string SpecialLine;     // the tooltip line that says what those rules are
 
         public string NameToken => "$tk_" + PrefabName.ToLowerInvariant();
         public string DescriptionToken => NameToken + "_desc";
@@ -144,6 +146,25 @@ namespace RavenIron.Tankard.Core
             new DrinkDef { PrefabName = "TK_SurtrsKiss", Effect = new DrinkEffect { Name = "Ember Gut", Seconds = 900f, Resist = Resist.Fire }, FermentSeconds = 6000f, DisplayName = "Surtr's Kiss", DonorPrefab = "MeadHealthMedium",
                 Path = BrewPath.Fermenter, Abv = 40f, Blurb = "Vineberries from the burning lands. One of these and the floor is lava.",
                 Ingredients = new[] { new Ingredient("Vineberry", 8), new Ingredient("Honey", 6) }, FermentYield = 4 },
+
+            // ---- the two with rules of their own (owner, 2026-11-18) ------------------------------------------------
+            // Skadi's Nightmare: the gold-flake schnapps. Mid game (frost glands from the Mountains), expensive (coins are
+            // the gold flakes), long in the barrel, and only two cups to a base.
+            new DrinkDef { PrefabName = "TK_SkadisNightmare", Special = Special.SkadisNightmare, FermentSeconds = 5400f,
+                DisplayName = "Skadi's Nightmare", DonorPrefab = "MeadFrostResist",
+                Path = BrewPath.Fermenter, Abv = 35f, Blurb = "Ice-clear, with gold flakes turning in it. Cold going down, then it burns.",
+                SpecialLine = "While you're drunk on it, nothing wild will touch you. Bosses and raids don't care, and anything you hit hits back. " +
+                              "When it wears off you're Frozen for 10 minutes. A fire or a frost mead thaws you.",
+                Ingredients = new[] { new Ingredient("Coins", 25), new Ingredient("FreezeGland", 4), new Ingredient("Honey", 8), new Ingredient("Thistle", 2) },
+                FermentYield = 2 },
+            // The Valhalla, the final boss of cocktails: the strong brewed drinks poured into one cup at the cauldron.
+            new DrinkDef { PrefabName = "TK_Valhalla", Special = Special.Valhalla, DisplayName = "The Valhalla", DonorPrefab = "MeadStaminaMedium",
+                Path = BrewPath.Station, Abv = 60f, Blurb = "Everything strong in the hall, in one cup. Nobody remembers the second half of the night.",
+                SpecialLine = "Puts you on the floor. You wake somewhere you shouldn't be, with nothing of yours and things that aren't. " +
+                              "Then three days of fury: triple damage, double stamina cost, half the stamina back, fading as the days pass. " +
+                              "Only more drink takes the edge off. The Bloody Ivar can't help, and nobody drinks another until it's over.",
+                Ingredients = new[] { new Ingredient("TK_SurtrsKiss", 1), new Ingredient("TK_YmirsMarrow", 1), new Ingredient("TK_BragisTongue", 1),
+                                      new Ingredient("TK_SwampmothersWine", 1) }, CraftAmount = 1 },
         };
 
         /// <summary>The vanilla item a base is cloned from. A base must be a material the fermenter takes, not a consumable.</summary>
@@ -201,7 +222,8 @@ namespace RavenIron.Tankard.Core
             {
                 words[d.NameToken.Substring(1)] = d.DisplayName;
                 words[d.DescriptionToken.Substring(1)] = d.Blurb + " (" + d.Abv.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "% alcohol)" +
-                    (d.Effect != null ? "\n" + d.Effect.Describe() + "." : "") + (d.CuresHangover ? "\nCures a hangover." : "");
+                    (d.Effect != null ? "\n" + d.Effect.Describe() + "." : "") + (d.CuresHangover ? "\nCures a hangover." : "") +
+                    (string.IsNullOrEmpty(d.SpecialLine) ? "" : "\n" + d.SpecialLine);
                 if (d.Path == BrewPath.Fermenter)
                 {
                     words[d.BaseNameToken.Substring(1)] = d.BaseDisplayName;

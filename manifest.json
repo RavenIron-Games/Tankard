@@ -1,8 +1,8 @@
 {
   "name": "Tankard",
-  "version_number": "0.1.0",
+  "version_number": "0.2.0",
   "website_url": "https://ravenirongames.com/",
-  "description": "Booze that gets you drunk: eleven brews, a tolerance you earn, swaying, slurred chat, hangovers, and blackouts that send you home the long way.",
+  "description": "Booze that gets you drunk: thirteen brews, a tolerance you earn, hangovers, blackouts, and two legends: the Valhalla and Skadi's Nightmare.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2360"
   ]

@@ -22,7 +22,7 @@ namespace RavenIron.Tankard
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "com.raveniron.tankard";
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
         internal static ManualLogSource Log;
 
         internal static ConfigEntry<bool> Enabled;
@@ -43,6 +43,8 @@ namespace RavenIron.Tankard
         internal static ConfigEntry<bool> BlackoutLeavesGear;
         internal static ConfigEntry<float> MapRememberSeconds;
         internal static ConfigEntry<bool> PreferExploredGround;
+        internal static ConfigEntry<bool> Valhalla;
+        internal static ConfigEntry<bool> SkadisNightmare;
 
         private Harmony _harmony;
 
@@ -68,6 +70,14 @@ namespace RavenIron.Tankard
             Hangovers = Config.Bind("6 - Effects", "Hangovers", true,
                 "When a binge that reached Drunk is over, you wake with a hangover: 40% less stamina regen and 25% less health regen, " +
                 "for 5 to 15 minutes by how drunk you got, 20 after a blackout. A Bloody Ivar cures it.");
+            Valhalla = Config.Bind("6 - Effects", "Valhalla", true,
+                "The Valhalla, the final boss of cocktails. On: one cup always blacks you out, takes everything into the grave, " +
+                "wakes you somewhere dangerous with things that aren't yours, then three game days of triple damage against " +
+                "creatures, double stamina cost and half stamina regen, fading as the days pass. Off: it is just a 60% drink.");
+            SkadisNightmare = Config.Bind("6 - Effects", "SkadisNightmare", true,
+                "Skadi's Nightmare. On: while you're drunk on it (Buzzed or worse, not blacked out) every creature but bosses and " +
+                "raids leaves you alone, and one you hit fights back; when it wears off you're Frozen for 10 minutes unless a fire " +
+                "or a frost mead thaws you. Off: it is just a 35% drink.");
             PerDrinkFermentTimes = Config.Bind("6 - Effects", "PerDrinkFermentTimes", true,
                 "Each Tankard drink ferments for its own time, longer the stronger it is: Hive-Gold Mead 20 minutes, Surtr's Kiss 100 " +
                 "(vanilla mead is 40). Off, they take vanilla's time. Read on the game of whoever looks at the barrel.");
@@ -138,6 +148,8 @@ namespace RavenIron.Tankard
             if (Enabled.Value) Stumbler.Tick(dt);
             BlackoutRunner.Tick(dt); // runs even when disabled, so turning Tankard off can never strand a hidden map
             MapMemory.Tick(dt);
+            ValhallaRunner.Tick(dt, Player.m_localPlayer); // ticks its own wait even when off, and removes its effect
+            SkadiRunner.Tick(dt, Player.m_localPlayer);
         }
 
         // ---- fault reporting from the hot path ----------------------------------------------------------------------

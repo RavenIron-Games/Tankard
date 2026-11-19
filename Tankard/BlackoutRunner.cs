@@ -290,6 +290,7 @@ namespace RavenIron.Tankard
         public static void AfterDrink(Player p)
         {
             if (!Plugin.Enabled.Value || !Plugin.Blackouts.Value || p == null) return;
+            if (ValhallaRunner.Pending) return; // a Valhalla is already putting you on the floor
             // Blood alcohol decides it (owner, 2026-11-18): only a drink that leaves you over the limit can do it.
             float over = Blackout.Over(Meter.Level, Plugin.BlackoutOver.Value);
             double chance = Blackout.Chance(over);
@@ -302,17 +303,29 @@ namespace RavenIron.Tankard
             catch (Exception ex) { Plugin.Log.LogError($"Blackout failed part-way: {ex}"); }
         }
 
-        private static void Execute(Player p, float over)
+        /// <summary>
+        /// The Valhalla's blackout (ValhallaRunner): certain, takes everything, counts toward the streak like any other,
+        /// and wakes you at <paramref name="dangerSpot"/> (the server's pick, by <paramref name="placeName"/>) or, without
+        /// one, at an ordinary far spot. Then hands you things that are not yours. True if it happened.
+        /// </summary>
+        public static bool Valhalla(Player p, Vector3? dangerSpot, string placeName)
+        {
+            if (!Plugin.Enabled.Value || p == null) return false;
+            try { return Execute(p, Blackout.Over(Meter.Level, Plugin.BlackoutOver.Value), dangerSpot, placeName, valhalla: true); }
+            catch (Exception ex) { Plugin.Log.LogError($"Valhalla blackout failed part-way: {ex}"); return false; }
+        }
+
+        private static bool Execute(Player p, float over, Vector3? forced = null, string placeName = null, bool valhalla = false)
         {
             if (p.IsDead() || p.IsTeleporting() || p.InCutscene())
             {
                 Plugin.Log.LogInfo("Blackout skipped: dead, teleporting or in a cutscene.");
-                return;
+                return false;
             }
             if (WorldGenerator.instance == null || ZoneSystem.instance == null)
             {
                 Plugin.Log.LogWarning("Blackout skipped: no world generator.");
-                return;
+                return false;
             }
 
             Vector3 home = p.transform.position;
@@ -324,7 +337,7 @@ namespace RavenIron.Tankard
             int today = EnvMan.instance != null && ZNet.instance != null ? EnvMan.instance.GetDay() : Math.Max(0, before.LastDay);
             Blackout.Streak streak = Blackout.Advance(before, today);
             float distance = Blackout.DistanceFor(over, streak);
-            double loss = Blackout.LossFor(over, streak);
+            double loss = valhalla ? 1.0 : Blackout.LossFor(over, streak); // the Valhalla takes everything
             int drinks = Meter.BingeDrinks;
             WorldGenerator wg = WorldGenerator.instance;
             float water = ZoneSystem.instance.m_waterLevel;
@@ -336,13 +349,18 @@ namespace RavenIron.Tankard
             if (Plugin.PreferExploredGround.Value && generated != null && generated.Count > 0)
                 preferred = (x, z) => generated.Contains(ZoneSystem.GetZone(new Vector3(x, 0f, z)));
 
-            if (!Blackout.PickLanding(home.x, home.z, distance, Rng,
+            float lx, lz, ly;
+            if (forced.HasValue)
+            {
+                lx = forced.Value.x; ly = forced.Value.y; lz = forced.Value.z;
+            }
+            else if (!Blackout.PickLanding(home.x, home.z, distance, Rng,
                     (x, z) => (int)wg.GetBiome(x, z), (x, z) => wg.GetHeight(x, z), water, allowed,
-                    out float lx, out float lz, out float ly, preferred, streak.IsTotal ? Blackout.FarDistance : 0f))
+                    out lx, out lz, out ly, preferred, streak.IsTotal || valhalla ? Blackout.FarDistance : 0f))
             {
                 Plugin.Log.LogInfo("Blackout: nowhere allowed to wake up, so you stay put.");
                 p.Message(MessageHud.MessageType.Center, "The world spins, but you stay on your feet.");
-                return;
+                return false;
             }
 
             // Step 3: ask first. Vanilla's distant teleport finds the real floor itself once the area loads (FindFloor, then
@@ -357,7 +375,7 @@ namespace RavenIron.Tankard
             if (!p.TeleportTo(landing, facing, distantTeleport: true))
             {
                 Plugin.Log.LogInfo("Blackout: the game refused the teleport (cooldown or already moving); nothing taken.");
-                return;
+                return false;
             }
 
             // Step 4: the irreversible part.
@@ -376,18 +394,33 @@ namespace RavenIron.Tankard
             _followHome = home;
             _followTarget = landing;
             Meter.WakeFromBlackout();
+            if (valhalla)
+            {
+                Meter.FillToCap(); // you come round still flattened by it
+                ValhallaRunner.GiveLoot(p);
+            }
             float actual = new Vector2(lx - home.x, lz - home.z).magnitude;
             bool onGenerated = generated != null && generated.Contains(ZoneSystem.GetZone(landing));
             Plugin.Log.LogInfo($"BLACKOUT {over:0.0} over the limit, after {drinks} drinks: {left} stack(s) left at {home}, aimed {distance:0} m, woke {actual:0} m away " +
                                $"at ({lx:0}, {lz:0}) on {(onGenerated ? "already-generated" : "NEW")} ground. " +
                                $"Streak: day {streak.Days} in a row (in-game day {streak.LastDay}), blackout {streak.Count} of the streak, loss {loss:P0}" +
-                               (streak.IsTotal ? ", TOTAL." : "."));
+                               (streak.IsTotal ? ", TOTAL." : ".") +
+                               (valhalla ? $" THE VALHALLA: everything taken, woke {(placeName != null ? "by " + placeName : "somewhere ordinary")}." : ""));
+            if (valhalla)
+            {
+                p.Message(MessageHud.MessageType.Center, "Valhalla takes you.");
+                p.Message(MessageHud.MessageType.TopLeft,
+                    "You wake somewhere you should never be, in clothes that aren't yours, with pockets full of someone else's things. " +
+                    "Everything you own is back where you were drinking.");
+                return true;
+            }
             p.Message(MessageHud.MessageType.Center, streak.IsTotal ? "Three nights running. Everything goes black." : "Everything goes black.");
             p.Message(MessageHud.MessageType.TopLeft, streak.IsTotal
                 ? "You've woken up a long way from anywhere you know, with nothing on you. It's all back where you were drinking."
                 : left > 0
                     ? "You've woken up somewhere you don't recognise. Some of your things are back where you were drinking, and you can't read your map."
                     : "You've woken up somewhere you don't recognise, and you can't read your map.");
+            return true;
         }
 
         /// <summary>Moves a share of the inventory into a tombstone at the player's feet. Returns how many stacks moved.</summary>
