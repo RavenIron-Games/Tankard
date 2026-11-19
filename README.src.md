@@ -145,7 +145,3 @@ The numbers below are read from the code when this page is built.
   - Patreon: <https://www.patreon.com/cw/RavenIronGames>
   - Discord: <https://discord.gg/AGKDEurAVa>
 - **ServerSync** by blaxxun, used as published.
-- The **Wubarrk Clan**, for their Valheim knowledge base, the robot test driver that played Tankard before any person did, and this page's layout.
-- The **Blender-Unity pipeline kit** (The Wastes), for how to make and ship icons. Tankard's icons are drawn from scratch: no game art is copied.
-
-{{runes}}
