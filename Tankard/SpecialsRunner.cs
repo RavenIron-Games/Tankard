@@ -107,19 +107,21 @@ namespace RavenIron.Tankard
             ZoneSystem zs = ZoneSystem.instance;
             WorldGenerator wg = WorldGenerator.instance;
             if (zs == null || wg == null) return false;
-            var picks = new List<ZoneSystem.LocationInstance>();
+            // Grouped by kind, so a kind is picked first and then a place of it (Valhalla.TryPickByKind).
+            var byKind = new Dictionary<string, List<ZoneSystem.LocationInstance>>();
             foreach (ZoneSystem.LocationInstance li in zs.m_locationInstances.Values)
             {
-                string n = li.m_location?.m_prefabName;
-                if (!Valhalla.IsDangerous(n)) continue;
+                string kind = Valhalla.DangerKind(li.m_location?.m_prefabName);
+                if (kind == null) continue;
                 if (((int)wg.GetBiome(li.m_position) & allowed) == 0) continue;
-                picks.Add(li);
+                if (!byKind.TryGetValue(kind, out var list)) byKind[kind] = list = new List<ZoneSystem.LocationInstance>();
+                list.Add(li);
             }
-            if (picks.Count == 0) return false;
+            if (byKind.Count == 0) return false;
             float water = zs.m_waterLevel;
             for (int tries = 0; tries < 12; tries++)
             {
-                ZoneSystem.LocationInstance li = picks[Rng.Next(picks.Count)];
+                if (!Valhalla.TryPickByKind(byKind, Rng, out ZoneSystem.LocationInstance li)) return false;
                 for (int a = 0; a < 24; a++)
                 {
                     double ang = Rng.NextDouble() * Math.PI * 2.0;

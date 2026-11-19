@@ -1012,6 +1012,28 @@ namespace RavenIron.Tankard.Tests
             Near(Valhalla.RegenMultiplier(0f, false), 1f, "valhalla: regen normal when it is over");
             Near(Valhalla.RegenMultiplier(0.5f, false), 0.75f, "valhalla: regen penalty fades too");
 
+            // The wake spot: a kind first, then a place of it (owner, 2026-11-19), so a swamp of infested trees can't win
+            // every draw. 100 trees and 1 crypt: picking straight from the places, the crypt came up about 1 in 100.
+            Check(Valhalla.DangerKind("Crypt2") == "Crypt" && Valhalla.DangerKind("Crypt4") == "Crypt", "valhalla: every crypt is one kind");
+            Check(Valhalla.DangerKind("InfestedTree01") == "Infested", "valhalla: the infested tree is its own kind");
+            Check(Valhalla.DangerKind("Meadows_house") == null && Valhalla.DangerKind(null) == null, "valhalla: a safe place has no kind");
+            {
+                var byKind = new Dictionary<string, List<string>>
+                {
+                    ["Infested"] = new List<string>(), ["Crypt"] = new List<string> { "crypt" }, ["Empty"] = new List<string>(),
+                };
+                for (int i = 0; i < 100; i++) byKind["Infested"].Add("tree" + i);
+                var kindRng = new Random(7);
+                int crypts = 0, n = 4000;
+                for (int i = 0; i < n; i++)
+                    if (Valhalla.TryPickByKind(byKind, kindRng, out string got) && got == "crypt") crypts++;
+                Check(crypts > n * 0.45 && crypts < n * 0.55, $"valhalla: the lone crypt gets half the wakes ({crypts} of {n})");
+                Check(!Valhalla.TryPickByKind(new Dictionary<string, List<string>>(), kindRng, out string none) && none == null,
+                    "valhalla: nothing to pick picks nothing");
+                Check(!Valhalla.TryPickByKind(new Dictionary<string, List<string>> { ["Empty"] = new List<string>() }, kindRng, out _),
+                    "valhalla: an empty kind is never picked");
+            }
+
             // Relief: stronger drinks for longer, and a weak drink never shortens what a strong one gave.
             Near(Valhalla.ReliefSeconds(40f), 720f, "valhalla: a 40% drink eases it for 12 minutes");
             Near(Valhalla.ReliefSeconds(5f), 195f, "valhalla: an ale for a little over 3");

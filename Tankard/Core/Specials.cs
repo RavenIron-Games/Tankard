@@ -202,12 +202,31 @@ namespace RavenIron.Tankard.Core
             "StoneTowerRuins", "Dvergr", "GuardTower", "Infested", "Charred", "Fortress", "MorgenHole",
         };
 
-        public static bool IsDangerous(string locationName)
+        public static bool IsDangerous(string locationName) => DangerKind(locationName) != null;
+
+        /// <summary>The kind of dangerous place a location is (the DangerParts entry it matches, so Crypt2 and Crypt4 are
+        /// both "Crypt"), or null when it is not one.</summary>
+        public static string DangerKind(string locationName)
         {
-            if (string.IsNullOrEmpty(locationName)) return false;
+            if (string.IsNullOrEmpty(locationName)) return null;
             foreach (string part in DangerParts)
-                if (locationName.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0) return true;
-            return false;
+                if (locationName.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0) return part;
+            return null;
+        }
+
+        /// <summary>A kind first, then one place of that kind (owner, 2026-11-19). Picking straight from every place let
+        /// the commonest kind win: a swamp full of infested trees sent three wakes in a row to one. False when empty.</summary>
+        public static bool TryPickByKind<T>(IDictionary<string, List<T>> byKind, Random rng, out T pick)
+        {
+            pick = default(T);
+            if (byKind == null || rng == null) return false;
+            var kinds = new List<string>();
+            foreach (var kv in byKind) if (kv.Value != null && kv.Value.Count > 0) kinds.Add(kv.Key);
+            if (kinds.Count == 0) return false;
+            kinds.Sort(StringComparer.Ordinal); // a fixed order, so a seeded rng picks the same way every time
+            List<T> places = byKind[kinds[rng.Next(kinds.Count)]];
+            pick = places[rng.Next(places.Count)];
+            return true;
         }
 
         /// <summary>How far from the dangerous place itself you come round: close enough to be in trouble, not inside it.</summary>
