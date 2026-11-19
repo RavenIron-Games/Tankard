@@ -9,7 +9,8 @@ namespace RavenIron.Tankard.Core
     /// new player gets them handled."
     ///
     ///  - Every drink has an ABV. Its hit on the meter is ABV x 2 at tolerance 0: a new player's first Surtr's Kiss (40%)
-    ///    is 80 points, Blackout tier from one cup.
+    ///    is 80 points: Hammered (75-95) from one cup, short of the Blackout tier (95) and 20 under the blackout line
+    ///    (100), so it takes another drink of 20+ points before a blackout can roll.
     ///  - Tolerance runs 0 to 69 and scales the hit down to <see cref="FloorAtMax"/> (40%) at the top: the same Surtr's Kiss
     ///    is 32 for a hardened drinker, and ale barely registers.
     ///  - Every drink raises tolerance by ABV / 10, slowing as you climb (times 1 - tol/80, so it still reaches 69) and
