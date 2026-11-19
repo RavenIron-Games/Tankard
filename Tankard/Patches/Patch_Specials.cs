@@ -26,11 +26,23 @@ namespace RavenIron.Tankard.Patches
                 if (s <= 0f) return true;
                 Player me = Player.m_localPlayer;
                 if (me == null || !ReferenceEquals(hit.GetAttacker(), me)) return true;
-                hit.ApplyModifier(Valhalla.DamageMultiplier(s));
+                float before = hit.GetTotalDamage();
+                float mult = Valhalla.DamageMultiplier(s);
+                hit.ApplyModifier(mult);
+                // The fury is otherwise invisible in the log (owner, Storm10 2026-11-19: "it didnt feel like triple
+                // damage"). One line per hit, at most every 2 s, with the numbers, so a test can see it.
+                float now = UnityEngine.Time.time;
+                if (now >= _nextLog)
+                {
+                    _nextLog = now + 2f;
+                    Plugin.Log.LogInfo($"Valhalla fury: hit on {__instance.m_name} x{mult:0.00}, {before:0.#} -> {hit.GetTotalDamage():0.#} before armour.");
+                }
             }
             catch (Exception ex) { Plugin.Report("Valhalla fury", ex); }
             return true;
         }
+
+        private static float _nextLog;
     }
 
     /// <summary>
@@ -51,10 +63,13 @@ namespace RavenIron.Tankard.Patches
             try
             {
                 if (!Plugin.Enabled.Value || !Plugin.SkadisNightmare.Value) return true;
-                Player p = a as Player ?? b as Player;
-                if (p == null) return true;
-                Character c = ReferenceEquals(p, a) ? b : a;
-                if (c == null || c is Player) return true;
+                // ONLY the creature's question: a creature's AI always asks IsEnemy(itself, other) (every BaseAI and
+                // MonsterAI call, decompiled 1.0.21). The player's own attack asks IsEnemy(player, target) to decide
+                // whether a hit lands (Attack, the same test that stops you hitting a tame), so answering that one too
+                // made calm creatures unhittable, and "anything you hit hits back" could never happen. Found on
+                // Storm10, 2026-11-19: "cant punch friendlies".
+                if (a == null || a is Player || !(b is Player p)) return true;
+                Character c = a;
                 ZDO pz = SkadiRunner.ZdoOf(p);
                 if (pz == null || !pz.GetBool(SkadiRunner.CalmHash)) return true;
                 bool raid = c.GetBaseAI() is MonsterAI m && m.IsEventCreature();
