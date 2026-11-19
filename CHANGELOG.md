@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- **The Valhalla keeps its secrets.** Its tooltip, setting and README no longer say what it does. Find out the hard way.
+
 ## 0.2.1
 
 Recipes for the early game.

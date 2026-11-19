@@ -22,7 +22,7 @@ namespace RavenIron.Tankard
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "com.raveniron.tankard";
-        public const string Version = "0.2.1";
+        public const string Version = "0.2.2";
         internal static ManualLogSource Log;
 
         internal static ConfigEntry<bool> Enabled;
