@@ -110,9 +110,12 @@ The numbers below are read from the code when this page is built.
 ![THE TOOLBOX FIRST TEN MINUTES](https://img.shields.io/badge/THE_TOOLBOX-FIRST_TEN_MINUTES-b8860b?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgNkw4IDJNMyA5LjVMOCA1LjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4YmM3OSIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg%3D%3D)
 
 1. Build a **cauldron** and brew a few **Longhouse Ales** from barley.
-2. Drink two and open your console (F5): `tankard` shows your meter, your tolerance and your stage.
+2. Drink two and watch the world start to lean. Keep going and you find out where the line is.
 3. Make a **Hive-Gold Mead** base at the Mead Ketill and put it in a fermenter under a roof.
 4. Keep a **Bloody Ivar** for the morning.
+
+**Admins only.** The `tankard` console command (F5) is for admins and testing: on a server, only a player on
+`adminlist.txt` can run it. In single player you are your own admin.
 
 | Console command | What it does |
 |---|---|

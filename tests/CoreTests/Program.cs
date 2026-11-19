@@ -404,6 +404,10 @@ namespace RavenIron.Tankard.Tests
             Check(!Blackout.LongWalkOver(false, true, 1179f, false), "long walk: the lost tankard ended the blackout, hangover running: no bed");
             Check(!Blackout.LongWalkOver(false, true, 0f, true), "long walk: walked home, binge still running and its hangover owed: no bed");
             Check(Blackout.LongWalkOver(false, true, 0f, false), "long walk: blackout over, hangover run out or cured: bed again");
+            Check(!Commands.Allowed(false), "console: a player who is not an admin is refused");
+            Check(Commands.Allowed(true), "console: an admin may run it");
+            Check(Commands.Refusal("map") == "tankard map: admins only. On a server, an admin on adminlist.txt can run it.", "console: refusal names the subcommand");
+            Check(Commands.Refusal("").StartsWith("tankard: admins only"), "console: refusal for the bare command");
             Check(Blackout.LongWalkOver(false, true, float.NaN, false), "long walk: a NaN hangover counts as none");
             Check(Blackout.LongWalkOver(false, false, 500f, true), "long walk: with hangovers off it ends with the blackout");
             Check(Blackout.LongWalkKeyFor("123") == "Tankard.LongWalk.123" && Blackout.LongWalkKeyFor(null) == "Tankard.LongWalk.unknown" &&

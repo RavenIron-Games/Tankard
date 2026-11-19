@@ -86,11 +86,17 @@ namespace RavenIron.Tankard
         {
             try
             {
-                new Terminal.ConsoleCommand("tankard", "Tankard: tankard status | find (your lost tankard) | map (end a blackout, map back) | sober | tolerance [0-69]", args =>
+                new Terminal.ConsoleCommand("tankard", "Tankard (admins only): tankard status | find (your lost tankard) | map (end a blackout, map back) | sober | tolerance [0-69]", args =>
                 {
                     try
                     {
                         string sub = args.Args.Length > 1 ? args.Args[1].ToLowerInvariant() : "status";
+                        if (!Commands.Allowed(ServerSyncSetup.Sync?.IsAdmin ?? false))
+                        {
+                            Plugin.Log.LogInfo($"Console: tankard {sub} refused, not an admin.");
+                            args.Context.AddString(Commands.Refusal(sub));
+                            return;
+                        }
                         Player p = Player.m_localPlayer;
                         switch (sub)
                         {

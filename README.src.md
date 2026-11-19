@@ -77,9 +77,12 @@ The numbers below are read from the code when this page is built.
 {{rune ᚠ | THE TOOLBOX | FIRST TEN MINUTES | b8860b}}
 
 1. Build a **cauldron** and brew a few **Longhouse Ales** from barley.
-2. Drink two and open your console (F5): `tankard` shows your meter, your tolerance and your stage.
+2. Drink two and watch the world start to lean. Keep going and you find out where the line is.
 3. Make a **Hive-Gold Mead** base at the Mead Ketill and put it in a fermenter under a roof.
 4. Keep a **Bloody Ivar** for the morning.
+
+**Admins only.** The `tankard` console command (F5) is for admins and testing: on a server, only a player on
+`adminlist.txt` can run it. In single player you are your own admin.
 
 | Console command | What it does |
 |---|---|
