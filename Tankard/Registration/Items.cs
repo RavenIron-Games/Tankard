@@ -115,8 +115,20 @@ namespace RavenIron.Tankard.Registration
 
             // Never take over somebody else's hash. ObjectDB.UpdateRegisters and ZNetScene.Awake both use Dictionary.Add, so
             // a collision there is an ArgumentException that aborts Awake: a bricked game, not a broken mod.
-            if (db.GetItemPrefab(def.PrefabName.GetStableHashCode()) != null)
+            GameObject held = db.GetItemPrefab(def.PrefabName.GetStableHashCode());
+            if (held != null)
             {
+                // An EARLIER Tankard build's clone (a hot reload under the Hotload dev tool: this assembly's statics start
+                // empty, but ObjectDB still holds the old build's prefabs). It is ours: adopt it rather than refuse it or
+                // build a second one, because every item in a bag, chest or fermenter already points at it. The caller
+                // reapplies this build's stats to it.
+                if (Holder.IsOurs(held))
+                {
+                    Holder.Adopt(held.transform.parent.gameObject);
+                    Prefabs[def.PrefabName] = held;
+                    Plugin.Log.LogInfo($"Adopted '{def.PrefabName}' from an earlier Tankard build.");
+                    return held;
+                }
                 Plugin.Log.LogError($"Something else already owns the item name '{def.PrefabName}'. Refusing to replace it.");
                 return null;
             }
@@ -235,6 +247,9 @@ namespace RavenIron.Tankard.Registration
 
         private static Material TintedCopy(Material src, string hex, Color tint)
         {
+            // Already this tint's copy: ApplyStats runs every pass, and an adopted prefab (Items.BuildOrGet) wears the
+            // earlier build's copies. Copying a copy would only stack up materials.
+            if (src.name.EndsWith("_tk" + hex.Substring(1), StringComparison.Ordinal)) return src;
             if (!TintedCopies.TryGetValue(src, out var byHex)) TintedCopies[src] = byHex = new Dictionary<string, Material>();
             if (byHex.TryGetValue(hex, out Material done) && done != null) return done;
             var m = new Material(src) { name = src.name + "_tk" + hex.Substring(1) };
@@ -419,16 +434,37 @@ namespace RavenIron.Tankard.Registration
     /// </summary>
     internal static class Holder
     {
+        // Found by this NAME, never by the static: the static belongs to one build, and a hot reload loads a new assembly
+        // whose static is empty while the old build's container and clones live on.
+        public const string RootName = "Tankard_PrefabContainer";
+
         private static GameObject _root;
 
         public static bool IsAlive(UnityEngine.Object o) => !ReferenceEquals(o, null) && o != null;
+
+        /// <summary>
+        /// True for a clone some Tankard build made: it hangs straight from an inactive, parentless container of ours.
+        /// Another mod's item of the same name has no such parent, so it is still refused.
+        /// </summary>
+        public static bool IsOurs(GameObject go)
+        {
+            if (!IsAlive(go)) return false;
+            Transform parent = go.transform.parent;
+            return parent != null && parent.parent == null && parent.name == RootName && !parent.gameObject.activeSelf;
+        }
+
+        /// <summary>Takes an earlier build's container as this build's, so a reload never leaves two of them.</summary>
+        public static void Adopt(GameObject container)
+        {
+            if (!IsAlive(_root) && IsAlive(container) && container.name == RootName) _root = container;
+        }
 
         public static GameObject Root
         {
             get
             {
                 if (IsAlive(_root)) return _root;
-                _root = new GameObject("Tankard_PrefabContainer");
+                _root = new GameObject(RootName);
                 _root.SetActive(false);
                 UnityEngine.Object.DontDestroyOnLoad(_root);
                 return _root;

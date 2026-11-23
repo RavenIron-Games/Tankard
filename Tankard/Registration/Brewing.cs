@@ -85,6 +85,8 @@ namespace RavenIron.Tankard.Registration
             }
 
             if (!Recipes.TryGetValue(spec.Name, out Recipe recipe) || !Holder.IsAlive(recipe))
+                recipe = AdoptEarlierBuilds(db, spec.Name);
+            if (!Holder.IsAlive(recipe))
             {
                 recipe = ScriptableObject.CreateInstance<Recipe>();
                 recipe.name = spec.Name;
@@ -107,6 +109,30 @@ namespace RavenIron.Tankard.Registration
                 db.m_recipes.Add(recipe);
                 Plugin.Log.LogInfo($"Added {spec.Name}: {string.Join(" + ", spec.Ingredients.Select(i => i.Amount + " " + i.Item))} -> {spec.Amount} {spec.ResultPrefab} at {spec.Station}.");
             }
+        }
+
+        /// <summary>
+        /// An EARLIER Tankard build's recipe of this name (a hot reload under the Hotload dev tool: this assembly's table
+        /// starts empty, ObjectDB still lists the old build's recipes), or null. Ours means it makes an item hanging from
+        /// Tankard's prefab container; another mod's recipe of the same name is left alone. Adopted, it is rewritten by the
+        /// caller, so the crafting menu shows one recipe per drink, not one per build.
+        /// </summary>
+        private static Recipe AdoptEarlierBuilds(ObjectDB db, string name)
+        {
+            Recipe found = null;
+            for (int i = db.m_recipes.Count - 1; i >= 0; i--)
+            {
+                Recipe r = db.m_recipes[i];
+                if (!Holder.IsAlive(r) || r.name != name || r.m_item == null || !Holder.IsOurs(r.m_item.gameObject)) continue;
+                if (found == null) found = r;
+                else db.m_recipes.RemoveAt(i); // two earlier builds' copies: keep one
+            }
+            if (found != null)
+            {
+                Recipes[name] = found;
+                Plugin.Log.LogInfo($"Adopted {name} from an earlier Tankard build.");
+            }
+            return found;
         }
 
         // ---- fermenter ----------------------------------------------------------------------------------------
