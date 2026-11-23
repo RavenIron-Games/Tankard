@@ -1,7 +1,7 @@
 <!-- README schema v3 -->
 # 🍺 Tankard
 
-![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.2.4](https://img.shields.io/badge/VERSION-0.2.4-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
+![TANKARD ALE, MEAD AND REGRET](https://img.shields.io/badge/TANKARD-ALE%2C_MEAD_AND_REGRET-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMyAxVjEzTTMgMUw3IDRMMyA3IiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D) ![VERSION 0.2.5](https://img.shields.io/badge/VERSION-0.2.5-8b1e1e?style=for-the-badge&labelColor=1b1b1b) ![INSTALL ON SERVER AND EVERY PLAYER](https://img.shields.io/badge/INSTALL_ON-SERVER_AND_EVERY_PLAYER-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
 | 🍺 **14 drinks** | 🧠 **Tolerance 0-69** | 🌑 **Blackouts** | 🤕 **Hangovers** |
 |---|---|---|---|
@@ -17,7 +17,7 @@ Tankard adds real drinking to Valheim. Every cup goes onto a meter that climbs a
 
 Strong drinks flatten a new viking and barely warm an old one. Tolerance is earned, a cup at a time, and the morning after always sends the bill.
 
-![NEW IN 0.2.4 TWO LEGENDS AND A CUP](https://img.shields.io/badge/NEW_IN_0.2.4-TWO_LEGENDS_AND_A_CUP-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
+![NEW IN 0.2.5 TWO LEGENDS AND A CUP](https://img.shields.io/badge/NEW_IN_0.2.5-TWO_LEGENDS_AND_A_CUP-8b1e1e?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNMS41IDFWMTNNOC41IDFWMTNNMS41IDFMOC41IDEzTTguNSAxTDEuNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmY4MzgzIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8%2BPC9zdmc%2B)
 
 > **💀 The Valhalla**, the final boss of cocktails. What it does, we're not telling. **❄️ Skadi's Nightmare**, the gold-flake schnapps: while you're drunk on it, the wild leaves you alone. When it wears off, you freeze. **☕ Kaffi**, the way back: no alcohol, and it takes the edge off the night.
 
@@ -32,7 +32,7 @@ Strong drinks flatten a new viking and barely warm an old one. Tolerance is earn
 
 ![I THE BREW](https://img.shields.io/badge/I-THE_BREW-a0652a?style=for-the-badge&labelColor=1b1b1b&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMCAxNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjE0Ij48cGF0aCBkPSJNNyAxTDMgN0w3IDEzIiBmaWxsPSJub25lIiBzdHJva2U9IiNjYmFhOGEiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4%3D)
 
-Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed**: make a base at the **Mead Ketill**, put it in a fermenter under a roof, wait, and tap four cups. Stronger drinks take longer in the barrel. Every drink also gives a short buff, listed in its tooltip, and every drink can be set on a table with the **serving tray**, like a mead.
+Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed**: make a base at the **Mead Ketill**, put it in a fermenter under a roof, wait, and tap four cups. Stronger drinks take longer in the barrel. Every drink also gives a short buff, listed in its tooltip, and every drink can be set on a table with the **serving tray**, like a mead, in a bottle the colour of its icon.
 
 | Drink | ABV | Made at | Recipe | What else it does |
 |---|---|---|---|---|

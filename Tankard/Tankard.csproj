@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>Tankard</AssemblyName>
     <RootNamespace>RavenIron.Tankard</RootNamespace>
-    <Version>0.2.4</Version>
+    <Version>0.2.5</Version>
     <LangVersion>latest</LangVersion>
     <!-- Vendor\ServerSync.cs is blaxxun's file with nullable annotations; it compiles clean with these two warnings
          turned down, as in Ragnarok's Wrath and Valkyrie's Cargo. Our own files carry no nullable syntax. -->
