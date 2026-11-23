@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+
+- **Drinks go on the table.** The serving tray now holds every Tankard drink, under Food, like vanilla meads. Each one is set down as itself, with its own name and icon, for one cup. Pick it up to get the cup back.
+
 ## 0.2.3
 
 - **The Valhalla is less predictable.** Where it leaves you was almost always the same kind of place. Not any more.

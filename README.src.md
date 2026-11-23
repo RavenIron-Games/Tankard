@@ -36,7 +36,7 @@ Strong drinks flatten a new viking and barely warm an old one. Tolerance is earn
 
 {{rune ᚲ | I | THE BREW | a0652a}}
 
-Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed**: make a base at the **Mead Ketill**, put it in a fermenter under a roof, wait, and tap four cups. Stronger drinks take longer in the barrel. Every drink also gives a short buff, listed in its tooltip.
+Five drinks come out of the **cauldron** in one go. Six strong ones are **brewed**: make a base at the **Mead Ketill**, put it in a fermenter under a roof, wait, and tap four cups. Stronger drinks take longer in the barrel. Every drink also gives a short buff, listed in its tooltip, and every drink can be set on a table with the **serving tray**, like a mead.
 
 {{gen drinks}}
 
