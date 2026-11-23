@@ -1014,6 +1014,15 @@ namespace RavenIron.Tankard.Tests
 
             // The wake spot: a kind first, then a place of it (owner, 2026-11-19), so a swamp of infested trees can't win
             // every draw. 100 trees and 1 crypt: picking straight from the places, the crypt came up about 1 in 100.
+            // ---- bottle tints (owner, 2026-11-22: "the icons need to match the drops ingame")
+            foreach (var d in Drinks.All)
+                Check(Tints.ByDrink.TryGetValue(d.PrefabName, out string th) && Tints.TryParse(th, out _, out _, out _), $"tint: {d.PrefabName} has a #rrggbb colour");
+            Check(Tints.ByDrink.Count == Drinks.All.Count, "tint: no colour for a drink that does not exist");
+            Check(Tints.TryParse("#ff5a14", out float tr, out float tg, out float tb) && tr == 1f && Math.Abs(tg - 90f / 255f) < 1e-6 && Math.Abs(tb - 20f / 255f) < 1e-6, "tint: #ff5a14 parses to its channels");
+            Check(!Tints.TryParse("ff5a14", out _, out _, out _) && !Tints.TryParse("#ff5a1", out _, out _, out _) && !Tints.TryParse("#gg5a14", out _, out _, out _) && !Tints.TryParse(null, out _, out _, out _), "tint: anything but #rrggbb is refused");
+            var tintItems = Drinks.Items();
+            Check(tintItems.Where(s => !s.IsDrink).All(s => Tints.For(s) == Tints.ByDrink[s.Drink.PrefabName]), "tint: a base wears its drink's colour");
+            Check(Tints.For(ItemSpec.LostTankardSpec()) == null, "tint: the lost tankard keeps its own look");
             Check(Valhalla.DangerKind("Crypt2") == "Crypt" && Valhalla.DangerKind("Crypt4") == "Crypt", "valhalla: every crypt is one kind");
             Check(Valhalla.DangerKind("InfestedTree01") == "Infested", "valhalla: the infested tree is its own kind");
             Check(Valhalla.DangerKind("Meadows_house") == null && Valhalla.DangerKind(null) == null, "valhalla: a safe place has no kind");

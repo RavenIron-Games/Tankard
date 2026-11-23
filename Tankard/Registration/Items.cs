@@ -194,6 +194,119 @@ namespace RavenIron.Tankard.Registration
             s.m_equipStatusEffect = null;
 
             ApplyPiece(def, prefab, drop, icon);
+            try { ApplyTint(def, prefab); }
+            catch (Exception ex) { Plugin.Log.LogError($"Could not colour the bottle of '{def.PrefabName}'; it keeps the donor's look: {ex.Message}"); }
+        }
+
+        // ---- the bottle's colour -----------------------------------------------------------------------------------
+        // A vanilla mead is ONE mesh with ONE painted texture, drawn twice (attach on the ground or a table, equipoffset        // in the hand), and some share that material with the WEAPONS atlas (weapons1). So the tint goes on a COPY of each
+        // material, owned by this prefab alone; writing the donor's would recolour every vanilla mead and half the swords.
+        // _Color multiplies the texture. An emissive bottle (the bog witch meads glow white) would wash the tint out, so
+        // its emission takes the tint too, at the brightness it had.
+        private static readonly Dictionary<Material, Dictionary<string, Material>> TintedCopies = new Dictionary<Material, Dictionary<string, Material>>();
+
+        private static void ApplyTint(ItemSpec def, GameObject prefab)
+        {
+            string hex = Tints.For(def);
+            if (hex == null) return;
+            if (!Tints.TryParse(hex, out float r, out float g, out float b))
+            {
+                Plugin.Log.LogWarning($"Tint '{hex}' for '{def.PrefabName}' is not #rrggbb; it keeps the donor's look.");
+                return;
+            }
+            var tint = new Color(r, g, b, 1f);
+            int painted = 0;
+            foreach (Renderer rend in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(rend is MeshRenderer) && !(rend is SkinnedMeshRenderer)) continue; // the pickup sparkle stays as it is
+                Material[] mats = rend.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    Material src = mats[i];
+                    if (src == null || !src.HasProperty("_Color")) continue;
+                    mats[i] = TintedCopy(src, hex, tint);
+                    changed = true;
+                }
+                if (changed) { rend.sharedMaterials = mats; painted++; }
+            }
+            Plugin.Log.LogDebug($"Tinted {painted} renderer(s) of '{def.PrefabName}' {hex}.");
+        }
+
+        private static Material TintedCopy(Material src, string hex, Color tint)
+        {
+            if (!TintedCopies.TryGetValue(src, out var byHex)) TintedCopies[src] = byHex = new Dictionary<string, Material>();
+            if (byHex.TryGetValue(hex, out Material done) && done != null) return done;
+            var m = new Material(src) { name = src.name + "_tk" + hex.Substring(1) };
+            // A vanilla bottle's texture is already coloured (the frost pouch is brown, the poison bottle green), and _Color
+            // MULTIPLIES it: ice blue on brown came out green in the robot's photo. So the copy draws a greyscale version of
+            // the texture, and the tint is the only colour left.
+            Texture grey = GreyCopy(src.mainTexture);
+            if (grey != null) m.mainTexture = grey;
+            m.SetColor("_Color", tint);
+            if (m.HasProperty("_EmissionColor"))
+            {
+                Color e = m.GetColor("_EmissionColor");
+                float glow = Mathf.Max(e.r, Mathf.Max(e.g, e.b));
+                if (glow > 0f) m.SetColor("_EmissionColor", new Color(tint.r * glow, tint.g * glow, tint.b * glow, 1f));
+            }
+            m.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+            byHex[hex] = m;
+            return m;
+        }
+
+        private static readonly Dictionary<Texture, Texture2D> GreyCopies = new Dictionary<Texture, Texture2D>();
+
+        /// <summary>
+        /// A greyscale copy of a texture, brightness stretched so its brightest parts are near white, or null where nothing is
+        /// drawn (a dedicated server has no graphics device: it renders no bottle, so it needs no tint). Vanilla's textures are
+        /// not CPU-readable, so the copy goes through the GPU: Blit into a render target, then ReadPixels back. One copy per
+        /// source texture, shared by every drink that uses it.
+        /// </summary>
+        private static Texture2D GreyCopy(Texture src)
+        {
+            if (src == null || SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) return null;
+            if (GreyCopies.TryGetValue(src, out Texture2D done) && done != null) return done;
+            int w = src.width, h = src.height;
+            RenderTexture rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+            RenderTexture before = RenderTexture.active;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, true) { name = src.name + "_tkgrey" };
+            try
+            {
+                Graphics.Blit(src, rt);
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            }
+            finally
+            {
+                RenderTexture.active = before;
+                RenderTexture.ReleaseTemporary(rt);
+            }
+            Color32[] px = tex.GetPixels32();
+            // Stretch by the 95th-percentile brightness, so a dark texture does not darken every tint.
+            var hist = new int[256];
+            var lum = new byte[px.Length];
+            for (int i = 0; i < px.Length; i++)
+            {
+                lum[i] = (byte)((px[i].r * 54 + px[i].g * 183 + px[i].b * 19) >> 8);
+                hist[lum[i]]++;
+            }
+            int top = 255, seen = 0, want = px.Length / 20;
+            while (top > 1 && (seen += hist[top]) < want) top--;
+            for (int i = 0; i < px.Length; i++)
+            {
+                byte v = (byte)Math.Min(255, lum[i] * 255 / top);
+                px[i] = new Color32(v, v, v, px[i].a);
+            }
+            tex.SetPixels32(px);
+            tex.Apply(true);
+            tex.filterMode = src.filterMode;
+            tex.wrapMode = src.wrapMode;
+            tex.anisoLevel = src.anisoLevel;
+            tex.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+            GreyCopies[src] = tex;
+            Plugin.Log.LogDebug($"Grey copy of '{src.name}' ({w}x{h}), stretched by {255f / top:F2}.");
+            return tex;
         }
 
         // ---- the serving tray ---------------------------------------------------------------------------------------
