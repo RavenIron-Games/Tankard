@@ -92,6 +92,8 @@ namespace RavenIron.Tankard.Registration
                 _updateRegisters(db);
                 Plugin.Log.LogInfo($"Registered {Prefabs.Count} drink item(s) in ObjectDB.");
             }
+            try { EnsureOnTray(db); }
+            catch (Exception ex) { Plugin.Log.LogError($"Could not put the drinks on the serving tray: {ex}"); }
         }
 
         private static GameObject BuildOrGet(ObjectDB db, ItemSpec def)
@@ -190,7 +192,63 @@ namespace RavenIron.Tankard.Registration
             s.m_setSize = 0;
             s.m_setStatusEffect = null;
             s.m_equipStatusEffect = null;
+
+            ApplyPiece(def, prefab, drop, icon);
         }
+
+        // ---- the serving tray ---------------------------------------------------------------------------------------
+        // The serving tray is vanilla's Feaster (owner, 2026-11-22: "the drinks need to be recognized by the serving tray").
+        // Read from 1.0.21 by the robot's survey (phase Y): its _FeasterPieceTable lists every vanilla food and mead as the
+        // ITEM prefab itself, with a Piece whose one requirement is one of that same item, meads under Food. Placing one sets
+        // the cup down; it is still an ItemDrop, so picking it up gives the cup back. A drink cloned from a mead already
+        // carries the mead's Piece, which named, pictured and cost the MEAD, so it is rewritten here to be this drink.
+
+        public const string TrayPrefab = "Feaster";
+
+        private static void ApplyPiece(ItemSpec def, GameObject prefab, ItemDrop drop, Sprite icon)
+        {
+            Piece piece = prefab.GetComponent<Piece>();
+            if (piece == null) return;
+            if (!def.IsDrink)
+            {
+                // A base or the lost tankard is never set on a table; a Piece left over from its donor would still cost the
+                // donor if anything ever offered it, so it says nothing it does not mean.
+                piece.m_resources = new Piece.Requirement[0];
+                return;
+            }
+            piece.m_name = def.NameToken;
+            piece.m_description = def.DescriptionToken;
+            if (icon != null) piece.m_icon = icon;
+            piece.m_category = Piece.PieceCategory.Food;
+            piece.m_resources = new[] { new Piece.Requirement { m_resItem = drop, m_amount = 1, m_recover = true } };
+        }
+
+        /// <summary>Puts every drink on the serving tray's menu. Idempotent: run after every ObjectDB pass.</summary>
+        public static void EnsureOnTray(ObjectDB db)
+        {
+            PieceTable table = db?.GetItemPrefab(TrayPrefab)?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_buildPieces;
+            if (table == null || table.m_pieces == null)
+            {
+                if (!_loggedNoTray)
+                {
+                    _loggedNoTray = true;
+                    Plugin.Log.LogWarning($"No serving tray ('{TrayPrefab}' with a piece table) in ObjectDB, so the drinks can't be set on a table.");
+                }
+                return;
+            }
+            int added = 0;
+            foreach (ItemSpec def in AllSpecs())
+            {
+                if (!def.IsDrink || !Prefabs.TryGetValue(def.PrefabName, out GameObject prefab) || prefab == null) continue;
+                if (prefab.GetComponent<Piece>() == null) continue;
+                if (table.m_pieces.Contains(prefab)) continue;
+                table.m_pieces.Add(prefab);
+                added++;
+            }
+            if (added > 0) Plugin.Log.LogInfo($"Serving tray: {added} drink(s) can be set on a table.");
+        }
+
+        private static bool _loggedNoTray;
 
         // ---- ZNetScene pass -----------------------------------------------------------------------------------
 
