@@ -448,8 +448,8 @@ namespace RavenIron.Tankard
 
         private static int MoveToTomb(Player p, HashSet<ItemDrop.ItemData> lost)
         {
-            // The same tombstone prefab and Setup call vanilla's Player.CreateTombStone uses, so it shows the player's name
-            // and behaves like the grave everyone knows.
+            // The same tombstone prefab vanilla's Player.CreateTombStone uses, so it shows the player's name and looks like
+            // the grave everyone knows (but see below: it is deliberately NOT a grave anyone owns).
             GameObject tomb = UnityEngine.Object.Instantiate(p.m_tombstone, p.GetCenterPoint(), p.transform.rotation);
             Inventory graveInv = tomb.GetComponent<Container>().GetInventory();
             Inventory inv = p.GetInventory();
@@ -461,8 +461,19 @@ namespace RavenIron.Tankard
                 graveInv.MoveItemToThis(inv, it);
                 if (inv.GetAllItems().Count < before) moved++;
             }
+            // The NAME only, never the owner id. TombStone.Setup also writes s_owner, and a grave with an owner reads as a
+            // DEATH to anything watching graves: TortalPortal 1.6.x's server sweeps every tombstone ZDO with s_owner set
+            // and a fresh s_timeOfDeath (which vanilla's Awake always writes) and raised a corpse gate for a blackout
+            // (owner, 2026-11-23). Its client half only fires from a Setup postfix, so skipping Setup quiets both halves.
+            // Vanilla's cost: the owner-only "loot all if it fits" and the grave's loot buff, both death mechanics.
+            // TK_blackoutOf keeps whose pile it is, for anything of ours that ever needs to know.
             PlayerProfile profile = Game.instance.GetPlayerProfile();
-            tomb.GetComponent<TombStone>().Setup(profile.GetName(), profile.GetPlayerID());
+            ZNetView nv = tomb.GetComponent<ZNetView>();
+            if (nv != null && nv.IsValid())
+            {
+                nv.GetZDO().Set(ZDOVars.s_ownerName, profile.GetName());
+                nv.GetZDO().Set("TK_blackoutOf", profile.GetPlayerID());
+            }
             if (moved < lost.Count) Plugin.Log.LogWarning($"Blackout: the pile was full; {lost.Count - moved} stack(s) stayed with you.");
             return moved;
         }
