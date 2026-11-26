@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6
+
+- **Works with TortalPortal.** A blackout no longer opens a corpse gate. The gear you leave behind still sits in a grave with your name on it, but it no longer counts as a death to mods that watch for graves. Because it isn't a real grave, opening it shows a normal chest window instead of grabbing everything at once, and emptying it gives no grave buff.
+- Plays well with live reloading (for mod developers): a reload no longer doubles Tankard's items and recipes.
+
 ## 0.2.5
 
 - **Every bottle looks like its icon.** Set down, dropped or held, each drink now wears its own colour: Surtr's Kiss orange, Rimecask ice blue, Skadi's Nightmare clear, and so on. The brewing bases take their drink's colour too. Vanilla's own meads look as they always did.
